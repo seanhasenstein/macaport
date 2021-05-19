@@ -12,62 +12,64 @@ const colors = [
   },
   {
     id: 2,
-    hex: '#ff2400',
+    hex: '#F60000',
     label: 'Scarlet',
   },
   {
     id: 3,
-    hex: '#ff8c00',
+    hex: '#FF8C00',
     label: 'Orange',
   },
   {
     id: 4,
-    hex: '#ffff00',
+    hex: '#FFEE00',
     label: 'Lemon Yellow',
   },
   {
     id: 5,
-    hex: '#ffd700',
+    hex: '#FFBE0D',
     label: 'Gold',
   },
   {
     id: 6,
-    hex: '#006400',
+    hex: '#236923',
     label: 'Dark Green',
   },
   {
     id: 7,
-    hex: '#4169e1',
+    hex: '#3783FF',
     label: 'Royal',
   },
   {
     id: 8,
-    hex: '#000080',
+    hex: '#1C4280',
     label: 'Navy',
   },
   {
     id: 9,
-    hex: '#750080',
+    hex: '#4815AA',
     label: 'Purple',
   },
   {
     id: 10,
-    hex: '#cccccc',
+    hex: '#bbbbbb',
     label: 'Gray',
   },
   {
     id: 11,
-    hex: '#654321',
+    hex: '#6c4903',
     label: 'Brown',
   },
   {
     id: 12,
-    hex: '#000000',
+    hex: '#111111',
     label: 'Black',
   },
 ];
 
 const ColorsStyles = styled.div`
+  padding: 0 1.5rem;
+
   .wrapper {
     margin: 0 auto;
     padding: 4rem 0;
@@ -109,15 +111,28 @@ const ColorsStyles = styled.div`
     padding: 2.5rem 0;
     max-width: 41rem;
     width: 100%;
+    min-width: 0;
+    flex: 1 1 0%;
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 1.25rem 1rem;
     list-style-type: none;
+  }
+
+  @media (max-width: 500px) {
+    .color-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    p.note {
+      align-items: flex-start;
+    }
   }
 `;
 
 const Color = styled.li<ColorProps>`
-  width: 6rem;
+  max-width: 6rem;
+  width: 100%;
 
   span {
     height: 2.5rem;
@@ -134,6 +149,18 @@ const Color = styled.li<ColorProps>`
     font-size: 0.75rem;
     text-align: center;
     color: #374151;
+  }
+
+  @media (max-width: 500px) {
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: 5rem 1fr;
+    align-items: center;
+
+    p {
+      margin: 0 0 0 1rem;
+      text-align: left;
+    }
   }
 `;
 

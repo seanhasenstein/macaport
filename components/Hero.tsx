@@ -2,16 +2,21 @@ import Link from 'next/link';
 import styled from 'styled-components';
 
 const HeroStyles = styled.div`
-  margin: 0 auto;
-  padding: 5rem 0;
-  width: 100%;
-  max-width: 64rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  padding: 0 1.5rem;
+
+  .wrapper {
+    margin: 0 auto;
+    padding: 4rem 0;
+    width: 100%;
+    max-width: 65.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
   .text-content {
-    max-width: 32rem;
+    padding: 0 2rem 0 0;
+    max-width: 34rem;
     width: 100%;
   }
 
@@ -47,27 +52,44 @@ const HeroStyles = styled.div`
       width: 100%;
     }
   }
+
+  @media (max-width: 768px) {
+    .wrapper {
+      flex-direction: column-reverse;
+    }
+
+    .hero-img {
+      max-width: 18rem;
+    }
+
+    .text-content {
+      margin: 1.5rem 0 0;
+      text-align: center;
+    }
+  }
 `;
 
 export default function Hero() {
   return (
     <HeroStyles>
-      <div className="text-content">
-        <h1>Welcome to Macaport</h1>
-        <p>
-          Located in New London, Wisconsin, we specialize in custom screen
-          printing for fundraisers, family reunions, clubs, sports teams,
-          special events, etc.
-        </p>
-        <Link href="#">
-          <a className="btn">Learn More</a>
-        </Link>
-      </div>
-      <div className="hero-img">
-        <img
-          src="/images/hero.jpg"
-          alt="Hooded sweatshirt, t-shirt, and crewneck sweatshirt with Macaport logo"
-        />
+      <div className="wrapper">
+        <div className="text-content">
+          <h1>Welcome to Macaport</h1>
+          <p>
+            Located in New London, Wisconsin, we specialize in custom screen
+            printing for fundraisers, family reunions, clubs, sports teams,
+            special events, etc.
+          </p>
+          <Link href="#">
+            <a className="btn">Learn More</a>
+          </Link>
+        </div>
+        <div className="hero-img">
+          <img
+            src="/images/hero.jpg"
+            alt="Hooded sweatshirt, t-shirt, and crewneck sweatshirt with Macaport logo"
+          />
+        </div>
       </div>
     </HeroStyles>
   );

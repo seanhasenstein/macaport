@@ -4,6 +4,8 @@ import Table from './Table';
 import { pricing } from '../data/pricing';
 
 const PricingStyles = styled.div`
+  padding: 0 1.5rem;
+
   .wrapper {
     margin: 0 auto;
     padding: 4rem 0;
@@ -38,13 +40,15 @@ const PricingStyles = styled.div`
     border-radius: 0.5rem;
 
     button {
-      padding: 0.5rem 2rem;
+      margin: 0;
+      padding: 0.5rem 0;
       position: relative;
       width: 33.333333%;
       background-color: transparent;
       border: 1px solid transparent;
       border-radius: 0.375rem;
-      font-weight: 600;
+      font-size: 0.875rem;
+      font-weight: 500;
       white-space: nowrap;
       color: #4b5563;
       cursor: pointer;
@@ -69,6 +73,26 @@ const PricingStyles = styled.div`
     border: 1px solid #f3f4f6;
     border-radius: 0.25rem;
   }
+
+  @media (max-width: 600px) {
+    .buttons {
+      flex-direction: column;
+      align-items: center;
+
+      button {
+        padding: 0.75rem 0;
+        width: 100%;
+      }
+    }
+
+    .table {
+      overflow-x: scroll;
+
+      table {
+        width: 636px;
+      }
+    }
+  }
 `;
 
 type ButtonProps = {
@@ -91,11 +115,11 @@ function Button({ label, category, active, setActive }: ButtonProps) {
 
 const columns = [
   'Quantity',
-  '1 Ink Color',
-  '2 Ink Colors',
-  '3 Ink Colors',
-  '4 Ink Colors',
-  '5 Ink Colors',
+  '1 Color',
+  '2 Colors',
+  '3 Colors',
+  '4 Colors',
+  '5 Colors',
 ];
 
 type activeState = 'tshirt' | 'hoodie' | 'crewneck';
@@ -107,7 +131,7 @@ export default function Pricing() {
     <PricingStyles>
       <div className="wrapper">
         <h2>Pricing</h2>
-        <p>A breakdown of our prices per quantity and number of colors.</p>
+        <p>A breakdown of our prices per quantity and number of ink colors.</p>
         <div className="buttons">
           <Button
             label="T-Shirts"

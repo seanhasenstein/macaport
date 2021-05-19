@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 const FooterStyles = styled.footer`
-  padding: 2rem 0;
+  padding: 2rem 1.5rem;
   width: 100%;
   background-color: #111827;
 
@@ -15,6 +15,10 @@ const FooterStyles = styled.footer`
     margin: 0;
     color: #747c8b;
     font-size: 0.875rem;
+  }
+
+  @media (max-width: 500px) {
+    text-align: center;
   }
 `;
 
