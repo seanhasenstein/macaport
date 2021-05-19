@@ -1,6 +1,8 @@
 import React from 'react';
 import Head from 'next/head';
 import { createGlobalStyle } from 'styled-components';
+import Header from './Header';
+import Footer from './Footer';
 
 const GlobalStyles = createGlobalStyle`
 @font-face {
@@ -47,7 +49,7 @@ html,
   font-family: 'Inter',-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
     letter-spacing: -0.011em;
-  background-color: #edf0f3;
+  background-color: #F9FAFB;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "cv02","cv03","cv04","cv09", "cv11";
 }
@@ -79,7 +81,9 @@ export default function Layout({
         <meta charSet="utf-8" />
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
       </Head>
+      <Header />
       {children}
+      <Footer />
     </>
   );
 }

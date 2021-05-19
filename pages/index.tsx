@@ -1,9 +1,14 @@
 import Layout from '../components/Layout';
+import Hero from '../components/Hero';
+import Colors from '../components/Colors';
+import Pricing from '../components/Pricing';
 
 export default function Home() {
   return (
     <Layout>
-      <h1>Welcome to Macaport!</h1>
+      <Hero />
+      <Colors />
+      <Pricing />
     </Layout>
   );
 }
