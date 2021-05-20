@@ -52,7 +52,7 @@ html,
   font-feature-settings: "cv02","cv03","cv04","cv09", "cv11";
 }
 
-html, body, button, input {
+html, body, button, input, textarea {
   font-family: 'Inter',-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
@@ -64,6 +64,16 @@ a {
 
 * {
   box-sizing: border-box;
+}
+
+.sr-only {
+  position: absolute;
+  clip: rect(1px, 1px, 1px, 1px);
+  padding: 0;
+  border: 0;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
 }
 `;
 

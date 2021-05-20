@@ -131,7 +131,10 @@ export default function Pricing() {
     <PricingStyles>
       <div className="wrapper">
         <h2>Pricing</h2>
-        <p>A breakdown of our prices per quantity and number of ink colors.</p>
+        <p>
+          The following is a breakdown of our prices per quantity and per number
+          of ink colors.
+        </p>
         <div className="buttons">
           <Button
             label="T-Shirts"
