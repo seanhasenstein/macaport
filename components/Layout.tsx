@@ -57,6 +57,13 @@ html, body, button, input, textarea {
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
 
+#__next {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
 a {
   color: inherit;
   text-decoration: none;

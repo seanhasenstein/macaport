@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 
 const FooterStyles = styled.footer`
+  margin-top: auto;
   padding: 2rem 1.5rem;
   width: 100%;
   background-color: #111827;

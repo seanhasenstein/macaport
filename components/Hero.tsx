@@ -34,7 +34,7 @@ const HeroStyles = styled.div`
     line-height: 1.625;
   }
 
-  .btn {
+  .button {
     padding: 0.75rem 2rem;
     display: inline-flex;
     background-color: #22272f;
@@ -81,7 +81,7 @@ export default function Hero() {
             special events, etc.
           </p>
           <Link href="#">
-            <a className="btn">Learn More</a>
+            <a className="button">Learn More</a>
           </Link>
         </div>
         <div className="hero-img">
