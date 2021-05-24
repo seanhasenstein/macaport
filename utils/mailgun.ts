@@ -35,7 +35,7 @@ export async function sendEmail({
 
     if (html) form.append('html', html);
     if (bcc) form.append('bcc', bcc);
-    if (replyTo) form.append('replyTo', replyTo);
+    if (replyTo) form.append('h:Reply-To', replyTo);
 
     const res = await fetch(endpoint, {
       method: 'post',

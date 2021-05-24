@@ -21,6 +21,7 @@ export default async function handler(
       to: `<seanhasenstein@gmail.com>`,
       from: `Macaport Contact Form <seanhasenstein@gmail.com>`,
       subject: `Contact Form Message [#${id}]`,
+      replyTo: req.body.email,
       text,
       html,
     });
