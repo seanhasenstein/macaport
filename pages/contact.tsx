@@ -91,6 +91,30 @@ const ContactStyles = styled.div`
     animation: spinner 0.6s linear infinite;
   }
 
+  .server-error {
+    margin: 1rem 0 0;
+    padding: 1.125rem;
+    display: flex;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: #cd2121;
+    background-color: #fef2f2;
+    border: 1px solid #fde0e0;
+    border-radius: 0.25rem;
+
+    a {
+      text-decoration: underline;
+    }
+
+    svg {
+      margin: 0 0.5rem 0 0;
+      flex-shrink: 0;
+      height: 1.375rem;
+      width: 1.375rem;
+      color: #f87171;
+    }
+  }
+
   @media (max-width: 500px) {
     .button {
       width: 100%;
@@ -234,7 +258,7 @@ const SuccessStyles = styled.div`
     margin: 0;
     height: 3rem;
     width: 3rem;
-    color: green;
+    color: #10b981;
   }
 
   h3 {
@@ -328,7 +352,7 @@ function Success() {
   );
 }
 
-type FormStatus = 'IDLE' | 'ERROR' | 'SUCCESS';
+type FormStatus = 'IDLE' | 'SUCCESS' | 'ERROR';
 
 export default function Contact() {
   const [serverError, setServerError] = React.useState();
@@ -394,7 +418,26 @@ export default function Contact() {
                 <button type="submit" className="button">
                   {isSubmitting ? <span className="spinner" /> : 'Send message'}
                 </button>
-                {serverError && <div className="error">{serverError}</div>}
+                {serverError && (
+                  <div className="server-error">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span>
+                      Oh no, something went wrong. If you continue to have
+                      problems please{' '}
+                      <a href="mailto:nick@macaport.com">contact us here</a>.
+                    </span>
+                  </div>
+                )}
               </Form>
             )}
           </Formik>
