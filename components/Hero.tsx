@@ -28,20 +28,34 @@ const HeroStyles = styled.div`
   }
 
   p {
-    margin: 1.125rem 0;
+    margin: 1.125rem 0 1.5rem;
     font-size: 1.125rem;
     color: #6b7280;
-    line-height: 1.625;
+    line-height: 1.5;
   }
 
   .button {
     padding: 0.75rem 2rem;
     display: inline-flex;
-    background-color: #22272f;
+    background-color: #253753;
     color: rgba(2255, 255, 255, 0.9);
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 500;
+    letter-spacing: 0.025em;
     border-radius: 0.25rem;
+    transition: all 150ms ease-in-out;
+
+    &:hover {
+      background-color: #2b4061;
+      color: rgba(255, 255, 255, 1);
+    }
+
+    &:focus {
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #2563eb 0px 0px 0px 4px,
+        rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+    }
   }
 
   .hero-img {
@@ -78,9 +92,9 @@ export default function Hero() {
           <p>
             Located in New London, Wisconsin, we specialize in custom screen
             printing for fundraisers, family reunions, clubs, sports teams,
-            special events, etc.
+            special events, and more.
           </p>
-          <Link href="#">
+          <Link href="/#colors">
             <a className="button">Learn More</a>
           </Link>
         </div>

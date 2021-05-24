@@ -167,11 +167,11 @@ const Color = styled.li<ColorProps>`
 export default function Colors() {
   return (
     <ColorsStyles>
-      <div className="wrapper">
+      <div className="wrapper" id="colors">
         <h2>Ink Colors</h2>
         <p>
-          These are the ink colors that we typically provide. However,
-          additional colors are available upon request.
+          These are the ink colors that we typically provide. Additional colors
+          are available upon request.
         </p>
         <ul className="color-list">
           {colors.map(c => (

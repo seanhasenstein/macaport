@@ -54,7 +54,7 @@ const ContactStyles = styled.div`
     display: inline-flex;
     justify-content: center;
     align-self: flex-end;
-    background-color: #1b2c49;
+    background-color: #253753;
     color: rgba(2255, 255, 255, 0.9);
     font-size: 0.875rem;
     font-weight: 500;
@@ -64,8 +64,15 @@ const ContactStyles = styled.div`
     cursor: pointer;
 
     &:hover {
-      background-color: #203557;
+      background-color: #2b4061;
       color: rgba(255, 255, 255, 1);
+    }
+
+    &:focus {
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #2563eb 0px 0px 0px 4px,
+        rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     }
   }
 

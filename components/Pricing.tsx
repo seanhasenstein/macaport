@@ -129,7 +129,7 @@ export default function Pricing() {
 
   return (
     <PricingStyles>
-      <div className="wrapper">
+      <div className="wrapper" id="pricing">
         <h2>Pricing</h2>
         <p>
           The following is a breakdown of our prices per quantity and per number

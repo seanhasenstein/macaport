@@ -15,7 +15,7 @@ const TableStyles = styled.table`
   th {
     padding: 0.75rem 0;
     font-size: 0.75rem;
-    font-weight: 500;
+    font-weight: 600;
     color: #d1d5db;
     text-align: center;
     text-transform: uppercase;
