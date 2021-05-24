@@ -18,8 +18,8 @@ export default async function handler(
     const { text, html } = generateContactFormEmail(req.body, id, timestamp);
 
     const result = await sendEmail({
-      to: `<seanhasenstein@gmail.com>`,
-      from: `Macaport Contact Form <seanhasenstein@gmail.com>`,
+      to: `<${process.env.CONTACT_FORM_TO}>`,
+      from: `Macaport Contact Form <${process.env.CONTACT_FORM_FROM}>`,
       subject: `Contact Form Message [#${id}]`,
       replyTo: req.body.email,
       text,
