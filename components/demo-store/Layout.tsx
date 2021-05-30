@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import Head from 'next/head';
-import { createGlobalStyle } from 'styled-components';
-import Header from './Header';
-import Footer from './Footer';
+import Link from 'next/link';
+import styled, { createGlobalStyle } from 'styled-components';
+
+type Props = {
+  children: ReactNode;
+  title?: string;
+};
 
 const GlobalStyles = createGlobalStyle`
-@font-face {
+  @font-face {
   font-family: 'Inter';
   font-style:  normal;
   font-weight: 400;
@@ -41,27 +45,20 @@ const GlobalStyles = createGlobalStyle`
        url("/fonts/Inter-Bold.woff?v=3.18") format("woff");
 }
 
-html,
+  html,
   body {
   padding: 0;
   margin: 0;
   font-size: 16px;
   letter-spacing: -0.011em;
-  background-color: #F9FAFB;
+  background-color: #fcfcfd;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "cv02","cv03","cv04","cv09", "cv11";
 }
 
-html, body, button, input, textarea {
+html, body, button, input, select {
   font-family: 'Inter',-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
-}
-
-#__next {
-  display: flex;
-  min-height: 100vh;
-  flex-direction: column;
-  justify-content: flex-start;
 }
 
 a {
@@ -142,26 +139,110 @@ select:focus {
 }
 `;
 
-type Props = {
-  children: React.ReactNode;
-  title?: string;
-};
+const LayoutStyles = styled.div`
+  width: 100%;
+`;
+
+const Nav = styled.nav`
+  padding: 0 1.5rem;
+  position: relative;
+  background-color: #fcfcfd;
+
+  .wrapper {
+    margin: 0 auto;
+    padding: 0.875rem 0;
+    max-width: 1280px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  svg {
+    height: 1.5rem;
+    width: 1.5rem;
+    color: #545c6b;
+  }
+
+  a:hover svg {
+    color: #181a1e;
+  }
+
+  .logo {
+    width: 12rem;
+  }
+
+  @media (max-width: 500px) {
+    .logo {
+      width: 9rem;
+    }
+  }
+`;
 
 export default function Layout({
   children,
-  title = 'Macaport | Screen Printing Company',
+  title = 'Macaport Demo Apparel Store',
 }: Props) {
   return (
-    <>
+    <LayoutStyles>
       <GlobalStyles />
       <Head>
         <title>{title}</title>
         <meta charSet="utf-8" />
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
       </Head>
-      <Header />
-      {children}
-      <Footer />
-    </>
+      <header>
+        <Nav>
+          <div className="wrapper">
+            <Link href="/demo-store">
+              <a title="Store Home">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                  />
+                </svg>
+              </a>
+            </Link>
+            <Link href="/demo-store">
+              <a>
+                <img
+                  src="/images/logo.png"
+                  alt="Sheboygan Lutheran logo"
+                  className="logo"
+                />
+              </a>
+            </Link>
+            <Link href="/demo-store/cart">
+              <a title="Cart">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+              </a>
+            </Link>
+          </div>
+        </Nav>
+      </header>
+      <div>{children}</div>
+      <footer />
+    </LayoutStyles>
   );
 }

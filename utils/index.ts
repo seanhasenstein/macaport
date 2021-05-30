@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import { CartItem } from '../interfaces';
 
 export function formatMoney(input: number) {
   return `$${(input / 100).toFixed(2)}`;
@@ -38,4 +39,88 @@ export function createId(prefix?: string | false, len = 14) {
   if (prefix) return `${prefix}_${id}`;
 
   return id;
+}
+
+// Demo store code...
+
+export function calculateCartSubtotal(items: CartItem[]) {
+  return items.reduce((total, item) => total + item.quantity! * item.price, 0);
+}
+
+export function calculateTransactionFee(subtotal: number) {
+  if (subtotal === 0) {
+    return 0;
+  }
+  return Math.ceil((subtotal + 30) / (1 - 0.029)) - subtotal;
+}
+
+export function calculateCartTotal(subtotal: number, transactionFee = 0) {
+  return subtotal + transactionFee;
+}
+
+export function formatToMoney(input: number, includeDecimal = false) {
+  const price = input / 100;
+
+  if (includeDecimal) {
+    return `$${price.toFixed(2)}`;
+  } else {
+    return `$${price}`;
+  }
+}
+
+export function slugify(input: string) {
+  let result = input;
+  // trim and convert to lowercase
+  // and replace all spaces with a dash
+  result = result.trim().toLowerCase().replace(/\s+/g, '-');
+  // remove all non alpha-numeric characters (but keep dashes)
+  result = result.replace(/[^0-9a-z-]/g, '');
+  // remove all multiple dashes (--, ---, etc.)
+  result = result.replace(/^-+|-+(?=-|$)/g, '');
+  // remove dash if it's the first character
+  result = result.replace(/^-/, '');
+  // remove dash if it's the last character
+  result = result.replace(/-$/, '');
+  return result;
+}
+
+const months = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+export function formatDate(input: string) {
+  const dateObj = new Date(input);
+  const month = months[dateObj.getMonth()];
+  const date = dateObj.getDate();
+  const year = dateObj.getFullYear();
+  return `${month} ${date}, ${year}`;
+}
+
+const NUM = '0123456789';
+
+export function createReceiptNumber() {
+  const rnd = crypto.randomBytes(11);
+  const value = new Array(11);
+  const charsLength = NUM.length;
+
+  for (let i = 0; i < value.length; i++) {
+    if (i === 5) {
+      value[5] = '-';
+    } else {
+      value[i] = NUM[rnd[i] % charsLength];
+    }
+  }
+
+  return value.join('');
 }

@@ -71,7 +71,7 @@ const HeaderStyles = styled.header`
     display: none;
   }
 
-  @media (max-width: 900px) {
+  @media (max-width: 950px) {
     nav {
       flex-direction: column;
       align-items: flex-start;
@@ -191,6 +191,7 @@ export default function Header() {
             <NavItem text="Home" href="/" />
             <NavItem text="Ink Colors" href="/#colors" />
             <NavItem text="Pricing" href="/#pricing" />
+            <NavItem text="Demo Store" href="/demo-store" />
             <NavItem text="Contact Us" href="/contact" />
           </ul>
         </nav>
