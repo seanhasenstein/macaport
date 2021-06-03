@@ -1,5 +1,6 @@
 import React from 'react';
 import { GetServerSideProps } from 'next';
+import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { useCart } from '../../../hooks/useCart';
 import { Store, Item } from '../../../interfaces';
@@ -107,8 +108,11 @@ const ProductStyles = styled.div`
     .primary-img {
       padding: 3rem 0;
       width: 100%;
-      background-color: #f4f4f5;
+      background-color: #fff;
       text-align: center;
+      border: 1px solid #e5e7eb;
+      box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+        rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
 
       img {
         max-width: 24rem;
@@ -125,7 +129,10 @@ const ProductStyles = styled.div`
 
       > div {
         padding: 2rem;
-        background-color: #f4f4f5;
+        background-color: #fff;
+        border: 1px solid #e5e7eb;
+        box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+          rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
 
         img {
           width: 100%;
@@ -320,13 +327,37 @@ const ProductStyles = styled.div`
 `;
 
 export default function Product({ store, product, active, error }: Props) {
+  const router = useRouter();
   const [showSidebar, setShowSidebar] = React.useState(false);
-  const [color, setColor] = React.useState(product.colors[0].label);
+  const [color, setColor] = React.useState(() => {
+    if (router.query.color) {
+      return Array.isArray(router.query.color)
+        ? router.query.color[0]
+        : router.query.color;
+    } else {
+      return product.colors[0].label;
+    }
+  });
+  const [primaryImage, setPrimaryImage] = React.useState(() => {
+    const c = product.colors.find(c => c.label === color);
+    return c?.image;
+  });
   const [size, setSize] = React.useState('DEFAULT');
   const [validationError, setValidationError] = React.useState<string>();
   const { addItem } = useCart();
 
-  console.log(addItem);
+  React.useEffect(() => {
+    router.push(
+      `/store/${store.slug}/${product.id}?color=${color}`,
+      undefined,
+      { shallow: true }
+    );
+    setPrimaryImage(() => {
+      const c = product.colors.find(c => c.label === color);
+      return c?.image;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [color]);
 
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setColor(e.target.value);
@@ -383,7 +414,7 @@ export default function Product({ store, product, active, error }: Props) {
         <div className="wrapper">
           <div className="images">
             <div className="primary-img">
-              <img src={product.image} alt={product.name} />
+              <img src={primaryImage} alt={`${color} ${product.name}`} />
             </div>
             <div className="secondary-imgs">
               <div>

@@ -1,7 +1,8 @@
-interface Color {
+export interface Color {
   id: number;
   label: string;
   hex: string;
+  image: string;
 }
 
 export interface Item {

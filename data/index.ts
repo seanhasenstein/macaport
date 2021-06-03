@@ -1424,7 +1424,6 @@ export const stores = [
         name: 'Short Sleeve Cotton T-Shirt',
         description:
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin dictum sagittis nibh vitae dignissim. Suspendisse et turpis efficitur, eleifend leo sed, consectetur ligula.',
-        image: '/images/tshirt.png',
         tag: 'Adult Sizes',
         price: 1500,
         sizes: ['S', 'M', 'L', 'XL', 'XXL'],
@@ -1433,21 +1432,29 @@ export const stores = [
             id: 1,
             label: 'White',
             hex: '#fff',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-cotton-white.jpg',
           },
           {
             id: 2,
             label: 'Grey',
             hex: '#d1d5db',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-cotton-grey.jpg',
           },
           {
             id: 3,
             label: 'Navy',
             hex: '#003366',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-cotton-navy.jpg',
           },
           {
             id: 4,
             label: 'Black',
             hex: '#000',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-cotton-black.jpg',
           },
         ],
         skus: [
@@ -1658,7 +1665,6 @@ export const stores = [
         name: 'Short Sleeve Dri-FIT T-Shirt',
         description:
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin dictum sagittis nibh vitae dignissim. Suspendisse et turpis efficitur, eleifend leo sed, consectetur ligula.',
-        image: '/images/tshirt.png',
         tag: 'Adult Sizes',
         price: 1700,
         sizes: ['S', 'M', 'L', 'XL', 'XXL'],
@@ -1667,21 +1673,29 @@ export const stores = [
             id: 1,
             label: 'White',
             hex: '#fff',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-dri-fit-white.jpg',
           },
           {
             id: 2,
             label: 'Grey',
             hex: '#d1d5db',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-dri-fit-grey.jpg',
           },
           {
             id: 3,
             label: 'Navy',
             hex: '#003366',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-dri-fit-navy.jpg',
           },
           {
             id: 4,
             label: 'Black',
             hex: '#000',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-dri-fit-black.jpg',
           },
         ],
         skus: [
@@ -1892,7 +1906,6 @@ export const stores = [
         name: 'Long Sleeve Cotton T-Shirt',
         description:
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin dictum sagittis nibh vitae dignissim. Suspendisse et turpis efficitur, eleifend leo sed, consectetur ligula.',
-        image: '/images/long-sleeve.png',
         tag: 'Adult Sizes',
         price: 2200,
         sizes: ['S', 'M', 'L', 'XL', 'XXL'],
@@ -1901,21 +1914,29 @@ export const stores = [
             id: 1,
             label: 'White',
             hex: '#fff',
+            image:
+              '/images/stores/new-london-hs-cc/long-sleeve-cotton-white.jpg',
           },
           {
             id: 2,
             label: 'Grey',
             hex: '#d1d5db',
+            image:
+              '/images/stores/new-london-hs-cc/long-sleeve-cotton-grey.jpg',
           },
           {
             id: 3,
             label: 'Navy',
             hex: '#003366',
+            image:
+              '/images/stores/new-london-hs-cc/long-sleeve-cotton-navy.jpg',
           },
           {
             id: 4,
             label: 'Black',
             hex: '#000',
+            image:
+              '/images/stores/new-london-hs-cc/long-sleeve-cotton-black.jpg',
           },
         ],
         skus: [
@@ -2126,7 +2147,6 @@ export const stores = [
         name: 'Cotton Crewneck Sweatshirt',
         description:
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin dictum sagittis nibh vitae dignissim. Suspendisse et turpis efficitur, eleifend leo sed, consectetur ligula.',
-        image: '/images/crewneck-sweatshirt.png',
         tag: 'Adult Sizes',
         price: 2800,
         sizes: ['S', 'M', 'L', 'XL', 'XXL'],
@@ -2135,21 +2155,25 @@ export const stores = [
             id: 1,
             label: 'White',
             hex: '#fff',
+            image: '/images/stores/new-london-hs-cc/crewneck-cotton-white.jpg',
           },
           {
             id: 2,
             label: 'Grey',
             hex: '#d1d5db',
+            image: '/images/stores/new-london-hs-cc/crewneck-cotton-grey.jpg',
           },
           {
             id: 3,
             label: 'Navy',
             hex: '#003366',
+            image: '/images/stores/new-london-hs-cc/crewneck-cotton-navy.jpg',
           },
           {
             id: 4,
             label: 'Black',
             hex: '#000',
+            image: '/images/stores/new-london-hs-cc/crewneck-cotton-black.jpg',
           },
         ],
         skus: [
@@ -2360,7 +2384,6 @@ export const stores = [
         name: 'Cotton Hooded Sweatshirt',
         description:
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin dictum sagittis nibh vitae dignissim. Suspendisse et turpis efficitur, eleifend leo sed, consectetur ligula.',
-        image: '/images/hooded-sweatshirt.png',
         tag: 'Adult Sizes',
         price: 3000,
         sizes: ['S', 'M', 'L', 'XL', 'XXL'],
@@ -2369,21 +2392,25 @@ export const stores = [
             id: 1,
             label: 'White',
             hex: '#fff',
+            image: '/images/stores/new-london-hs-cc/hooded-cotton-white.jpg',
           },
           {
             id: 2,
             label: 'Grey',
             hex: '#d1d5db',
+            image: '/images/stores/new-london-hs-cc/hooded-cotton-grey.jpg',
           },
           {
             id: 3,
             label: 'Navy',
             hex: '#003366',
+            image: '/images/stores/new-london-hs-cc/hooded-cotton-navy.jpg',
           },
           {
             id: 4,
             label: 'Black',
             hex: '#000',
+            image: '/images/stores/new-london-hs-cc/hooded-cotton-black.jpg',
           },
         ],
         skus: [
@@ -2594,7 +2621,6 @@ export const stores = [
         name: 'Dri-FIT Hooded Sweatshirt',
         description:
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin dictum sagittis nibh vitae dignissim. Suspendisse et turpis efficitur, eleifend leo sed, consectetur ligula.',
-        image: '/images/hooded-sweatshirt.png',
         tag: 'Adult Sizes',
         price: 4000,
         sizes: ['S', 'M', 'L', 'XL', 'XXL'],
@@ -2603,21 +2629,19 @@ export const stores = [
             id: 1,
             label: 'White',
             hex: '#fff',
+            image: '/images/stores/new-london-hs-cc/hooded-dri-fit-white.jpg',
           },
           {
             id: 2,
             label: 'Grey',
             hex: '#d1d5db',
+            image: '/images/stores/new-london-hs-cc/hooded-dri-fit-grey.jpg',
           },
           {
             id: 3,
             label: 'Navy',
             hex: '#003366',
-          },
-          {
-            id: 4,
-            label: 'Black',
-            hex: '#000',
+            image: '/images/stores/new-london-hs-cc/hooded-dri-fit-navy.jpg',
           },
         ],
         skus: [
@@ -2652,16 +2676,6 @@ export const stores = [
             },
           },
           {
-            id: 'sku_Q3t0iuzABsSKtO',
-            productId: 'prod_VzkXZZP3gDMG7m',
-            size: 'S',
-            color: {
-              id: 4,
-              label: 'Black',
-              hex: '#000',
-            },
-          },
-          {
             id: 'sku_3h2s5SmE15t3Eu',
             productId: 'prod_VzkXZZP3gDMG7m',
             size: 'M',
@@ -2689,16 +2703,6 @@ export const stores = [
               id: 3,
               label: 'Navy',
               hex: '#003366',
-            },
-          },
-          {
-            id: 'sku_BnFiiHZoNF224w',
-            productId: 'prod_VzkXZZP3gDMG7m',
-            size: 'M',
-            color: {
-              id: 4,
-              label: 'Black',
-              hex: '#000',
             },
           },
           {
@@ -2732,16 +2736,6 @@ export const stores = [
             },
           },
           {
-            id: 'sku_m5RKP1yb8pmhy6',
-            productId: 'prod_VzkXZZP3gDMG7m',
-            size: 'L',
-            color: {
-              id: 4,
-              label: 'Black',
-              hex: '#000',
-            },
-          },
-          {
             id: 'sku_ygOZ4ijjWLLwob',
             productId: 'prod_VzkXZZP3gDMG7m',
             size: 'XL',
@@ -2772,16 +2766,6 @@ export const stores = [
             },
           },
           {
-            id: 'sku_kEmJs0rRa45jfZ',
-            productId: 'prod_VzkXZZP3gDMG7m',
-            size: 'XL',
-            color: {
-              id: 4,
-              label: 'Black',
-              hex: '#000',
-            },
-          },
-          {
             id: 'sku_a8daqLxCW4KNI4',
             productId: 'prod_VzkXZZP3gDMG7m',
             size: 'XXL',
@@ -2809,16 +2793,6 @@ export const stores = [
               id: 3,
               label: 'Navy',
               hex: '#003366',
-            },
-          },
-          {
-            id: 'sku_6XcqJeKW3aKI5Y',
-            productId: 'prod_VzkXZZP3gDMG7m',
-            size: 'XXL',
-            color: {
-              id: 4,
-              label: 'Black',
-              hex: '#000',
             },
           },
         ],
@@ -2846,7 +2820,7 @@ export const stores = [
         name: 'Short Sleeve Cotton T-Shirt',
         description:
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin dictum sagittis nibh vitae dignissim. Suspendisse et turpis efficitur, eleifend leo sed, consectetur ligula.',
-        image: '/images/tshirt.png',
+        image: '/images/stores/new-london-hs-cc/short-sleeve-cotton-white.jpg',
         tag: 'Adult Sizes',
         price: 1500,
         sizes: ['S', 'M', 'L', 'XL', 'XXL'],
@@ -2855,21 +2829,29 @@ export const stores = [
             id: 1,
             label: 'White',
             hex: '#fff',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-cotton-white.jpg',
           },
           {
             id: 2,
             label: 'Grey',
             hex: '#d1d5db',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-cotton-grey.jpg',
           },
           {
             id: 3,
             label: 'Navy',
             hex: '#003366',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-cotton-navy.jpg',
           },
           {
             id: 4,
             label: 'Black',
             hex: '#000',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-cotton-black.jpg',
           },
         ],
         skus: [
@@ -3080,7 +3062,7 @@ export const stores = [
         name: 'Short Sleeve Dri-FIT T-Shirt',
         description:
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin dictum sagittis nibh vitae dignissim. Suspendisse et turpis efficitur, eleifend leo sed, consectetur ligula.',
-        image: '/images/tshirt.png',
+        image: '/images/stores/new-london-hs-cc/short-sleeve-dri-fit-white.jpg',
         tag: 'Adult Sizes',
         price: 1700,
         sizes: ['S', 'M', 'L', 'XL', 'XXL'],
@@ -3089,21 +3071,29 @@ export const stores = [
             id: 1,
             label: 'White',
             hex: '#fff',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-dri-fit-white.jpg',
           },
           {
             id: 2,
             label: 'Grey',
             hex: '#d1d5db',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-dri-fit-grey.jpg',
           },
           {
             id: 3,
             label: 'Navy',
             hex: '#003366',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-dri-fit-navy.jpg',
           },
           {
             id: 4,
             label: 'Black',
             hex: '#000',
+            image:
+              '/images/stores/new-london-hs-cc/short-sleeve-dri-fit-black.jpg',
           },
         ],
         skus: [
@@ -3314,7 +3304,7 @@ export const stores = [
         name: 'Long Sleeve Cotton T-Shirt',
         description:
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin dictum sagittis nibh vitae dignissim. Suspendisse et turpis efficitur, eleifend leo sed, consectetur ligula.',
-        image: '/images/long-sleeve.png',
+        image: '/images/stores/new-london-hs-cc/long-sleeve-cotton-white.jpg',
         tag: 'Adult Sizes',
         price: 2200,
         sizes: ['S', 'M', 'L', 'XL', 'XXL'],
@@ -3323,21 +3313,29 @@ export const stores = [
             id: 1,
             label: 'White',
             hex: '#fff',
+            image:
+              '/images/stores/new-london-hs-cc/long-sleeve-cotton-white.jpg',
           },
           {
             id: 2,
             label: 'Grey',
             hex: '#d1d5db',
+            image:
+              '/images/stores/new-london-hs-cc/long-sleeve-cotton-grey.jpg',
           },
           {
             id: 3,
             label: 'Navy',
             hex: '#003366',
+            image:
+              '/images/stores/new-london-hs-cc/long-sleeve-cotton-navy.jpg',
           },
           {
             id: 4,
             label: 'Black',
             hex: '#000',
+            image:
+              '/images/stores/new-london-hs-cc/long-sleeve-cotton-black.jpg',
           },
         ],
         skus: [
@@ -3548,7 +3546,7 @@ export const stores = [
         name: 'Cotton Crewneck Sweatshirt',
         description:
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin dictum sagittis nibh vitae dignissim. Suspendisse et turpis efficitur, eleifend leo sed, consectetur ligula.',
-        image: '/images/crewneck-sweatshirt.png',
+        image: '/images/stores/new-london-hs-cc/crewneck-cotton-white.jpg',
         tag: 'Adult Sizes',
         price: 2800,
         sizes: ['S', 'M', 'L', 'XL', 'XXL'],
@@ -3557,21 +3555,25 @@ export const stores = [
             id: 1,
             label: 'White',
             hex: '#fff',
+            image: '/images/stores/new-london-hs-cc/crewneck-cotton-white.jpg',
           },
           {
             id: 2,
             label: 'Grey',
             hex: '#d1d5db',
+            image: '/images/stores/new-london-hs-cc/crewneck-cotton-grey.jpg',
           },
           {
             id: 3,
             label: 'Navy',
             hex: '#003366',
+            image: '/images/stores/new-london-hs-cc/crewneck-cotton-navy.jpg',
           },
           {
             id: 4,
             label: 'Black',
             hex: '#000',
+            image: '/images/stores/new-london-hs-cc/crewneck-cotton-black.jpg',
           },
         ],
         skus: [
@@ -3782,7 +3784,7 @@ export const stores = [
         name: 'Cotton Hooded Sweatshirt',
         description:
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin dictum sagittis nibh vitae dignissim. Suspendisse et turpis efficitur, eleifend leo sed, consectetur ligula.',
-        image: '/images/hooded-sweatshirt.png',
+        image: '/images/stores/new-london-hs-cc/hooded-cotton-white.jpg',
         tag: 'Adult Sizes',
         price: 3000,
         sizes: ['S', 'M', 'L', 'XL', 'XXL'],
@@ -3791,21 +3793,25 @@ export const stores = [
             id: 1,
             label: 'White',
             hex: '#fff',
+            image: '/images/stores/new-london-hs-cc/hooded-cotton-white.jpg',
           },
           {
             id: 2,
             label: 'Grey',
             hex: '#d1d5db',
+            image: '/images/stores/new-london-hs-cc/hooded-cotton-grey.jpg',
           },
           {
             id: 3,
             label: 'Navy',
             hex: '#003366',
+            image: '/images/stores/new-london-hs-cc/hooded-cotton-navy.jpg',
           },
           {
             id: 4,
             label: 'Black',
             hex: '#000',
+            image: '/images/stores/new-london-hs-cc/hooded-cotton-black.jpg',
           },
         ],
         skus: [
@@ -4016,7 +4022,7 @@ export const stores = [
         name: 'Dri-FIT Hooded Sweatshirt',
         description:
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin dictum sagittis nibh vitae dignissim. Suspendisse et turpis efficitur, eleifend leo sed, consectetur ligula.',
-        image: '/images/hooded-sweatshirt.png',
+        image: '/images/stores/new-london-hs-cc/hooded-dri-fit-white.jpg',
         tag: 'Adult Sizes',
         price: 4000,
         sizes: ['S', 'M', 'L', 'XL', 'XXL'],
@@ -4025,21 +4031,19 @@ export const stores = [
             id: 1,
             label: 'White',
             hex: '#fff',
+            image: '/images/stores/new-london-hs-cc/hooded-dri-fit-white.jpg',
           },
           {
             id: 2,
             label: 'Grey',
             hex: '#d1d5db',
+            image: '/images/stores/new-london-hs-cc/hooded-dri-fit-grey.jpg',
           },
           {
             id: 3,
             label: 'Navy',
             hex: '#003366',
-          },
-          {
-            id: 4,
-            label: 'Black',
-            hex: '#000',
+            image: '/images/stores/new-london-hs-cc/hooded-dri-fit-navy.jpg',
           },
         ],
         skus: [
@@ -4074,16 +4078,6 @@ export const stores = [
             },
           },
           {
-            id: 'sku_Q3t0iuzABsSKtO',
-            productId: 'prod_VzkXZZP3gDMG7m',
-            size: 'S',
-            color: {
-              id: 4,
-              label: 'Black',
-              hex: '#000',
-            },
-          },
-          {
             id: 'sku_3h2s5SmE15t3Eu',
             productId: 'prod_VzkXZZP3gDMG7m',
             size: 'M',
@@ -4111,16 +4105,6 @@ export const stores = [
               id: 3,
               label: 'Navy',
               hex: '#003366',
-            },
-          },
-          {
-            id: 'sku_BnFiiHZoNF224w',
-            productId: 'prod_VzkXZZP3gDMG7m',
-            size: 'M',
-            color: {
-              id: 4,
-              label: 'Black',
-              hex: '#000',
             },
           },
           {
@@ -4154,16 +4138,6 @@ export const stores = [
             },
           },
           {
-            id: 'sku_m5RKP1yb8pmhy6',
-            productId: 'prod_VzkXZZP3gDMG7m',
-            size: 'L',
-            color: {
-              id: 4,
-              label: 'Black',
-              hex: '#000',
-            },
-          },
-          {
             id: 'sku_ygOZ4ijjWLLwob',
             productId: 'prod_VzkXZZP3gDMG7m',
             size: 'XL',
@@ -4191,16 +4165,6 @@ export const stores = [
               id: 3,
               label: 'Navy',
               hex: '#003366',
-            },
-          },
-          {
-            id: 'sku_kEmJs0rRa45jfZ',
-            productId: 'prod_VzkXZZP3gDMG7m',
-            size: 'XL',
-            color: {
-              id: 4,
-              label: 'Black',
-              hex: '#000',
             },
           },
           {
@@ -4233,16 +4197,6 @@ export const stores = [
               hex: '#003366',
             },
           },
-          {
-            id: 'sku_6XcqJeKW3aKI5Y',
-            productId: 'prod_VzkXZZP3gDMG7m',
-            size: 'XXL',
-            color: {
-              id: 4,
-              label: 'Black',
-              hex: '#000',
-            },
-          },
         ],
       },
     ],
@@ -4252,35 +4206,35 @@ export const stores = [
   },
 ];
 
-const order = {
-  _id: '60b3dfd9fe479900099c75a4',
-  orderId: '77413-10337',
-  items: [],
-  customer: {
-    firstName: 'Sean',
-    lastName: 'Hasenstein',
-    email: 'seanhasenstein@gmail.com',
-  },
-  summary: {
-    subtotal: 2800,
-    shipping: 0,
-    salesTax: 154,
-    total: 2954,
-  },
-  shippingAddress: '3201 Playbird Rd, Sheboygan, WI 53083',
-  transactionId: '2157047189',
-  createdAt: '2021-05-30T18:56:23.862Z',
-  updatedAt: '2021-05-30T18:56:23.862Z',
-};
+// const order = {
+//   _id: '60b3dfd9fe479900099c75a4',
+//   orderId: '77413-10337',
+//   items: [],
+//   customer: {
+//     firstName: 'Sean',
+//     lastName: 'Hasenstein',
+//     email: 'seanhasenstein@gmail.com',
+//   },
+//   summary: {
+//     subtotal: 2800,
+//     shipping: 0,
+//     salesTax: 154,
+//     total: 2954,
+//   },
+//   shippingAddress: '3201 Playbird Rd, Sheboygan, WI 53083',
+//   transactionId: '2157047189',
+//   createdAt: '2021-05-30T18:56:23.862Z',
+//   updatedAt: '2021-05-30T18:56:23.862Z',
+// };
 
-const orderItem = {
-  id: 'sku_JffkPeOXUwotBN',
-  name: 'Cotton Crewneck Sweatshirt',
-  genders: ['Men', 'Women'],
-  image: '/images/crewneck.png',
-  price: 2800,
-  color: 'Navy',
-  size: 'M',
-  quantity: 1,
-  itemTotal: 2800,
-};
+// const orderItem = {
+//   id: 'sku_JffkPeOXUwotBN',
+//   name: 'Cotton Crewneck Sweatshirt',
+//   genders: ['Men', 'Women'],
+//   image: '/images/crewneck.png',
+//   price: 2800,
+//   color: 'Navy',
+//   size: 'M',
+//   quantity: 1,
+//   itemTotal: 2800,
+// };
