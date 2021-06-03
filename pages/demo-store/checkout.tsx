@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { useCart } from '../../hooks/useCart';
 import useHasMounted from '../../hooks/useHasMounted';
-import Layout from '../../components/Layout';
+import Layout from '../../components/demo-store/Layout';
 import CheckoutForm from '../../components/demo-store/CheckoutForm';
 import CheckoutOrderItem from '../../components/demo-store/CheckoutOrderItem';
 import OrderTotals from '../../components/demo-store/OrderTotals';

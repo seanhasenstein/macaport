@@ -51,3 +51,20 @@ export interface Order {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export interface Store {
+  id: string;
+  name: string;
+  slug: string;
+  startDate: string;
+  closeDate: string;
+  contact: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  primaryShippingAddress: string;
+  products: Item[];
+  createdAt: string;
+  updatedAt: string;
+}

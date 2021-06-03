@@ -191,7 +191,7 @@ export default function Header() {
             <NavItem text="Home" href="/" />
             <NavItem text="Ink Colors" href="/#colors" />
             <NavItem text="Pricing" href="/#pricing" />
-            <NavItem text="Demo Store" href="/demo-store" />
+            <NavItem text="Stores" href="/stores" />
             <NavItem text="Contact Us" href="/contact" />
           </ul>
         </nav>

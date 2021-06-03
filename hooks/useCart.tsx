@@ -48,12 +48,12 @@ const initialState: any = {
   cartTotal: 0,
 };
 
-const CartContext = React.createContext<CartProviderState | undefined>(
-  initialState
-);
+const CartContext =
+  React.createContext<CartProviderState | undefined>(initialState);
 
 export const useCart = () => {
   const context = React.useContext(CartContext);
+
   if (!context) throw new Error('Expected to be wrapped in a CartProvider');
 
   return context;
@@ -127,9 +127,15 @@ const calculateItemTotals = (items: CartItem[]) => {
   }));
 };
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({
+  children,
+  cartId,
+}: {
+  children: React.ReactNode;
+  cartId: string;
+}) {
   const [savedCart, saveCart] = useLocalStorage(
-    'demo-cart-c895fafc',
+    cartId ? cartId : `cart-storage`,
     JSON.stringify(initialState)
   );
   const [state, dispatch] = React.useReducer(reducer, JSON.parse(savedCart));
