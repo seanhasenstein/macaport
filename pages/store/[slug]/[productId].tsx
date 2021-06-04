@@ -106,7 +106,7 @@ const ProductStyles = styled.div`
     align-items: center;
 
     .primary-img {
-      padding: 3rem 0;
+      padding: 3rem 2rem;
       width: 100%;
       background-color: #fff;
       text-align: center;
@@ -123,8 +123,8 @@ const ProductStyles = styled.div`
     .secondary-imgs {
       margin: 1rem 0;
       display: grid;
-      grid-auto-flow: column;
-      gap: 0 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+      gap: 1rem;
       width: 100%;
 
       > div {
@@ -148,7 +148,7 @@ const ProductStyles = styled.div`
   }
 
   .name {
-    margin: 0;
+    margin: 0 1.5rem 0 0;
     font-size: 1.25rem;
     font-weight: 500;
     color: #111827;
@@ -156,7 +156,7 @@ const ProductStyles = styled.div`
 
   .price {
     margin: 0;
-    font-size: 1rem;
+    font-size: 1.125rem;
     font-weight: 600;
     color: #111827;
   }
