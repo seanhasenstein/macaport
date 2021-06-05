@@ -44,7 +44,10 @@ export function createId(prefix?: string | false, len = 14) {
 // Demo store code...
 
 export function calculateCartSubtotal(items: CartItem[]) {
-  return items.reduce((total, item) => total + item.quantity! * item.price, 0);
+  return items.reduce(
+    (total, item) => total + item.quantity! * item.size.price,
+    0
+  );
 }
 
 export function calculateTransactionFee(subtotal: number) {

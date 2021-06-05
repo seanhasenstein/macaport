@@ -7,6 +7,12 @@ interface SecondaryImage {
   alt: string;
 }
 
+interface Size {
+  id: number;
+  label: string;
+  price: number;
+}
+
 interface Color {
   id: number;
   label: string;
@@ -21,8 +27,7 @@ interface ProductInput {
   name: string;
   description: string;
   tag: string;
-  price: number;
-  sizes: string[];
+  sizes: Size[];
   colors: Color[];
 }
 
@@ -34,7 +39,7 @@ interface Product extends ProductInput {
 interface Sku {
   id: string;
   productId: Product['id'];
-  size: string;
+  size: Size;
   color: SkuColor;
 }
 
@@ -56,7 +61,7 @@ function createId(prefix: string, len = 14) {
 }
 
 function createSkusFromSizesAndColors(
-  sizes: string[],
+  sizes: Size[],
   colors: Color[],
   productId: string
 ) {
@@ -81,7 +86,6 @@ function createProduct({
   name,
   description,
   tag,
-  price,
   sizes,
   colors,
 }: ProductInput): Product {
@@ -93,7 +97,6 @@ function createProduct({
     name,
     description,
     tag,
-    price,
     sizes,
     colors,
     skus,
@@ -108,8 +111,38 @@ const products: ProductInput[] = [
     name: 'Short Sleeve Cotton T-Shirt',
     description,
     tag: 'Adult Sizes',
-    price: 1500,
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    sizes: [
+      {
+        id: 1,
+        label: 'S',
+        price: 1500,
+      },
+      {
+        id: 2,
+        label: 'M',
+        price: 1500,
+      },
+      {
+        id: 3,
+        label: 'L',
+        price: 1500,
+      },
+      {
+        id: 4,
+        label: 'XL',
+        price: 1500,
+      },
+      {
+        id: 5,
+        label: 'XXL',
+        price: 1700,
+      },
+      {
+        id: 6,
+        label: 'XXXL',
+        price: 1900,
+      },
+    ],
     colors: [
       {
         id: 1,
@@ -193,8 +226,38 @@ const products: ProductInput[] = [
     name: 'Short Sleeve Dri-FIT T-Shirt',
     description,
     tag: 'Adult Sizes',
-    price: 1700,
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    sizes: [
+      {
+        id: 1,
+        label: 'S',
+        price: 1700,
+      },
+      {
+        id: 2,
+        label: 'M',
+        price: 1700,
+      },
+      {
+        id: 3,
+        label: 'L',
+        price: 1700,
+      },
+      {
+        id: 4,
+        label: 'XL',
+        price: 1700,
+      },
+      {
+        id: 5,
+        label: 'XXL',
+        price: 1900,
+      },
+      {
+        id: 6,
+        label: 'XXXL',
+        price: 2000,
+      },
+    ],
     colors: [
       {
         id: 1,
@@ -234,8 +297,38 @@ const products: ProductInput[] = [
     name: 'Long Sleeve Cotton T-Shirt',
     description,
     tag: 'Adult Sizes',
-    price: 2200,
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    sizes: [
+      {
+        id: 1,
+        label: 'S',
+        price: 2200,
+      },
+      {
+        id: 2,
+        label: 'M',
+        price: 2200,
+      },
+      {
+        id: 3,
+        label: 'L',
+        price: 2200,
+      },
+      {
+        id: 4,
+        label: 'XL',
+        price: 2200,
+      },
+      {
+        id: 5,
+        label: 'XXL',
+        price: 2400,
+      },
+      {
+        id: 6,
+        label: 'XXXL',
+        price: 2500,
+      },
+    ],
     colors: [
       {
         id: 1,
@@ -275,8 +368,38 @@ const products: ProductInput[] = [
     name: 'Cotton Crewneck Sweatshirt',
     description,
     tag: 'Adult Sizes',
-    price: 2800,
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    sizes: [
+      {
+        id: 1,
+        label: 'S',
+        price: 2800,
+      },
+      {
+        id: 2,
+        label: 'M',
+        price: 2800,
+      },
+      {
+        id: 3,
+        label: 'L',
+        price: 2800,
+      },
+      {
+        id: 4,
+        label: 'XL',
+        price: 2800,
+      },
+      {
+        id: 5,
+        label: 'XXL',
+        price: 3000,
+      },
+      {
+        id: 6,
+        label: 'XXXL',
+        price: 3100,
+      },
+    ],
     colors: [
       {
         id: 1,
@@ -316,8 +439,38 @@ const products: ProductInput[] = [
     name: 'Cotton Hooded Sweatshirt',
     description,
     tag: 'Adult Sizes',
-    price: 3000,
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    sizes: [
+      {
+        id: 1,
+        label: 'S',
+        price: 3000,
+      },
+      {
+        id: 2,
+        label: 'M',
+        price: 3000,
+      },
+      {
+        id: 3,
+        label: 'L',
+        price: 3000,
+      },
+      {
+        id: 4,
+        label: 'XL',
+        price: 3000,
+      },
+      {
+        id: 5,
+        label: 'XXL',
+        price: 3200,
+      },
+      {
+        id: 6,
+        label: 'XXXL',
+        price: 3400,
+      },
+    ],
     colors: [
       {
         id: 1,
@@ -353,8 +506,38 @@ const products: ProductInput[] = [
     name: 'Dri-FIT Hooded Sweatshirt',
     description,
     tag: 'Adult Sizes',
-    price: 4000,
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    sizes: [
+      {
+        id: 1,
+        label: 'S',
+        price: 4000,
+      },
+      {
+        id: 2,
+        label: 'M',
+        price: 4000,
+      },
+      {
+        id: 3,
+        label: 'L',
+        price: 4000,
+      },
+      {
+        id: 4,
+        label: 'XL',
+        price: 4000,
+      },
+      {
+        id: 5,
+        label: 'XXL',
+        price: 4300,
+      },
+      {
+        id: 6,
+        label: 'XXXL',
+        price: 4500,
+      },
+    ],
     colors: [
       {
         id: 1,
@@ -388,7 +571,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       name: p.name,
       description: p.description,
       tag: p.tag,
-      price: p.price,
       sizes: p.sizes,
       colors: p.colors,
     });

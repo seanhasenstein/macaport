@@ -4,6 +4,12 @@ type SecondaryImage = {
   alt: string;
 };
 
+export interface Size {
+  id: number;
+  label: string;
+  price: number;
+}
+
 export interface Color {
   id: number;
   label: string;
@@ -19,8 +25,7 @@ export interface Item {
   name: string;
   description: string;
   tag: string;
-  price: number;
-  sizes: string[];
+  sizes: Size[];
   colors: Color[];
   skus: Sku[];
 }
@@ -29,14 +34,14 @@ export interface Sku {
   id: string;
   productId: Item['id'];
   color: SkuColor;
-  size: string;
+  size: Size;
 }
 
 export interface CartItem extends Item {
   id: string;
   productId: string;
   color: string;
-  size: string;
+  size: Size;
   image?: string;
   quantity?: number;
   itemTotal?: number;

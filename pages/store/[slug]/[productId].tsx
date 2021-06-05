@@ -3,7 +3,7 @@ import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { useCart } from '../../../hooks/useCart';
-import { Store, Item } from '../../../interfaces';
+import { Store, Item, Size } from '../../../interfaces';
 import { formatToMoney } from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
 import ProductSidebar from '../../../components/store/ProductSidebar';
@@ -207,7 +207,8 @@ const ProductStyles = styled.div`
         text-align: center;
       }
 
-      &.checked {
+      &.checked,
+      &.checked:hover {
         background-color: #202329;
         border-color: #202329;
 
@@ -218,6 +219,7 @@ const ProductStyles = styled.div`
 
       &:hover {
         border-color: #656e81;
+        background-color: #fff;
       }
 
       input {
@@ -341,7 +343,11 @@ export default function Product({ store, product, active, error }: Props) {
     const c = product.colors.find(c => c.label === color);
     return c?.secondaryImages;
   });
-  const [size, setSize] = React.useState('DEFAULT');
+  const [size, setSize] = React.useState<Size>({
+    id: 9999,
+    label: 'DEFAULT',
+    price: 0,
+  });
   const [validationError, setValidationError] = React.useState<string>();
   const { addItem } = useCart();
 
@@ -369,20 +375,27 @@ export default function Product({ store, product, active, error }: Props) {
   };
 
   const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (validationError && e.target.value !== 'DEFAULT')
+    if (validationError && e.target.value !== undefined)
       setValidationError(undefined);
+    const s = product.sizes.find(s => s.label === e.target.value);
 
-    setSize(e.target.value);
+    if (!s) {
+      // todo: look at this error and figure out if its the best way to alert user
+      // should I setSize(undefined)?
+      throw new Error('No size was found!');
+    }
+
+    setSize(s);
   };
 
   const handleButtonClick = () => {
-    if (size === 'DEFAULT') {
+    if (size.label === 'DEFAULT') {
       setValidationError('Please select a size');
       return;
     }
 
     const sku = product.skus.find(
-      sku => sku.size === size && sku.color.label === color
+      sku => sku.size.label === size.label && sku.color.label === color
     );
 
     // todo: figure out what to do when no sku or item is found
@@ -393,7 +406,7 @@ export default function Product({ store, product, active, error }: Props) {
         productId: product.id,
         image: primaryImage,
         color,
-        size,
+        size: sku.size,
       });
     setShowSidebar(true);
   };
@@ -420,7 +433,9 @@ export default function Product({ store, product, active, error }: Props) {
         <div className="wrapper">
           <div className="mobile-header">
             <h2 className="name">{product.name}</h2>
-            <h3 className="price">{formatToMoney(product.price)}</h3>
+            <h3 className="price">
+              {formatToMoney(size ? size.price : product.sizes[0].price)}
+            </h3>
           </div>
           <div className="images">
             <div className="primary-img">
@@ -438,7 +453,9 @@ export default function Product({ store, product, active, error }: Props) {
           <div className="main">
             <div className="large-header">
               <h2 className="name">{product.name}</h2>
-              <h3 className="price">{formatToMoney(product.price)}</h3>
+              <h3 className="price">
+                {formatToMoney(size ? size.price : product.sizes[0].price)}
+              </h3>
             </div>
             <div className="colors">
               <h4>Colors</h4>
@@ -459,17 +476,19 @@ export default function Product({ store, product, active, error }: Props) {
               <div className="grid">
                 {product.sizes.map(s => (
                   <div
-                    key={s}
-                    className={`size ${size === s ? 'checked' : ''}`}
+                    key={s.id}
+                    className={`size ${
+                      size && size.label === s.label ? 'checked' : ''
+                    }`}
                   >
-                    <label htmlFor={s}>{s}</label>
+                    <label htmlFor={s.label}>{s.label}</label>
                     <input
                       type="radio"
-                      value={s}
+                      value={s.label}
+                      checked={size && size.label === s.label}
                       onChange={handleSizeChange}
-                      checked={size === s}
-                      name={s}
-                      id={s}
+                      name={s.label}
+                      id={s.label}
                       tabIndex={-1}
                     />
                   </div>
@@ -516,7 +535,6 @@ export default function Product({ store, product, active, error }: Props) {
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
-    console.log(context.query);
     const store = stores.find(s => s.slug === context.query.slug);
 
     if (!store) {

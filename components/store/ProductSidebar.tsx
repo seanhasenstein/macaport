@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { formatToMoney } from '../../utils';
-import { Item } from '../../interfaces';
+import { Item, Size } from '../../interfaces';
 import Button from './Button';
 
 const ProductSidebarStyles = styled.div`
@@ -174,7 +174,7 @@ const ProductSidebarStyles = styled.div`
 type Props = {
   item: Item;
   color: string;
-  size: string;
+  size?: Size;
   image: string | undefined;
   isSidebarOpen: boolean;
   closeSidebar: () => void;
@@ -215,6 +215,11 @@ export default function ProductSidebar({
       };
     }
   }, [closeSidebar, isSidebarOpen]);
+
+  if (!size) {
+    // todo: figure out best way to handle this situation (if no size is passed to productSidebar)
+    return null;
+  }
 
   return (
     <ProductSidebarStyles>
@@ -259,9 +264,9 @@ export default function ProductSidebar({
               <div className="item-details">
                 <h3 className="item-name">{item.name}</h3>
                 <p className="item-size">
-                  Color: {color} | Size: {size}
+                  Color: {color} | Size: {size.label}
                 </p>
-                <p className="item-price">{formatToMoney(item.price, true)}</p>
+                <p className="item-price">{formatToMoney(size.price, true)}</p>
               </div>
             </div>
             <div className="actions">

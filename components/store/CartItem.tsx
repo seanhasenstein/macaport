@@ -162,10 +162,16 @@ export default function CartItem({ item }: Props) {
 
   const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const sku = item.skus.find(
-      sku => sku.size === e.target.value && sku.color.label === item.color
+      sku => sku.size.label === e.target.value && sku.color.label === item.color
     );
 
-    setSize(e.target.value);
+    if (!sku) {
+      // todo: look at this and figure out how to alert the user if no sku is found
+      // possible message: 'an error has occured, please refresh and try again'.
+      throw new Error('No sku found!');
+    }
+
+    setSize(sku.size);
     updateItem(item.id, {
       id: sku?.id,
       prevId: item.id,
@@ -198,7 +204,7 @@ export default function CartItem({ item }: Props) {
           </a>
         </Link>
         <p className="secondary">Color: {item.color}</p>
-        <p className="price">{formatToMoney(item.price)}</p>
+        <p className="price">{formatToMoney(item.size.price)}</p>
       </div>
       <div className="inputs">
         <div className="size">
@@ -206,12 +212,12 @@ export default function CartItem({ item }: Props) {
           <select
             name="size"
             id="size"
-            value={size}
+            value={size.label}
             onChange={handleSizeChange}
             onBlur={handleSizeChange}
           >
             {item.sizes.map(size => (
-              <option key={size} value={size}>
+              <option key={size.id} value={size.label}>
                 {size}
               </option>
             ))}

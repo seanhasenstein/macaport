@@ -123,7 +123,7 @@ const calculateTotalItems = (items: CartItem[]) => {
 const calculateItemTotals = (items: CartItem[]) => {
   return items.map(item => ({
     ...item,
-    itemTotal: item.price * item.quantity!,
+    itemTotal: item.size.price * item.quantity!,
   }));
 };
 
@@ -157,9 +157,9 @@ export function CartProvider({
 
     const currentItem = state.items.find((i: CartItem) => i.id === item.id);
 
-    if (!currentItem && !Object.hasOwnProperty.call(item, 'price')) {
-      throw new Error('You must pass a `price` for new items');
-    }
+    // if (!currentItem && !Object.hasOwnProperty.call(item, 'price')) {
+    //   throw new Error('You must pass a `price` for new items');
+    // }
 
     if (!currentItem) {
       const payload = { ...item, quantity };

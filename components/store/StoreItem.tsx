@@ -121,7 +121,7 @@ export default function StoreItem({ item, storeSlug }: Props) {
           <div className="details">
             <h3 className="primary">{item.name}</h3>
             <h4 className="secondary">{item.tag}</h4>
-            <h4 className="price">{formatToMoney(item.price)}</h4>
+            <h4 className="price">{formatToMoney(item.sizes[0].price)}</h4>
             <div className="colors">
               {item.colors.map(c => (
                 <Color
