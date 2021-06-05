@@ -1,16 +1,24 @@
+type SecondaryImage = {
+  id: number;
+  url: string;
+  alt: string;
+};
+
 export interface Color {
   id: number;
   label: string;
   hex: string;
-  image: string;
+  primaryImage: string;
+  secondaryImages?: SecondaryImage[];
 }
+
+type SkuColor = Omit<Color, 'hex' | 'primaryImage' | 'secondaryImages'>;
 
 export interface Item {
   id: string;
   name: string;
   description: string;
   tag: string;
-  image: string;
   price: number;
   sizes: string[];
   colors: Color[];
@@ -20,7 +28,7 @@ export interface Item {
 export interface Sku {
   id: string;
   productId: Item['id'];
-  color: Color;
+  color: SkuColor;
   size: string;
 }
 
@@ -29,6 +37,7 @@ export interface CartItem extends Item {
   productId: string;
   color: string;
   size: string;
+  image?: string;
   quantity?: number;
   itemTotal?: number;
 }
@@ -58,7 +67,7 @@ export interface Store {
   name: string;
   slug: string;
   startDate: string;
-  closeDate: string;
+  closeDate: string | null;
   contact: {
     name: string;
     email: string;

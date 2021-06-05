@@ -184,7 +184,11 @@ export default function CartItem({ item }: Props) {
     <CartItemStyles>
       <Link href={`/demo-store/product/${item.productId}`}>
         <a>
-          <img src={item.image} alt={item.name} className="image" />
+          <img
+            src={item.image}
+            alt={`${item.color} ${item.name}`}
+            className="image"
+          />
         </a>
       </Link>
       <div className="item-details">

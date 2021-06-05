@@ -78,7 +78,9 @@ export default function Stores({ stores }: Props) {
                   <div className="item">
                     <span className="store-name">{s.name}</span>
                     <span className="store-close-date">
-                      {`${formatDate(s.closeDate)} at midnight (CT)`}
+                      {s.closeDate
+                        ? `${formatDate(s.closeDate)} at midnight (CT)`
+                        : 'Permanently Open'}
                     </span>
                   </div>
                 </a>
@@ -94,8 +96,9 @@ export default function Stores({ stores }: Props) {
 export const getServerSideProps: GetServerSideProps = async () => {
   const activeStores = stores.filter(s => {
     const now = new Date();
-    const isActive = new Date(s.closeDate) > now;
-    if (isActive) return s;
+    const isActive = s.closeDate === null ? true : new Date(s.closeDate) > now;
+
+    return isActive;
   });
 
   return { props: { stores: activeStores } };

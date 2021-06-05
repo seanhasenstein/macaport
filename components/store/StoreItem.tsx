@@ -114,7 +114,7 @@ export default function StoreItem({ item, storeSlug }: Props) {
         <a className="item">
           <div className="img-wrapper">
             <img
-              src={activeColor.image}
+              src={activeColor.primaryImage}
               alt={`${activeColor.label} ${item.name}`}
             />
           </div>

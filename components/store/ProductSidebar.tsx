@@ -175,6 +175,7 @@ type Props = {
   item: Item;
   color: string;
   size: string;
+  image: string | undefined;
   isSidebarOpen: boolean;
   closeSidebar: () => void;
 };
@@ -183,6 +184,7 @@ export default function ProductSidebar({
   item,
   color,
   size,
+  image,
   isSidebarOpen,
   closeSidebar,
 }: Props) {
@@ -252,7 +254,7 @@ export default function ProductSidebar({
           <div className="main">
             <div className="item">
               <div className="item-img">
-                <img src={item.image} alt={item.name} />
+                <img src={image} alt={`${color} ${item.name}`} />
               </div>
               <div className="item-details">
                 <h3 className="item-name">{item.name}</h3>

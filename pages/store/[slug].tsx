@@ -79,7 +79,11 @@ export default function Store({ store, active, error }: Props) {
       <StoreStyles>
         <h2>{store.name}</h2>
         <p>
-          This store closes on {formatDate(store.closeDate)} at midnight (CT).
+          {store.closeDate === null
+            ? 'This store is permanently open.'
+            : `This store closes on ${formatDate(
+                store.closeDate
+              )} at midnight (CT).`}
         </p>
         <div className="items">
           {store.products.map((p: Item) => (
@@ -100,7 +104,8 @@ export const getServerSideProps: GetServerSideProps = async context => {
     }
 
     const now = new Date();
-    const storeIsActive = new Date(store.closeDate) > now;
+    const storeIsActive =
+      store.closeDate === null ? true : new Date(store.closeDate) > now;
 
     if (storeIsActive) {
       return {
@@ -108,7 +113,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    return { props: { store: 'undefined', active: false } };
+    return { props: { store: null, active: false } };
   } catch (err) {
     return {
       props: { error: err.message },

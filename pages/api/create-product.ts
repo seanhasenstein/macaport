@@ -1,16 +1,25 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import * as crypto from 'crypto';
 
+interface SecondaryImage {
+  id: number;
+  url: string;
+  alt: string;
+}
+
 interface Color {
   id: number;
   label: string;
   hex: string;
+  primaryImage: string;
+  secondaryImages: SecondaryImage[];
 }
+
+type SkuColor = Omit<Color, 'hex' | 'primaryImage' | 'secondaryImages'>;
 
 interface ProductInput {
   name: string;
   description: string;
-  image: string;
   tag: string;
   price: number;
   sizes: string[];
@@ -26,7 +35,7 @@ interface Sku {
   id: string;
   productId: Product['id'];
   size: string;
-  color: Color;
+  color: SkuColor;
 }
 
 const ALPHA_NUM =
@@ -46,32 +55,19 @@ function createId(prefix: string, len = 14) {
   return `${prefix}_${id}`;
 }
 
-// function createSkusArray(skus: string[], productId: string) {
-//   return skus.map(sku => {
-//     const id = createId('sku');
-
-//     return { id, productId, size: sku };
-//   });
-// }
-
-function createSkusFromSizeAndColor(
+function createSkusFromSizesAndColors(
   sizes: string[],
   colors: Color[],
   productId: string
 ) {
-  // Every size -> color combo needs to be assigned as a sku
-  // iterate over sizes
-  // for every size iterate over every color
-  // asign the sku
-
-  // need to return an array of skus
-
   let skus: Sku[] = [];
 
   sizes.forEach(s => {
     const skusResult = colors.map(c => {
       const id = createId('sku');
-      return { id, productId, size: s, color: c };
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { hex, primaryImage, secondaryImages, ...color } = c;
+      return { id, productId, size: s, color };
     });
 
     skus = [...skus, ...skusResult];
@@ -84,20 +80,18 @@ function createSkusFromSizeAndColor(
 function createProduct({
   name,
   description,
-  image,
   tag,
   price,
   sizes,
   colors,
 }: ProductInput): Product {
   const id = createId('prod');
-  const skus = createSkusFromSizeAndColor(sizes, colors, id);
+  const skus = createSkusFromSizesAndColors(sizes, colors, id);
 
   return {
     id,
     name,
     description,
-    image,
     tag,
     price,
     sizes,
@@ -113,112 +107,286 @@ const products: ProductInput[] = [
   {
     name: 'Short Sleeve Cotton T-Shirt',
     description,
-    image: '/images/tshirt.png',
     tag: 'Adult Sizes',
     price: 1500,
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     colors: [
-      { id: 1, label: 'White', hex: '#fff' },
-      { id: 2, label: 'Grey', hex: '#ccc' },
-      { id: 3, label: 'Navy', hex: '#003366' },
-      { id: 4, label: 'Black', hex: '#000' },
+      {
+        id: 1,
+        label: 'White',
+        hex: '#fff',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/short-sleeve-cotton-white.jpg',
+        secondaryImages: [
+          {
+            id: 1,
+            url: '/images/stores/new-london-hs-cc/short-sleeve-cotton-white.jpg',
+            alt: 'Back of white short sleeve cotton t-shirt',
+          },
+          {
+            id: 2,
+            url: '/images/stores/new-london-hs-cc/short-sleeve-cotton-white.jpg',
+            alt: 'Side of white short sleeve cotton t-shirt',
+          },
+        ],
+      },
+      {
+        id: 2,
+        label: 'Grey',
+        hex: '#ccc',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/short-sleeve-cotton-grey.jpg',
+        secondaryImages: [
+          {
+            id: 1,
+            url: '/images/stores/new-london-hs-cc/short-sleeve-cotton-grey.jpg',
+            alt: 'Back of white short sleeve cotton t-shirt',
+          },
+          {
+            id: 2,
+            url: '/images/stores/new-london-hs-cc/short-sleeve-cotton-grey.jpg',
+            alt: 'Side of white short sleeve cotton t-shirt',
+          },
+        ],
+      },
+      {
+        id: 3,
+        label: 'Navy',
+        hex: '#003366',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/short-sleeve-cotton-navy.jpg',
+        secondaryImages: [
+          {
+            id: 1,
+            url: '/images/stores/new-london-hs-cc/short-sleeve-cotton-navy.jpg',
+            alt: 'Back of white short sleeve cotton t-shirt',
+          },
+          {
+            id: 2,
+            url: '/images/stores/new-london-hs-cc/short-sleeve-cotton-navy.jpg',
+            alt: 'Side of white short sleeve cotton t-shirt',
+          },
+        ],
+      },
+      {
+        id: 4,
+        label: 'Black',
+        hex: '#000',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/short-sleeve-cotton-black.jpg',
+        secondaryImages: [
+          {
+            id: 1,
+            url: '/images/stores/new-london-hs-cc/short-sleeve-cotton-black.jpg',
+            alt: 'Back of white short sleeve cotton t-shirt',
+          },
+          {
+            id: 2,
+            url: '/images/stores/new-london-hs-cc/short-sleeve-cotton-black.jpg',
+            alt: 'Side of white short sleeve cotton t-shirt',
+          },
+        ],
+      },
     ],
   },
   {
     name: 'Short Sleeve Dri-FIT T-Shirt',
     description,
-    image: '/images/tshirt.png',
     tag: 'Adult Sizes',
     price: 1700,
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     colors: [
-      { id: 1, label: 'White', hex: '#fff' },
-      { id: 2, label: 'Grey', hex: '#ccc' },
-      { id: 3, label: 'Navy', hex: '#003366' },
-      { id: 4, label: 'Black', hex: '#000' },
+      {
+        id: 1,
+        label: 'White',
+        hex: '#fff',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/short-sleeve-dri-fit-white.jpg',
+        secondaryImages: [],
+      },
+      {
+        id: 2,
+        label: 'Grey',
+        hex: '#ccc',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/short-sleeve-dri-fit-grey.jpg',
+        secondaryImages: [],
+      },
+      {
+        id: 3,
+        label: 'Navy',
+        hex: '#003366',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/short-sleeve-dri-fit-navy.jpg',
+        secondaryImages: [],
+      },
+      {
+        id: 4,
+        label: 'Black',
+        hex: '#000',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/short-sleeve-dri-fit-black.jpg',
+        secondaryImages: [],
+      },
     ],
   },
   {
     name: 'Long Sleeve Cotton T-Shirt',
     description,
-    image: '/images/long-sleeve.png',
     tag: 'Adult Sizes',
     price: 2200,
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     colors: [
-      { id: 1, label: 'White', hex: '#fff' },
-      { id: 2, label: 'Grey', hex: '#ccc' },
-      { id: 3, label: 'Navy', hex: '#003366' },
-      { id: 4, label: 'Black', hex: '#000' },
+      {
+        id: 1,
+        label: 'White',
+        hex: '#fff',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/long-sleeve-cotton-white.jpg',
+        secondaryImages: [],
+      },
+      {
+        id: 2,
+        label: 'Grey',
+        hex: '#ccc',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/long-sleeve-cotton-grey.jpg',
+        secondaryImages: [],
+      },
+      {
+        id: 3,
+        label: 'Navy',
+        hex: '#003366',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/long-sleeve-cotton-navy.jpg',
+        secondaryImages: [],
+      },
+      {
+        id: 4,
+        label: 'Black',
+        hex: '#000',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/long-sleeve-cotton-black.jpg',
+        secondaryImages: [],
+      },
     ],
   },
   {
     name: 'Cotton Crewneck Sweatshirt',
     description,
-    image: '/images/crewneck-sweatshirt.png',
     tag: 'Adult Sizes',
     price: 2800,
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     colors: [
-      { id: 1, label: 'White', hex: '#fff' },
-      { id: 2, label: 'Grey', hex: '#ccc' },
-      { id: 3, label: 'Navy', hex: '#003366' },
-      { id: 4, label: 'Black', hex: '#000' },
+      {
+        id: 1,
+        label: 'White',
+        hex: '#fff',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/crewneck-cotton-white.jpg',
+        secondaryImages: [],
+      },
+      {
+        id: 2,
+        label: 'Grey',
+        hex: '#ccc',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/crewneck-cotton-grey.jpg',
+        secondaryImages: [],
+      },
+      {
+        id: 3,
+        label: 'Navy',
+        hex: '#003366',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/crewneck-cotton-navy.jpg',
+        secondaryImages: [],
+      },
+      {
+        id: 4,
+        label: 'Black',
+        hex: '#000',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/crewneck-cotton-black.jpg',
+        secondaryImages: [],
+      },
     ],
   },
   {
     name: 'Cotton Hooded Sweatshirt',
     description,
-    image: '/images/hooded-sweatshirt.png',
     tag: 'Adult Sizes',
     price: 3000,
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     colors: [
-      { id: 1, label: 'White', hex: '#fff' },
-      { id: 2, label: 'Grey', hex: '#ccc' },
-      { id: 3, label: 'Navy', hex: '#003366' },
-      { id: 4, label: 'Black', hex: '#000' },
+      {
+        id: 1,
+        label: 'White',
+        hex: '#fff',
+        primaryImage: '/images/stores/new-london-hs-cc/hooded-cotton-white.jpg',
+        secondaryImages: [],
+      },
+      {
+        id: 2,
+        label: 'Grey',
+        hex: '#ccc',
+        primaryImage: '/images/stores/new-london-hs-cc/hooded-cotton-grey.jpg',
+        secondaryImages: [],
+      },
+      {
+        id: 3,
+        label: 'Navy',
+        hex: '#003366',
+        primaryImage: '/images/stores/new-london-hs-cc/hooded-cotton-navy.jpg',
+        secondaryImages: [],
+      },
+      {
+        id: 4,
+        label: 'Black',
+        hex: '#000',
+        primaryImage: '/images/stores/new-london-hs-cc/hooded-cotton-black.jpg',
+        secondaryImages: [],
+      },
     ],
   },
   {
     name: 'Dri-FIT Hooded Sweatshirt',
     description,
-    image: '/images/hooded-sweatshirt.png',
     tag: 'Adult Sizes',
     price: 4000,
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     colors: [
-      { id: 1, label: 'White', hex: '#fff' },
-      { id: 2, label: 'Grey', hex: '#ccc' },
-      { id: 3, label: 'Navy', hex: '#003366' },
-      { id: 4, label: 'Black', hex: '#000' },
+      {
+        id: 1,
+        label: 'White',
+        hex: '#fff',
+        primaryImage:
+          '/images/stores/new-london-hs-cc/hooded-dri-fit-white.jpg',
+        secondaryImages: [],
+      },
+      {
+        id: 2,
+        label: 'Grey',
+        hex: '#ccc',
+        primaryImage: '/images/stores/new-london-hs-cc/hooded-dri-fit-grey.jpg',
+        secondaryImages: [],
+      },
+      {
+        id: 3,
+        label: 'Navy',
+        hex: '#003366',
+        primaryImage: '/images/stores/new-london-hs-cc/hooded-dri-fit-navy.jpg',
+        secondaryImages: [],
+      },
     ],
   },
 ];
-
-// const products = [
-//   {
-//     name: 'Cotton Crewneck Sweatshirt',
-//     description,
-//     image: '/images/crewneck-sweatshirt.png',
-//     tag: 'Adult Sizes',
-//     price: 2800,
-//     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-//     colors: [
-//       { id: 1, label: 'White', hex: '#fff' },
-//       { id: 2, label: 'Grey', hex: '#ccc' },
-//       { id: 3, label: 'Navy', hex: '#003366' },
-//       { id: 4, label: 'Black', hex: '#000' },
-//     ],
-//   },
-// ];
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const result = products.map(p => {
     return createProduct({
       name: p.name,
       description: p.description,
-      image: p.image,
       tag: p.tag,
       price: p.price,
       sizes: p.sizes,

@@ -90,17 +90,10 @@ const ProductStyles = styled.div`
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 0.8fr;
-    gap: 1.875rem 3rem;
-    grid-template-areas:
-      'images primary'
-      'images colors'
-      'images sizes'
-      'images actions'
-      'images details';
+    gap: 0 3rem;
   }
 
   .images {
-    grid-area: images;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -141,8 +134,12 @@ const ProductStyles = styled.div`
     }
   }
 
-  .primary {
-    grid-area: primary;
+  .mobile-header {
+    display: none;
+  }
+
+  .large-header {
+    margin: 0 0 3rem;
     display: flex;
     justify-content: space-between;
   }
@@ -161,16 +158,21 @@ const ProductStyles = styled.div`
     color: #111827;
   }
 
-  h4 {
+  .main h4 {
     margin: 0 0 1rem;
     font-weight: 500;
     font-size: 1rem;
     color: #111827;
   }
 
-  .colors {
-    grid-area: colors;
+  .sizes,
+  .actions,
+  .description,
+  .details {
+    margin: 2rem 0 0;
+  }
 
+  .colors {
     .grid {
       max-width: 18rem;
       width: 100%;
@@ -180,8 +182,6 @@ const ProductStyles = styled.div`
   }
 
   .sizes {
-    grid-area: sizes;
-
     .grid {
       display: grid;
       grid-auto-flow: column;
@@ -235,10 +235,6 @@ const ProductStyles = styled.div`
     }
   }
 
-  .actions {
-    grid-area: actions;
-  }
-
   button {
     padding: 0.75rem 1.25rem;
     width: 100%;
@@ -263,10 +259,6 @@ const ProductStyles = styled.div`
       background-color: #181a1e;
       color: rgba(255, 255, 255, 1);
     }
-  }
-
-  .details {
-    grid-area: details;
   }
 
   .description {
@@ -307,17 +299,20 @@ const ProductStyles = styled.div`
   }
 
   @media (max-width: 700px) {
-    padding: 2rem 1.5rem;
+    padding: 2.5rem 1.5rem;
 
     .wrapper {
       grid-template-columns: 1fr;
-      grid-template-areas:
-        'primary'
-        'images'
-        'colors'
-        'sizes'
-        'actions'
-        'details';
+    }
+
+    .mobile-header {
+      margin: 0 0 2rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .large-header {
+      display: none;
     }
 
     .name {
@@ -340,7 +335,11 @@ export default function Product({ store, product, active, error }: Props) {
   });
   const [primaryImage, setPrimaryImage] = React.useState(() => {
     const c = product.colors.find(c => c.label === color);
-    return c?.image;
+    return c?.primaryImage;
+  });
+  const [secondaryImages, setSecondaryImages] = React.useState(() => {
+    const c = product.colors.find(c => c.label === color);
+    return c?.secondaryImages;
   });
   const [size, setSize] = React.useState('DEFAULT');
   const [validationError, setValidationError] = React.useState<string>();
@@ -352,9 +351,15 @@ export default function Product({ store, product, active, error }: Props) {
       undefined,
       { shallow: true }
     );
+
     setPrimaryImage(() => {
       const c = product.colors.find(c => c.label === color);
-      return c?.image;
+      return c?.primaryImage;
+    });
+
+    setSecondaryImages(() => {
+      const c = product.colors.find(c => c.label === color);
+      return c?.secondaryImages;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [color]);
@@ -386,6 +391,7 @@ export default function Product({ store, product, active, error }: Props) {
         ...product,
         id: sku.id,
         productId: product.id,
+        image: primaryImage,
         color,
         size,
       });
@@ -412,78 +418,86 @@ export default function Product({ store, product, active, error }: Props) {
     >
       <ProductStyles>
         <div className="wrapper">
+          <div className="mobile-header">
+            <h2 className="name">{product.name}</h2>
+            <h3 className="price">{formatToMoney(product.price)}</h3>
+          </div>
           <div className="images">
             <div className="primary-img">
               <img src={primaryImage} alt={`${color} ${product.name}`} />
             </div>
             <div className="secondary-imgs">
-              <div>
-                <img src={product.image} alt={product.name} />
-              </div>
-              <div>
-                <img src={product.image} alt={product.name} />
-              </div>
-              <div>
-                <img src={product.image} alt={product.name} />
-              </div>
+              {secondaryImages &&
+                secondaryImages.map(i => (
+                  <div key={i.id}>
+                    <img src={i.url} alt={i.alt} />
+                  </div>
+                ))}
             </div>
           </div>
-          <div className="primary">
-            <h2 className="name">{product.name}</h2>
-            <h3 className="price">{formatToMoney(product.price)}</h3>
-          </div>
-          <div className="colors">
-            <h4>Colors</h4>
-            <div className="grid">
-              {product.colors.map(c => (
-                <Color
-                  key={c.id}
-                  hex={c.hex}
-                  label={c.label}
-                  color={color}
-                  handleColorChange={handleColorChange}
-                />
-              ))}
+          <div className="main">
+            <div className="large-header">
+              <h2 className="name">{product.name}</h2>
+              <h3 className="price">{formatToMoney(product.price)}</h3>
             </div>
-          </div>
-          <div className="sizes">
-            <h4>Sizes</h4>
-            <div className="grid">
-              {product.sizes.map(s => (
-                <div key={s} className={`size ${size === s ? 'checked' : ''}`}>
-                  <label htmlFor={s}>{s}</label>
-                  <input
-                    type="radio"
-                    value={s}
-                    onChange={handleSizeChange}
-                    checked={size === s}
-                    name={s}
-                    id={s}
-                    tabIndex={-1}
+            <div className="colors">
+              <h4>Colors</h4>
+              <div className="grid">
+                {product.colors.map(c => (
+                  <Color
+                    key={c.id}
+                    hex={c.hex}
+                    label={c.label}
+                    color={color}
+                    handleColorChange={handleColorChange}
                   />
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="actions">
-            <button type="button" onClick={handleButtonClick}>
-              Add to order
-            </button>
-            {validationError && <div className="error">{validationError}</div>}
-          </div>
-          <div className="details">
-            <div className="description">
-              <h4>Description</h4>
-              <p>{product.description}</p>
+            <div className="sizes">
+              <h4>Sizes</h4>
+              <div className="grid">
+                {product.sizes.map(s => (
+                  <div
+                    key={s}
+                    className={`size ${size === s ? 'checked' : ''}`}
+                  >
+                    <label htmlFor={s}>{s}</label>
+                    <input
+                      type="radio"
+                      value={s}
+                      onChange={handleSizeChange}
+                      checked={size === s}
+                      name={s}
+                      id={s}
+                      tabIndex={-1}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="other-details">
-              <h4>Details</h4>
-              <ul>
-                <li>Cut, sewn, and dyed in Los Angeles, CA, USA</li>
-                <li>Garment dyed</li>
-                <li>Pre-washed &amp; pre shrunk</li>
-                <li>50% Polyester, 37.5% Cotton, 12.5% Rayon</li>
-              </ul>
+            <div className="actions">
+              <button type="button" onClick={handleButtonClick}>
+                Add to order
+              </button>
+              {validationError && (
+                <div className="error">{validationError}</div>
+              )}
+            </div>
+            <div className="details">
+              <div className="description">
+                <h4>Description</h4>
+                <p>{product.description}</p>
+              </div>
+              <div className="other-details">
+                <h4>Details</h4>
+                <ul>
+                  <li>Cut, sewn, and dyed in Los Angeles, CA, USA</li>
+                  <li>Garment dyed</li>
+                  <li>Pre-washed &amp; pre shrunk</li>
+                  <li>50% Polyester, 37.5% Cotton, 12.5% Rayon</li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
@@ -492,6 +506,7 @@ export default function Product({ store, product, active, error }: Props) {
         item={product}
         color={color}
         size={size}
+        image={primaryImage}
         isSidebarOpen={showSidebar}
         closeSidebar={handleCloseSidebar}
       />
@@ -515,7 +530,8 @@ export const getServerSideProps: GetServerSideProps = async context => {
     }
 
     const now = new Date();
-    const storeIsActive = new Date(store.closeDate) > now;
+    const storeIsActive =
+      store.closeDate === null ? true : new Date(store.closeDate) > now;
 
     if (storeIsActive) {
       return {
