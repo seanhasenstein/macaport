@@ -37,7 +37,7 @@ function Color(props: ColorProps) {
   );
 }
 
-const StoreItemStyles = styled.div`
+const StoreItemStyles = styled.a`
   padding: 0 1rem 0.875rem 1rem;
   position: relative;
   background-color: #fff;
@@ -109,31 +109,28 @@ export default function StoreItem({ item, storeSlug }: Props) {
   const [activeColor, setActiveColor] = React.useState(item.colors[0]);
 
   return (
-    <StoreItemStyles>
-      <Link href={`/store/${storeSlug}/${item.id}?color=${activeColor.label}`}>
-        <a className="item">
-          <div className="img-wrapper">
-            <img
-              src={activeColor.primaryImage}
-              alt={`${activeColor.label} ${item.name}`}
-            />
+    <Link
+      href={`/store/${storeSlug}/${item.id}?color=${activeColor.label}`}
+      passHref
+    >
+      <StoreItemStyles>
+        <div className="img-wrapper">
+          <img
+            src={activeColor.primaryImage}
+            alt={`${activeColor.label} ${item.name}`}
+          />
+        </div>
+        <div className="details">
+          <h3 className="primary">{item.name}</h3>
+          <h4 className="secondary">{item.tag}</h4>
+          <h4 className="price">{formatToMoney(item.sizes[0].price)}</h4>
+          <div className="colors">
+            {item.colors.map(c => (
+              <Color key={c.id} colorObj={c} setActiveColor={setActiveColor} />
+            ))}
           </div>
-          <div className="details">
-            <h3 className="primary">{item.name}</h3>
-            <h4 className="secondary">{item.tag}</h4>
-            <h4 className="price">{formatToMoney(item.sizes[0].price)}</h4>
-            <div className="colors">
-              {item.colors.map(c => (
-                <Color
-                  key={c.id}
-                  colorObj={c}
-                  setActiveColor={setActiveColor}
-                />
-              ))}
-            </div>
-          </div>
-        </a>
-      </Link>
-    </StoreItemStyles>
+        </div>
+      </StoreItemStyles>
+    </Link>
   );
 }

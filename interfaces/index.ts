@@ -1,4 +1,4 @@
-type SecondaryImage = {
+export type SecondaryImage = {
   id: number;
   url: string;
   alt: string;
@@ -23,7 +23,8 @@ type SkuColor = Omit<Color, 'hex' | 'primaryImage' | 'secondaryImages'>;
 export interface Item {
   id: string;
   name: string;
-  description: string;
+  description?: string;
+  details?: string[];
   tag: string;
   sizes: Size[];
   colors: Color[];

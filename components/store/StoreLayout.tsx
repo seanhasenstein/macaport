@@ -51,6 +51,7 @@ const GlobalStyles = createGlobalStyle`
   body {
   padding: 0;
   margin: 0;
+  position: relative;
   font-size: 16px;
   letter-spacing: -0.011em;
   /* background-color: #fcfcfd; */

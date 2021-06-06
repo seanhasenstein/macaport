@@ -7,6 +7,7 @@ import { Store, Item, Size } from '../../../interfaces';
 import { formatToMoney } from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
 import ProductSidebar from '../../../components/store/ProductSidebar';
+import Lightbox from '../../../components/store/Lightbox';
 import { stores } from '../../../data';
 
 type Props = {
@@ -82,7 +83,7 @@ const Color = (props: ColorProps) => (
 );
 
 const ProductStyles = styled.div`
-  padding: 3rem 1.5rem;
+  padding: 2.5rem 1.5rem;
 
   .wrapper {
     margin: 0 auto;
@@ -106,6 +107,7 @@ const ProductStyles = styled.div`
       border: 1px solid #e5e7eb;
       box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
         rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+      cursor: pointer;
 
       img {
         max-width: 24rem;
@@ -114,18 +116,19 @@ const ProductStyles = styled.div`
     }
 
     .secondary-imgs {
-      margin: 1rem 0;
+      margin: 1.5rem 0;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-      gap: 1rem;
+      gap: 1.5rem;
       width: 100%;
 
-      > div {
+      button {
         padding: 2rem;
         background-color: #fff;
         border: 1px solid #e5e7eb;
         box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
           rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+        cursor: pointer;
 
         img {
           width: 100%;
@@ -184,7 +187,7 @@ const ProductStyles = styled.div`
   .sizes {
     .grid {
       display: grid;
-      grid-auto-flow: column;
+      grid-template-columns: repeat(auto-fit, minmax(4rem, 1fr));
       gap: 0.875rem;
     }
 
@@ -219,7 +222,6 @@ const ProductStyles = styled.div`
 
       &:hover {
         border-color: #656e81;
-        background-color: #fff;
       }
 
       input {
@@ -237,7 +239,7 @@ const ProductStyles = styled.div`
     }
   }
 
-  button {
+  .add-to-order-button {
     padding: 0.75rem 1.25rem;
     width: 100%;
     height: 2.625rem;
@@ -326,6 +328,7 @@ const ProductStyles = styled.div`
 export default function Product({ store, product, active, error }: Props) {
   const router = useRouter();
   const [showSidebar, setShowSidebar] = React.useState(false);
+  const [showLightbox, setShowLightbox] = React.useState(false);
   const [color, setColor] = React.useState(() => {
     if (router.query.color) {
       return Array.isArray(router.query.color)
@@ -343,6 +346,7 @@ export default function Product({ store, product, active, error }: Props) {
     const c = product.colors.find(c => c.label === color);
     return c?.secondaryImages;
   });
+  const [clickedImage, setClickedImage] = React.useState('image-0');
   const [size, setSize] = React.useState<Size>({
     id: 9999,
     label: 'DEFAULT',
@@ -388,7 +392,12 @@ export default function Product({ store, product, active, error }: Props) {
     setSize(s);
   };
 
-  const handleButtonClick = () => {
+  const handleImageClick = (imageIndex: string) => {
+    setClickedImage(imageIndex);
+    setShowLightbox(true);
+  };
+
+  const handleAddToOrderClick = () => {
     if (size.label === 'DEFAULT') {
       setValidationError('Please select a size');
       return;
@@ -424,112 +433,142 @@ export default function Product({ store, product, active, error }: Props) {
   }
 
   return (
-    <StoreLayout
-      storeId={store.id}
-      storeSlug={store.slug}
-      title={`${product.name} | ${store.name} | Macaport`}
-    >
-      <ProductStyles>
-        <div className="wrapper">
-          <div className="mobile-header">
-            <h2 className="name">{product.name}</h2>
-            <h3 className="price">
-              {formatToMoney(size ? size.price : product.sizes[0].price)}
-            </h3>
-          </div>
-          <div className="images">
-            <div className="primary-img">
-              <img src={primaryImage} alt={`${color} ${product.name}`} />
-            </div>
-            <div className="secondary-imgs">
-              {secondaryImages &&
-                secondaryImages.map(i => (
-                  <div key={i.id}>
-                    <img src={i.url} alt={i.alt} />
-                  </div>
-                ))}
-            </div>
-          </div>
-          <div className="main">
-            <div className="large-header">
+    <>
+      <StoreLayout
+        storeId={store.id}
+        storeSlug={store.slug}
+        title={`${product.name} | ${store.name} | Macaport`}
+      >
+        <ProductStyles>
+          <div className="wrapper">
+            <div className="mobile-header">
               <h2 className="name">{product.name}</h2>
               <h3 className="price">
-                {formatToMoney(size ? size.price : product.sizes[0].price)}
+                {formatToMoney(
+                  size.label !== 'DEFAULT' ? size.price : product.sizes[0].price
+                )}
               </h3>
             </div>
-            <div className="colors">
-              <h4>Colors</h4>
-              <div className="grid">
-                {product.colors.map(c => (
-                  <Color
-                    key={c.id}
-                    hex={c.hex}
-                    label={c.label}
-                    color={color}
-                    handleColorChange={handleColorChange}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="sizes">
-              <h4>Sizes</h4>
-              <div className="grid">
-                {product.sizes.map(s => (
-                  <div
-                    key={s.id}
-                    className={`size ${
-                      size && size.label === s.label ? 'checked' : ''
-                    }`}
-                  >
-                    <label htmlFor={s.label}>{s.label}</label>
-                    <input
-                      type="radio"
-                      value={s.label}
-                      checked={size && size.label === s.label}
-                      onChange={handleSizeChange}
-                      name={s.label}
-                      id={s.label}
-                      tabIndex={-1}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="actions">
-              <button type="button" onClick={handleButtonClick}>
-                Add to order
+            <div className="images">
+              <button
+                className="primary-img"
+                onClick={() => handleImageClick('image-0')}
+              >
+                <img src={primaryImage} alt={`${color} ${product.name}`} />
               </button>
-              {validationError && (
-                <div className="error">{validationError}</div>
-              )}
-            </div>
-            <div className="details">
-              <div className="description">
-                <h4>Description</h4>
-                <p>{product.description}</p>
+              <div className="secondary-imgs">
+                {secondaryImages &&
+                  secondaryImages.map((image, i) => (
+                    <button
+                      key={image.id}
+                      onClick={() => handleImageClick(`image-${i + 1}`)}
+                    >
+                      <img src={image.url} alt={image.alt} />
+                    </button>
+                  ))}
               </div>
-              <div className="other-details">
-                <h4>Details</h4>
-                <ul>
-                  <li>Cut, sewn, and dyed in Los Angeles, CA, USA</li>
-                  <li>Garment dyed</li>
-                  <li>Pre-washed &amp; pre shrunk</li>
-                  <li>50% Polyester, 37.5% Cotton, 12.5% Rayon</li>
-                </ul>
+            </div>
+            <div className="main">
+              <div className="large-header">
+                <h2 className="name">{product.name}</h2>
+                <h3 className="price">
+                  {formatToMoney(
+                    size.label !== 'DEFAULT'
+                      ? size.price
+                      : product.sizes[0].price
+                  )}
+                </h3>
+              </div>
+              <div className="colors">
+                <h4>Colors</h4>
+                <div className="grid">
+                  {product.colors.map(c => (
+                    <Color
+                      key={c.id}
+                      hex={c.hex}
+                      label={c.label}
+                      color={color}
+                      handleColorChange={handleColorChange}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="sizes">
+                <h4>Sizes</h4>
+                <div className="grid">
+                  {product.sizes.map(s => (
+                    <div
+                      key={s.id}
+                      className={`size ${
+                        size && size.label === s.label ? 'checked' : ''
+                      }`}
+                    >
+                      <label htmlFor={s.label}>{s.label}</label>
+                      <input
+                        type="radio"
+                        value={s.label}
+                        checked={size && size.label === s.label}
+                        onChange={handleSizeChange}
+                        name={s.label}
+                        id={s.label}
+                        tabIndex={-1}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="actions">
+                <button
+                  type="button"
+                  className="add-to-order-button"
+                  onClick={handleAddToOrderClick}
+                >
+                  Add to order
+                </button>
+                {validationError && (
+                  <div className="error">{validationError}</div>
+                )}
+              </div>
+              <div className="details">
+                {product.description && (
+                  <div className="description">
+                    <h4>Description</h4>
+                    <p>{product.description}</p>
+                  </div>
+                )}
+                {product.details && (
+                  <div className="other-details">
+                    <h4>Details</h4>
+                    <ul>
+                      {product.details.map((d, i) => (
+                        <li key={i}>{d}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
-      </ProductStyles>
-      <ProductSidebar
-        item={product}
-        color={color}
-        size={size}
-        image={primaryImage}
-        isSidebarOpen={showSidebar}
-        closeSidebar={handleCloseSidebar}
-      />
-    </StoreLayout>
+        </ProductStyles>
+        <ProductSidebar
+          item={product}
+          color={color}
+          size={size}
+          image={primaryImage}
+          isSidebarOpen={showSidebar}
+          closeSidebar={handleCloseSidebar}
+        />
+      </StoreLayout>
+      {showLightbox && primaryImage ? (
+        <Lightbox
+          setShowLightbox={setShowLightbox}
+          primaryImage={primaryImage}
+          primaryAlt={`${color} ${product.name}`}
+          secondaryImages={secondaryImages}
+          clickedImage={clickedImage}
+        />
+      ) : null}
+    </>
   );
 }
 

@@ -50,11 +50,11 @@ const StoreStyles = styled.div`
       padding: 0;
       grid-template-columns: 1fr 1fr;
 
-      .item:nth-of-type(odd) {
+      a:nth-of-type(odd) {
         border-radius: 0 0.25rem 0.25rem 0;
       }
 
-      .item:nth-of-type(even) {
+      a:nth-of-type(even) {
         border-radius: 0.25rem 0 0 0.25rem;
       }
     }

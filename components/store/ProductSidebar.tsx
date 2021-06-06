@@ -21,20 +21,19 @@ const ProductSidebarStyles = styled.div`
   .sidebar {
     max-width: 30rem;
     width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    /* overflow-y: scroll; */
     position: fixed;
     top: 0;
     bottom: 0;
     right: 0;
-    transition: transform 500ms cubic-bezier(0.4, 0, 0.2, 1);
-    transform: translateX(100%);
-
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow-y: scroll;
     background-color: #fcfcfd;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
       0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: translateX(100%);
+    transition: transform 500ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .sidebar.show {

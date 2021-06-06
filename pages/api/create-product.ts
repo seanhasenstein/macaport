@@ -25,7 +25,8 @@ type SkuColor = Omit<Color, 'hex' | 'primaryImage' | 'secondaryImages'>;
 
 interface ProductInput {
   name: string;
-  description: string;
+  description?: string;
+  details?: string[];
   tag: string;
   sizes: Size[];
   colors: Color[];
@@ -85,6 +86,7 @@ function createSkusFromSizesAndColors(
 function createProduct({
   name,
   description,
+  details,
   tag,
   sizes,
   colors,
@@ -96,6 +98,7 @@ function createProduct({
     id,
     name,
     description,
+    details,
     tag,
     sizes,
     colors,
@@ -106,10 +109,18 @@ function createProduct({
 const description =
   'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin dictum sagittis nibh vitae dignissim. Suspendisse et turpis efficitur, eleifend leo sed, consectetur ligula.';
 
+const details = [
+  'Cut, sewn, and dyed in Milwaukee, WI, USA',
+  'Garment dyed',
+  'Pre-washed and pre shrunk',
+  '50% Polyester, 37.5% Cotton, 12.5% Rayon',
+];
+
 const products: ProductInput[] = [
   {
     name: 'Short Sleeve Cotton T-Shirt',
     description,
+    details,
     tag: 'Adult Sizes',
     sizes: [
       {
@@ -225,6 +236,7 @@ const products: ProductInput[] = [
   {
     name: 'Short Sleeve Dri-FIT T-Shirt',
     description,
+    details,
     tag: 'Adult Sizes',
     sizes: [
       {
@@ -296,6 +308,7 @@ const products: ProductInput[] = [
   {
     name: 'Long Sleeve Cotton T-Shirt',
     description,
+    details,
     tag: 'Adult Sizes',
     sizes: [
       {
@@ -366,7 +379,6 @@ const products: ProductInput[] = [
   },
   {
     name: 'Cotton Crewneck Sweatshirt',
-    description,
     tag: 'Adult Sizes',
     sizes: [
       {
@@ -438,6 +450,7 @@ const products: ProductInput[] = [
   {
     name: 'Cotton Hooded Sweatshirt',
     description,
+    details,
     tag: 'Adult Sizes',
     sizes: [
       {
@@ -505,6 +518,7 @@ const products: ProductInput[] = [
   {
     name: 'Dri-FIT Hooded Sweatshirt',
     description,
+    details,
     tag: 'Adult Sizes',
     sizes: [
       {
@@ -570,6 +584,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     return createProduct({
       name: p.name,
       description: p.description,
+      details: p.details,
       tag: p.tag,
       sizes: p.sizes,
       colors: p.colors,
