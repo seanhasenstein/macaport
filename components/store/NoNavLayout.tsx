@@ -4,8 +4,6 @@ import Link from 'next/link';
 import styled, { createGlobalStyle } from 'styled-components';
 
 type Props = {
-  storeId?: string;
-  storeSlug?: string;
   children: ReactNode;
   title?: string;
 };
@@ -54,7 +52,6 @@ const GlobalStyles = createGlobalStyle`
   position: relative;
   font-size: 16px;
   letter-spacing: -0.011em;
-  /* background-color: #fcfcfd; */
   background-color: #f9fafb;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "cv02","cv03","cv04","cv09", "cv11";
@@ -145,12 +142,12 @@ select:focus {
 
 const LayoutStyles = styled.div`
   width: 100%;
-`;
 
-const Nav = styled.nav`
-  padding: 0 1.5rem;
-  position: relative;
-  background-color: #f9fafb;
+  nav {
+    padding: 0 1.5rem;
+    position: relative;
+    background-color: #f9fafb;
+  }
 
   .wrapper {
     margin: 0 auto;
@@ -158,19 +155,9 @@ const Nav = styled.nav`
     max-width: 1280px;
     width: 100%;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     border-bottom: 1px solid #e5e7eb;
-  }
-
-  svg {
-    height: 1.5rem;
-    width: 1.5rem;
-    color: #545c6b;
-  }
-
-  a:hover svg {
-    color: #181a1e;
   }
 
   .logo {
@@ -184,11 +171,7 @@ const Nav = styled.nav`
   }
 `;
 
-export default function StoreLayout({
-  children,
-  title = 'Macaport Store',
-  storeSlug,
-}: Props) {
+export default function NoNavLayout({ children, title = 'Macaport' }: Props) {
   return (
     <LayoutStyles>
       <GlobalStyles />
@@ -198,26 +181,9 @@ export default function StoreLayout({
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
       </Head>
       <header>
-        <Nav>
+        <nav>
           <div className="wrapper">
-            <Link href={`/store/${storeSlug}`}>
-              <a title="Store Home">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                  />
-                </svg>
-              </a>
-            </Link>
-            <Link href={`/store/${storeSlug}`}>
+            <Link href="/">
               <a>
                 <img
                   src="/images/logo.png"
@@ -226,25 +192,8 @@ export default function StoreLayout({
                 />
               </a>
             </Link>
-            <Link href={`/store/${storeSlug}/cart`}>
-              <a title="Cart">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              </a>
-            </Link>
           </div>
-        </Nav>
+        </nav>
       </header>
       <div>{children}</div>
       <footer />

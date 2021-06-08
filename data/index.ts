@@ -1410,7 +1410,7 @@ export const products = [
 export const stores: Store[] = [
   {
     id: 'store_h8DUfQMxfyQrSt',
-    name: 'This store should not show up, it is expired',
+    name: 'Sheboygan Lutheran HS Track & Field Store',
     slug: 'expired-store',
     startDate: '2021-05-29T05:00:00.000Z',
     closeDate: '2021-06-01T05:00:00.000Z',
@@ -3842,7 +3842,7 @@ export const stores: Store[] = [
   },
   {
     id: 'store_abcdfQMxfy3vkK',
-    name: 'New London HS Cross Country',
+    name: 'New London HS Cross Country Store',
     slug: 'new-london-hs-cross-country',
     startDate: '2021-05-29T05:00:00.000Z',
     closeDate: null,

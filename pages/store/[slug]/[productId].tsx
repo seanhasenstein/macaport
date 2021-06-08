@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
@@ -8,6 +9,7 @@ import { formatToMoney } from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
 import ProductSidebar from '../../../components/store/ProductSidebar';
 import Lightbox from '../../../components/store/Lightbox';
+import { MessageStyles } from '../../../styles/Message';
 import { stores } from '../../../data';
 
 type Props = {
@@ -325,24 +327,31 @@ const ProductStyles = styled.div`
   }
 `;
 
-export default function Product({ store, product, active, error }: Props) {
+export default function Product({ store, product, error }: Props) {
   const router = useRouter();
   const [showSidebar, setShowSidebar] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
   const [color, setColor] = React.useState(() => {
+    if (error) return 'error';
     if (router.query.color) {
-      return Array.isArray(router.query.color)
+      const color = Array.isArray(router.query.color)
         ? router.query.color[0]
         : router.query.color;
+
+      const verifiedColor = product.colors.find(c => c.label === color);
+
+      return verifiedColor ? verifiedColor.label : product.colors[0].label;
     } else {
       return product.colors[0].label;
     }
   });
   const [primaryImage, setPrimaryImage] = React.useState(() => {
+    if (error) return 'error';
     const c = product.colors.find(c => c.label === color);
     return c?.primaryImage;
   });
   const [secondaryImages, setSecondaryImages] = React.useState(() => {
+    if (error) return [{ id: 1, url: 'error', alt: 'error' }];
     const c = product.colors.find(c => c.label === color);
     return c?.secondaryImages;
   });
@@ -356,6 +365,8 @@ export default function Product({ store, product, active, error }: Props) {
   const { addItem } = useCart();
 
   React.useEffect(() => {
+    if (error) return;
+
     router.push(
       `/store/${store.slug}/${product.id}?color=${color}`,
       undefined,
@@ -425,11 +436,35 @@ export default function Product({ store, product, active, error }: Props) {
   };
 
   if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  if (!active) {
-    return <div>This store is inactive.</div>;
+    return (
+      <StoreLayout>
+        <MessageStyles>
+          <div className="wrapper">
+            <div className="content">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="icon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <h3>Error</h3>
+              <p>{error}</p>
+              <Link href={`/store/${router.query.slug}`}>
+                <a className="button">Back to store home</a>
+              </Link>
+            </div>
+          </div>
+        </MessageStyles>
+      </StoreLayout>
+    );
   }
 
   return (
@@ -577,26 +612,34 @@ export const getServerSideProps: GetServerSideProps = async context => {
     const store = stores.find(s => s.slug === context.query.slug);
 
     if (!store) {
-      throw new Error(`No store found at ${context.query.slug}`);
-    }
-
-    const product = store.products.find(p => p.id === context.query.productId);
-
-    if (!product) {
-      throw new Error(`Product with ID ${context.query.productId} not found.`);
+      return {
+        redirect: {
+          permanent: false,
+          destination: '/store-not-found',
+        },
+      };
     }
 
     const now = new Date();
     const storeIsActive =
       store.closeDate === null ? true : new Date(store.closeDate) > now;
 
-    if (storeIsActive) {
+    if (!storeIsActive) {
       return {
-        props: { store, product, active: true },
+        redirect: {
+          permanent: false,
+          destination: '/store-closed',
+        },
       };
     }
 
-    return { props: { store: 'undefined', active: false } };
+    const product = store.products.find(p => p.id === context.query.productId);
+
+    if (!product) {
+      throw new Error('Product not found.');
+    }
+
+    return { props: { store, product } };
   } catch (err) {
     return {
       props: { error: err.message },

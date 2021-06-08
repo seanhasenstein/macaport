@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import styled from 'styled-components';
 import { GetServerSideProps } from 'next';
 import { stores } from '../../data';
@@ -6,6 +7,7 @@ import { Store as StoreInterface, Item } from '../../interfaces';
 import { formatDate } from '../../utils';
 import StoreLayout from '../../components/store/StoreLayout';
 import StoreItem from '../../components/store/StoreItem';
+import { MessageStyles } from '../../styles/Message';
 
 type Props = {
   store: StoreInterface;
@@ -61,13 +63,35 @@ const StoreStyles = styled.div`
   }
 `;
 
-export default function Store({ store, active, error }: Props) {
+export default function Store({ store, error }: Props) {
   if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  if (!active) {
-    return <div>This store is inactive.</div>;
+    return (
+      <StoreLayout>
+        <MessageStyles>
+          <div className="content">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="icon"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <h3>Error</h3>
+            <p>{error}</p>
+            <Link href="/stores">
+              <a className="button">See all available stores</a>
+            </Link>
+          </div>
+        </MessageStyles>
+      </StoreLayout>
+    );
   }
 
   return (
@@ -78,13 +102,11 @@ export default function Store({ store, active, error }: Props) {
     >
       <StoreStyles>
         <h2>{store.name}</h2>
-        <p>
-          {store.closeDate === null
-            ? 'This store is permanently open.'
-            : `This store closes on ${formatDate(
-                store.closeDate
-              )} at midnight (CT).`}
-        </p>
+        {store.closeDate === null ? null : (
+          <p>
+            This store closes on {formatDate(store.closeDate)} at midnight (CT).
+          </p>
+        )}
         <div className="items">
           {store.products.map((p: Item) => (
             <StoreItem key={p.id} item={p} storeSlug={store.slug} />
@@ -100,20 +122,28 @@ export const getServerSideProps: GetServerSideProps = async context => {
     const store = stores.find(s => s.slug === context.query.slug);
 
     if (!store) {
-      throw new Error(`No store found at ${context.query.slug}`);
+      return {
+        redirect: {
+          permanent: false,
+          destination: '/store-not-found',
+        },
+      };
     }
 
     const now = new Date();
     const storeIsActive =
       store.closeDate === null ? true : new Date(store.closeDate) > now;
 
-    if (storeIsActive) {
+    if (!storeIsActive) {
       return {
-        props: { store, active: true },
+        redirect: {
+          permanent: false,
+          destination: '/store-closed',
+        },
       };
     }
 
-    return { props: { store: null, active: false } };
+    return { props: { store } };
   } catch (err) {
     return {
       props: { error: err.message },
