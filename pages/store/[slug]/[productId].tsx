@@ -31,22 +31,28 @@ const ColorStyles = styled.div`
   position: relative;
   height: 2.5rem;
   width: 2.5rem;
-  box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-    rgba(0, 0, 0, 0.15) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px 0px;
-  border-radius: 9999px;
 
-  &.checked {
-    padding: 0.125rem;
-    border: 2px solid #3730a3;
-  }
-
-  label {
-    display: flex;
-    height: 100%;
-    width: 100%;
+  .label-wrapper {
+    height: 2.5rem;
+    width: 2.5rem;
+    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.15) 0px 1px 3px 0px,
+      rgba(0, 0, 0, 0.1) 0px 1px 2px 0px;
     border-radius: 9999px;
-    background-color: ${(props: ColorProps) => props.hex};
-    cursor: pointer;
+
+    &.checked {
+      padding: 0.125rem;
+      border: 2px solid #111827;
+    }
+
+    label {
+      display: flex;
+      height: 100%;
+      width: 100%;
+      border-radius: 9999px;
+      background-color: ${(props: ColorProps) => props.hex};
+      cursor: pointer;
+    }
   }
 
   input {
@@ -60,27 +66,37 @@ const ColorStyles = styled.div`
     background-color: transparent;
     border: none;
     box-shadow: none;
+
+    &:focus {
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+    }
+
+    &:focus + .label-wrapper {
+      border-color: rgb(99, 102, 241);
+    }
   }
 `;
 
 const Color = (props: ColorProps) => (
-  <ColorStyles
-    {...props}
-    className={props.color === props.label ? 'checked' : ''}
-    title={props.label}
-  >
-    <label htmlFor={props.label}>
-      <span className="sr-only">{props.label}</span>
-    </label>
+  <ColorStyles {...props} title={props.label}>
     <input
       type="radio"
-      name={props.label}
+      name="color"
       id={props.label}
       value={props.label}
       onChange={props.handleColorChange}
       checked={props.color === props.label}
-      tabIndex={-1}
     />
+    <div
+      className={`label-wrapper ${
+        props.color === props.label ? 'checked' : ''
+      }`}
+    >
+      <label htmlFor={props.label}>
+        <span className="sr-only">{props.label}</span>
+      </label>
+    </div>
   </ColorStyles>
 );
 
@@ -111,6 +127,10 @@ const ProductStyles = styled.div`
         rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
       cursor: pointer;
 
+      &:focus {
+        outline-color: rgb(99, 102, 241);
+      }
+
       img {
         max-width: 24rem;
         width: 100%;
@@ -131,6 +151,10 @@ const ProductStyles = styled.div`
         box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
           rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
         cursor: pointer;
+
+        &:focus {
+          outline-color: rgb(99, 102, 241);
+        }
 
         img {
           width: 100%;
@@ -196,8 +220,6 @@ const ProductStyles = styled.div`
     .size {
       margin: 0;
       position: relative;
-      border: 1px solid #d1d5db;
-      border-radius: 0.25rem;
 
       label {
         margin: 0;
@@ -205,25 +227,24 @@ const ProductStyles = styled.div`
         display: flex;
         justify-content: center;
         align-items: center;
+        border: 1px solid #d1d5db;
+        border-radius: 0.25rem;
         font-size: 0.9375rem;
         letter-spacing: 0.0375em;
         color: #111827;
         cursor: pointer;
         text-align: center;
-      }
 
-      &.checked,
-      &.checked:hover {
-        background-color: #202329;
-        border-color: #202329;
-
-        label {
-          color: #fff;
+        &:hover {
+          border-color: #545b6b;
         }
       }
 
-      &:hover {
-        border-color: #656e81;
+      &.checked label,
+      &.checked label:hover {
+        background-color: #202329;
+        border-color: #202329;
+        color: #fff;
       }
 
       input {
@@ -237,6 +258,17 @@ const ProductStyles = styled.div`
         background-color: transparent;
         border: none;
         box-shadow: none;
+
+        &:focus {
+          outline: 2px solid transparent;
+          outline-offset: 2px;
+        }
+
+        &:focus + label {
+          box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px,
+            rgb(99, 102, 241) 0px 0px 0px 4px,
+            rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+        }
       }
     }
   }
@@ -264,6 +296,13 @@ const ProductStyles = styled.div`
     &:hover {
       background-color: #181a1e;
       color: rgba(255, 255, 255, 1);
+    }
+
+    &:focus {
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px,
+        rgb(99, 102, 241) 0px 0px 0px 4px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     }
   }
 
@@ -538,16 +577,15 @@ export default function Product({ store, product, error }: Props) {
                         size && size.label === s.label ? 'checked' : ''
                       }`}
                     >
-                      <label htmlFor={s.label}>{s.label}</label>
                       <input
                         type="radio"
                         value={s.label}
                         checked={size && size.label === s.label}
                         onChange={handleSizeChange}
-                        name={s.label}
+                        name="size"
                         id={s.label}
-                        tabIndex={-1}
                       />
+                      <label htmlFor={s.label}>{s.label}</label>
                     </div>
                   ))}
                 </div>
@@ -586,6 +624,7 @@ export default function Product({ store, product, error }: Props) {
           </div>
         </ProductStyles>
         <ProductSidebar
+          storeSlug={store.slug}
           item={product}
           color={color}
           size={size}

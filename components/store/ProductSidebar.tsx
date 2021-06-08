@@ -22,9 +22,9 @@ const ProductSidebarStyles = styled.div`
     max-width: 30rem;
     width: 100%;
     height: 100%;
+    visibility: hidden;
     display: flex;
     flex-direction: column;
-    /* overflow-y: scroll; */
     position: fixed;
     top: 0;
     bottom: 0;
@@ -33,12 +33,14 @@ const ProductSidebarStyles = styled.div`
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
       0 10px 10px -5px rgba(0, 0, 0, 0.04);
     transform: translateX(100%);
-    transition: transform 500ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 500ms cubic-bezier(0.4, 0, 0.2, 1),
+      visibility 0ms 500ms;
   }
 
   .sidebar.show {
     transition: transform 500ms cubic-bezier(0.4, 0, 0.2, 1);
     transform: translateX(0);
+    visibility: visible;
   }
 
   .heading {
@@ -171,6 +173,7 @@ const ProductSidebarStyles = styled.div`
 `;
 
 type Props = {
+  storeSlug: string;
   item: Item;
   color: string;
   size?: Size;
@@ -180,6 +183,7 @@ type Props = {
 };
 
 export default function ProductSidebar({
+  storeSlug,
   item,
   color,
   size,
@@ -188,6 +192,7 @@ export default function ProductSidebar({
   closeSidebar,
 }: Props) {
   const ref = React.useRef<HTMLDivElement>(null);
+  const closeButton = React.useRef<HTMLButtonElement>(null);
 
   React.useEffect(() => {
     const handleEscapeKeyup = (e: KeyboardEvent) => {
@@ -200,6 +205,7 @@ export default function ProductSidebar({
     };
 
     if (isSidebarOpen) {
+      closeButton?.current && closeButton.current.focus();
       document.addEventListener('keyup', handleEscapeKeyup);
       document.addEventListener('click', handleOutsideClick);
 
@@ -241,6 +247,7 @@ export default function ProductSidebar({
               <h2>Added to Order</h2>
             </div>
             <button
+              ref={closeButton}
               aria-label="Close panel"
               className="close-button"
               onClick={() => closeSidebar()}
@@ -269,7 +276,7 @@ export default function ProductSidebar({
               </div>
             </div>
             <div className="actions">
-              <Button as="a" href="/demo-store/cart" color="white">
+              <Button as="a" href={`/store/${storeSlug}/cart`} color="white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6"
@@ -286,7 +293,11 @@ export default function ProductSidebar({
                 </svg>
                 View Cart
               </Button>
-              <Button as="a" href="/demo-store/checkout" color="black">
+              <Button
+                as="a"
+                href={`/store/${storeSlug}/checkout`}
+                color="black"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5"
@@ -304,7 +315,7 @@ export default function ProductSidebar({
               </Button>
             </div>
             <div className="store-home-link">
-              <Link href="/demo-store">
+              <Link href={`/store/${storeSlug}`}>
                 <a>Back to store home</a>
               </Link>
             </div>

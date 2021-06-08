@@ -70,6 +70,7 @@ export default function Lightbox({
   secondaryImages,
   clickedImage,
 }: Props) {
+  const closeButton = React.useRef<HTMLButtonElement>(null);
   React.useEffect(() => {
     const handleKeyup = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -78,6 +79,7 @@ export default function Lightbox({
       }
     };
 
+    closeButton?.current && closeButton.current.focus();
     document.body.style.overflow = 'hidden';
     document.body.addEventListener('keyup', handleKeyup);
     const image = document.querySelector(`#${clickedImage}`);
@@ -91,7 +93,11 @@ export default function Lightbox({
 
   return (
     <LightboxStyles>
-      <button className="close-button" onClick={() => setShowLightbox(false)}>
+      <button
+        ref={closeButton}
+        className="close-button"
+        onClick={() => setShowLightbox(false)}
+      >
         <span className="sr-only">Close Gallery</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
