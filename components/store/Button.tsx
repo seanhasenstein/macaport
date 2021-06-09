@@ -3,7 +3,7 @@ import Link from 'next/link';
 import styled from 'styled-components';
 
 const bgColors = {
-  black: '#3a3f4a',
+  black: '#31363f',
   blue: '#2b4061',
   white: '#fff',
 };
@@ -21,9 +21,9 @@ const borderColor = {
 };
 
 const hoverBg = {
-  black: '#31363f',
+  black: '#3a3f4a',
   blue: '#253753',
-  white: '#f9fafb',
+  white: '#fff',
 };
 
 const focusBoxShadow = {

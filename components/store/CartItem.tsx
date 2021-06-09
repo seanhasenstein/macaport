@@ -148,9 +148,10 @@ const CartItemStyles = styled.div`
 
 type Props = {
   item: CartItemInterface;
+  storeName: string;
 };
 
-export default function CartItem({ item }: Props) {
+export default function CartItem({ item, storeName }: Props) {
   const [size, setSize] = React.useState(item.size);
   const [quantity, setQuantity] = React.useState(item.quantity);
   const { removeItem, updateItem, updateItemQuantity } = useCart();
@@ -175,7 +176,7 @@ export default function CartItem({ item }: Props) {
     updateItem(item.id, {
       id: sku?.id,
       prevId: item.id,
-      size: e.target.value,
+      size: sku.size,
       quantity,
     });
   };
@@ -188,7 +189,7 @@ export default function CartItem({ item }: Props) {
 
   return (
     <CartItemStyles>
-      <Link href={`/demo-store/product/${item.productId}`}>
+      <Link href={`/store/${storeName}/${item.productId}`}>
         <a>
           <img
             src={item.image}
@@ -198,7 +199,7 @@ export default function CartItem({ item }: Props) {
         </a>
       </Link>
       <div className="item-details">
-        <Link href={`/demo-store/product/${item.productId}`}>
+        <Link href={`/store/${storeName}/${item.productId}`}>
           <a>
             <h3 className="primary">{item.name}</h3>
           </a>
@@ -218,7 +219,7 @@ export default function CartItem({ item }: Props) {
           >
             {item.sizes.map(size => (
               <option key={size.id} value={size.label}>
-                {size}
+                {size.label}
               </option>
             ))}
           </select>

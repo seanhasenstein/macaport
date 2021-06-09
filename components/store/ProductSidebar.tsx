@@ -112,6 +112,7 @@ const ProductSidebarStyles = styled.div`
     font-size: 1rem;
     font-weight: 600;
     line-height: 1.2;
+    color: #111827;
   }
 
   .item-img {
@@ -136,7 +137,7 @@ const ProductSidebarStyles = styled.div`
   }
 
   .item-size {
-    color: #848e9c;
+    color: #6b7280;
   }
 
   .item-price {

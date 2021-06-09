@@ -123,6 +123,7 @@ const ProductStyles = styled.div`
       background-color: #fff;
       text-align: center;
       border: 1px solid #e5e7eb;
+      border-radius: 0.1875rem;
       box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
         rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
       cursor: pointer;
@@ -148,6 +149,7 @@ const ProductStyles = styled.div`
         padding: 2rem;
         background-color: #fff;
         border: 1px solid #e5e7eb;
+        border-radius: 0.1875rem;
         box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
           rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
         cursor: pointer;
