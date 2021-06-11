@@ -39,7 +39,6 @@ export interface Sku {
 }
 
 export interface CartItem extends Item {
-  id: string;
   productId: string;
   color: string;
   size: Size;

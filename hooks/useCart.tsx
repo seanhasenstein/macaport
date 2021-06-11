@@ -21,6 +21,7 @@ type InitialState = {
 interface CartProviderState extends InitialState {
   addItem: (item: CartItem, quantity?: number) => void;
   removeItem: (id: CartItem['id']) => void;
+  updateItemSize: (prevId: CartItem['id'], payload: CartItem) => void;
   updateItem: (id: CartItem['id'], payload: Record<string, unknown>) => void;
   updateItemQuantity: (id: CartItem['id'], quantity: number) => void;
   emptyCart: () => void;
@@ -157,10 +158,6 @@ export function CartProvider({
 
     const currentItem = state.items.find((i: CartItem) => i.id === item.id);
 
-    // if (!currentItem && !Object.hasOwnProperty.call(item, 'price')) {
-    //   throw new Error('You must pass a `price` for new items');
-    // }
-
     if (!currentItem) {
       const payload = { ...item, quantity };
       dispatch({ type: 'ADD_ITEM', payload });
@@ -176,35 +173,31 @@ export function CartProvider({
   };
 
   const updateItem = (id: CartItem['id'], payload: Record<string, unknown>) => {
-    if (!id || !payload) return;
+    // todo: refactor this function
+    return { id, payload };
+  };
 
-    // if payload includes size then the item.id will change
-    // need to check if updated item.id is already in items
-    if (payload.size) {
-      const currentItem = state.items.find(
-        (i: CartItem) => i.id === payload.id
-      );
+  const updateItemSize = (
+    prevId: CartItem['id'],
+    payload: Record<string, unknown>
+  ) => {
+    if (!prevId || !payload || prevId === payload.id) return;
 
-      if (!currentItem) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { prevId, ...itemPayload } = payload;
+    const existingCartItem = state.items.find(
+      (item: CartItem) => item.id === payload.id
+    );
 
-        dispatch({
-          type: 'UPDATE_ITEM',
-          id,
-          payload: itemPayload,
-        });
-      } else {
-        removeItem(`${payload.prevId}`);
-
-        dispatch({
-          type: 'UPDATE_ITEM',
-          id: `${payload.id}`,
-          payload: {
-            quantity: currentItem.quantity + payload.quantity,
-          },
-        });
-      }
+    if (existingCartItem) {
+      dispatch({
+        type: 'UPDATE_ITEM',
+        id: `${payload.id}`,
+        payload: {
+          quantity: existingCartItem.quantity + payload.quantity,
+        },
+      });
+      removeItem(prevId);
+    } else {
+      dispatch({ type: 'UPDATE_ITEM', id: prevId, payload });
     }
   };
 
@@ -243,6 +236,7 @@ export function CartProvider({
         setItems,
         addItem,
         updateItem,
+        updateItemSize,
         updateItemQuantity,
         removeItem,
         emptyCart,
