@@ -7,16 +7,18 @@ const OrderTotalsStyles = styled.div`
   flex-direction: column;
 
   .item {
-    padding: 0.25rem 0;
+    padding: 0.5rem 0;
     display: flex;
     justify-content: space-between;
     font-size: 0.9375rem;
+    border-top: 1px solid #dadde2;
+
+    &:first-of-type {
+      border-top: none;
+    }
 
     &:last-of-type {
-      margin: 0.25rem 0 0;
-      padding: 0.5rem 0 0;
       font-weight: 600;
-      border-top: 1px solid #dadde2;
 
       & .amount {
         color: #2d9542;

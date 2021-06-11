@@ -5,7 +5,6 @@ import { useCart } from '../../../hooks/useCart';
 import useHasMounted from '../../../hooks/useHasMounted';
 import StoreLayout from '../../../components/store/StoreLayout';
 import styled from 'styled-components';
-import { formatToMoney } from '../../../utils';
 import CartItem from '../../../components/store/CartItem';
 import OrderTotals from '../../../components/store/OrderTotals';
 import { CartItem as CartItemInterface, Store } from '../../../interfaces';
@@ -13,51 +12,51 @@ import Button from '../../../components/store/Button';
 import { stores } from '../../../data';
 
 const CartStyles = styled.div`
-  margin: 3rem 0 0;
   padding: 0 1.5rem;
 
+  .wrapper {
+    margin: 4rem auto;
+    max-width: 70rem;
+    width: 100%;
+  }
+
   h2 {
-    margin: 0;
+    margin: 0 0 1.5rem;
     font-size: 1.5rem;
-    text-align: center;
   }
 
   .order-details {
-    margin: 0.5rem 0 3rem;
+    margin: 0.5rem 0 1.5rem;
     font-size: 1rem;
-    text-align: center;
     color: #6e788c;
+    display: none;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 20.5rem;
+    gap: 0 6rem;
   }
 
   .items {
-    margin: 0 auto;
-    padding: 0 2rem;
-    max-width: 56.25rem;
+    max-width: 42rem;
     width: 100%;
-    background-color: #fff;
-    border-radius: 0.1875rem;
-    box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
   }
 
   .order-summary {
-    margin: 3rem auto;
-    max-width: 900px;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
 
     .inner {
-      max-width: 20rem;
       width: 100%;
       display: grid;
-      grid-template-rows: auto auto auto;
-      gap: 1.25rem 0;
+      gap: 1rem 0;
     }
 
     h3 {
-      margin: 0;
+      margin: 0 0 1.5rem;
       font-size: 1rem;
       font-weight: 600;
     }
@@ -100,14 +99,31 @@ const CartStyles = styled.div`
     }
   }
 
-  @media (max-width: 800px) {
+  @media (max-width: 1000px) {
+    h2 {
+      margin: 0;
+      text-align: center;
+    }
+
+    .order-details {
+      display: block;
+      text-align: center;
+    }
+
+    .grid {
+      margin: 0 auto;
+      max-width: 700px;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto;
+    }
+
     .items {
-      padding: 0;
-      background-color: transparent;
-      box-shadow: none;
+      max-width: unset;
+      width: 100%;
     }
 
     .order-summary {
+      margin: 3rem 0 0;
       max-width: 100%;
       align-items: center;
     }
@@ -120,9 +136,10 @@ const CartStyles = styled.div`
 
 type Props = {
   store: Store;
+  error: string;
 };
 
-export default function Cart({ store }: Props) {
+export default function Cart({ store, error }: Props) {
   const hasMounted = useHasMounted();
   const {
     items,
@@ -133,61 +150,65 @@ export default function Cart({ store }: Props) {
     cartIsEmpty,
   } = useCart();
 
+  if (error) {
+    // todo
+  }
+
   return (
-    <StoreLayout title={`Cart | ${store.name} | Macaport`}>
+    <StoreLayout
+      title={`Cart | ${store.name} | Macaport`}
+      storeSlug={store.slug}
+    >
       <CartStyles>
-        <h2>Your Cart</h2>
-        {hasMounted ? (
-          <>
-            <div className="order-details">
-              {totalItems} Item
-              {totalItems > 1 ? 's' : totalItems === 0 ? 's' : null} |{' '}
-              {formatToMoney(cartSubtotal)}
-            </div>
-            <div className="items">
-              {cartIsEmpty ? (
-                <div className="empty-cart">
-                  Your cart is empty.{' '}
-                  <Link href={`/store/${store.slug}`}>Back to store home</Link>.
-                </div>
-              ) : (
-                items.map((item: CartItemInterface) => (
-                  <CartItem key={item.id} item={item} storeName={store.name} />
-                ))
-              )}
-            </div>
-            <div className="order-summary">
-              <div className="inner">
-                <h3>Order Summary</h3>
-                <OrderTotals
-                  subtotal={cartSubtotal}
-                  transactionFee={transactionFee}
-                  total={cartTotal}
-                />
-                <Button
-                  as="a"
-                  color="black"
-                  href={`/store/${store.name}/checkout`}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                    />
-                  </svg>
-                  Checkout
-                </Button>
+        <div className="wrapper">
+          <h2>Your Cart</h2>
+          {hasMounted ? (
+            <>
+              <div className="order-details">
+                ({totalItems} Item
+                {totalItems > 1 ? 's' : totalItems === 0 ? 's' : null})
               </div>
-            </div>
-          </>
-        ) : null}
+              <div className="grid">
+                <div className="items">
+                  {cartIsEmpty ? (
+                    <div className="empty-cart">
+                      Your cart is empty.{' '}
+                      <Link href={`/store/${store.slug}`}>
+                        Back to store home
+                      </Link>
+                      .
+                    </div>
+                  ) : (
+                    items.map((item: CartItemInterface) => (
+                      <CartItem
+                        key={item.id}
+                        item={item}
+                        storeName={store.name}
+                      />
+                    ))
+                  )}
+                </div>
+                <div className="order-summary">
+                  <div className="inner">
+                    <h3>Order Summary</h3>
+                    <OrderTotals
+                      subtotal={cartSubtotal}
+                      transactionFee={transactionFee}
+                      total={cartTotal}
+                    />
+                    <Button
+                      as="a"
+                      color="black"
+                      href={`/store/${store.slug}/checkout`}
+                    >
+                      Checkout
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : null}
+        </div>
       </CartStyles>
     </StoreLayout>
   );

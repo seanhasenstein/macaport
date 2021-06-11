@@ -6,47 +6,79 @@ import { formatToMoney } from '../../utils';
 import { CartItem as CartItemInterface } from '../../interfaces';
 
 const CartItemStyles = styled.div`
-  padding: 1.5rem 0;
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  padding: 2.25rem 0;
+  display: grid;
+  grid-template-areas:
+    'image details total'
+    'image inputs button';
+  grid-template-columns: 8rem 1fr 10rem;
+  gap: 0 1.5rem;
   border-bottom: 1px solid #e5e7eb;
 
   &:last-of-type {
-    border-bottom: none;
+    border: none;
   }
 
-  .image {
-    width: 3.75rem;
+  .item-image {
+    grid-area: image;
+
+    a {
+      padding: 0.5rem 0.75rem;
+      width: 7.5rem;
+      display: flex;
+      align-items: center;
+      background-color: #fff;
+      border-radius: 0.25rem;
+      border: 1px solid #e5e7eb;
+      box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+        rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+    }
+
+    img {
+      width: 100%;
+    }
   }
 
   .item-details {
+    grid-area: details;
     display: flex;
     flex-direction: column;
-    max-width: 225px;
-    width: 100%;
   }
 
   .primary {
     margin: 0;
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #36383e;
   }
 
-  .secondary,
-  .price {
-    margin: 0.125rem 0 0;
-    font-size: 0.875rem;
+  .secondary {
+    margin: 0.5rem 0 0;
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
     font-weight: 400;
     color: #6e788c;
   }
 
+  .color {
+    margin: 0.125rem 0 0 0.5rem;
+    height: 0.9375rem;
+    width: 0.9375rem;
+    background-color: ${(props: { item: CartItemInterface }) => {
+      const color = props.item.colors.find(c => c.label === props.item.color);
+      return color ? color.hex : props.item.color.toLowerCase();
+    }};
+    border-radius: 9999px;
+    border: 1px solid #9ca3af;
+  }
+
   .inputs {
+    grid-area: inputs;
     display: grid;
-    grid-template-columns: 9.5rem 5rem;
-    gap: 1rem;
+    grid-template-columns: 1fr 0.7fr;
+    gap: 0 1rem;
+    align-items: flex-end;
   }
 
   .size,
@@ -60,88 +92,84 @@ const CartItemStyles = styled.div`
   }
 
   .total {
-    min-width: 4.75rem;
+    grid-area: total;
     display: flex;
-    justify-content: center;
-    font-size: 0.875rem;
+    justify-content: flex-end;
+    font-size: 1rem;
     font-weight: 600;
     color: #36383e;
   }
 
   .remove-btn {
-    padding: 0.3125rem;
+    grid-area: button;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: transparent;
-    color: #6e788c;
-    border: 2px solid transparent;
-    border-radius: 4px;
-    cursor: pointer;
-  }
+    justify-content: flex-end;
+    align-items: flex-end;
 
-  .remove-btn span {
-    display: none;
+    button {
+      padding: 0;
+      font-size: 0.875rem;
+      font-weight: 400;
+      text-decoration: underline;
+      color: #6b7280;
+      background-color: transparent;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
   }
 
   .remove-btn:hover {
-    color: #080809;
+    color: #4b5563;
   }
 
-  .remove-btn svg {
-    height: 1.125rem;
-    width: 1.125rem;
-  }
+  @media (max-width: 1000px) {
+    margin: 0 auto;
+    width: 100%;
+    grid-template-areas:
+      'image details total'
+      'image inputs inputs'
+      'button button button';
+    grid-template-columns: 5rem 1fr 3rem;
+    gap: 0 1rem;
 
-  .remove-btn:focus {
-    outline: none;
-    box-shadow: 0 0 0 4px rgba(153, 155, 166, 0.4);
-    border-color: #999ba6;
-  }
+    .item-image {
+      height: 100%;
 
-  @media (max-width: 800px) {
-    margin: 0 0 1.25rem;
-    padding: 2rem 0;
-    flex-direction: column;
-    background-color: #fcfcfd;
-    border-radius: 0.5rem;
-    border: none;
-    box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
-
-    .image {
-      width: 7rem;
+      a {
+        padding: 0.5rem;
+        width: 100%;
+        height: 100%;
+      }
     }
 
-    .item-details {
-      margin: 1.25rem 0;
-      max-width: unset;
-      align-items: center;
-    }
-
-    .primary {
-      font-size: 1rem;
-    }
-
+    .primary,
+    .secondary,
     .total {
-      margin: 2rem 0 0;
+      font-size: 0.875rem;
+    }
+
+    .inputs {
+      margin: 1.25rem 0 0;
+      grid-template-columns: 1fr 1fr;
+
+      select {
+        font-size: 0.8125rem;
+      }
     }
 
     .remove-btn {
-      margin: 0;
-      padding: 0.375rem;
-      position: absolute;
-      top: 1.5rem;
-      right: 1.5rem;
-      background-color: #f5f5f5;
-      border-radius: 9999px;
-      box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
-        rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
-    }
+      margin: 1.125rem 0 0;
 
-    .remove-btn svg {
-      height: 1rem;
-      width: 1rem;
+      button {
+        padding: 0.5rem 0;
+        width: 100%;
+        font-weight: 500;
+        color: #374151;
+        text-decoration: none;
+        background-color: #f3f4f6;
+        border: 1px solid #e5e7eb;
+      }
     }
   }
 `;
@@ -152,12 +180,12 @@ type Props = {
 };
 
 export default function CartItem({ item, storeName }: Props) {
-  const [size, setSize] = React.useState(item.size);
+  const [size, setSize] = React.useState(item.size.label);
   const [quantity, setQuantity] = React.useState(item.quantity);
-  const { removeItem, updateItem, updateItemQuantity } = useCart();
+  const { removeItem, updateItemSize, updateItemQuantity } = useCart();
 
   React.useEffect(() => {
-    setSize(item.size);
+    setSize(item.size.label);
     setQuantity(item.quantity);
   }, [item]);
 
@@ -172,10 +200,10 @@ export default function CartItem({ item, storeName }: Props) {
       throw new Error('No sku found!');
     }
 
-    setSize(sku.size);
-    updateItem(item.id, {
+    setSize(sku.size.label);
+    updateItemSize(item.id, {
+      ...item,
       id: sku?.id,
-      prevId: item.id,
       size: sku.size,
       quantity,
     });
@@ -188,32 +216,33 @@ export default function CartItem({ item, storeName }: Props) {
   };
 
   return (
-    <CartItemStyles>
-      <Link href={`/store/${storeName}/${item.productId}`}>
-        <a>
-          <img
-            src={item.image}
-            alt={`${item.color} ${item.name}`}
-            className="image"
-          />
-        </a>
-      </Link>
-      <div className="item-details">
+    <CartItemStyles item={item}>
+      <div className="item-image">
         <Link href={`/store/${storeName}/${item.productId}`}>
           <a>
-            <h3 className="primary">{item.name}</h3>
+            <img src={item.image} alt={`${item.color} ${item.name}`} />
           </a>
         </Link>
-        <p className="secondary">Color: {item.color}</p>
-        <p className="price">{formatToMoney(item.size.price)}</p>
       </div>
+      <div className="item-details">
+        <h3 className="primary">
+          <Link href={`/store/${storeName}/${item.productId}`}>
+            <a>{item.name}</a>
+          </Link>
+        </h3>
+
+        <p className="secondary">
+          {item.color} <span className="color" />
+        </p>
+      </div>
+      <div className="total">{formatToMoney(item.itemTotal!)}</div>
       <div className="inputs">
         <div className="size">
           <label htmlFor="size">Size</label>
           <select
             name="size"
             id="size"
-            value={size.label}
+            value={size}
             onChange={handleSizeChange}
             onBlur={handleSizeChange}
           >
@@ -246,25 +275,11 @@ export default function CartItem({ item, storeName }: Props) {
           </select>
         </div>
       </div>
-      <div className="total">{formatToMoney(item.itemTotal!)}</div>
-      <button
-        type="submit"
-        className="remove-btn"
-        onClick={() => removeItem(item.id)}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-        >
-          <path
-            fillRule="evenodd"
-            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-            clipRule="evenodd"
-          />
-        </svg>
-        <span className="sr-only">Remove Item</span>
-      </button>
+      <div className="remove-btn">
+        <button type="button" onClick={() => removeItem(item.id)}>
+          Remove from cart
+        </button>
+      </div>
     </CartItemStyles>
   );
 }

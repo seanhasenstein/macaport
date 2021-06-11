@@ -54,8 +54,7 @@ const GlobalStyles = createGlobalStyle`
   position: relative;
   font-size: 16px;
   letter-spacing: -0.011em;
-  /* background-color: #fcfcfd; */
-  background-color: #f9fafb;
+  background-color: #f7f9fb;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "cv02","cv03","cv04","cv09", "cv11";
 }
