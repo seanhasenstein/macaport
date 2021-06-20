@@ -1,10 +1,6 @@
 import * as crypto from 'crypto';
 import { CartItem } from '../interfaces';
 
-export function formatMoney(input: number) {
-  return `$${(input / 100).toFixed(2)}`;
-}
-
 export function removeNonDigits(input: string) {
   return input.replace(/\D/g, '');
 }

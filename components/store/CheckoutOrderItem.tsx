@@ -39,7 +39,7 @@ export default function CheckoutOrderItem({ item }: { item: CartItem }) {
       <div className="item-details">
         <div className="item-primary">{item.name}</div>
         <div className="item-secondary">
-          Color: {item.color} | Size: {item.size}
+          Color: {item.color} | Size: {item.size.label}
         </div>
         <div className="item-quantity">
           Qty: {item.quantity} @ {formatToMoney(item.size.price)}

@@ -70,7 +70,7 @@ const CartItemStyles = styled.div`
       return color ? color.hex : props.item.color.toLowerCase();
     }};
     border-radius: 9999px;
-    border: 1px solid #9ca3af;
+    border: 1px solid #374151;
   }
 
   .inputs {
