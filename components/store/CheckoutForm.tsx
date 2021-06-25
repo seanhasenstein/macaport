@@ -19,10 +19,6 @@ import useHasMounted from '../../hooks/useHasMounted';
 import Button from './Button';
 
 const CheckoutFormStyles = styled.div`
-  margin: 0 auto;
-  max-width: 26rem;
-  width: 100%;
-
   .section {
     margin: 3rem 0;
   }
@@ -140,16 +136,24 @@ type FormData = {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
+  address: {
+    address1: string;
+    address2: string;
+    city: string;
+    state: string;
+    zipcode: string;
+  };
   cardholderName: string;
 };
 
 type FieldItemProps = {
-  name: keyof FormData;
+  name: string;
   label: string;
 };
 
 type ErrorMessageProps = {
-  name: keyof FormData;
+  name: string;
 };
 
 type ServerResponse = {
@@ -287,6 +291,14 @@ export default function CheckoutForm() {
         firstName: '',
         lastName: '',
         email: '',
+        phone: '',
+        address: {
+          address1: '',
+          address2: '',
+          city: '',
+          state: '',
+          zipcode: '',
+        },
         cardholderName: '',
       }}
       validationSchema={CheckoutSchema}
@@ -295,16 +307,23 @@ export default function CheckoutForm() {
       <CheckoutFormStyles>
         <Form>
           <div className="section">
-            <h3>1. Customer Information</h3>
             <div className="field-row">
               <FieldItem name="firstName" label="First Name" />
               <FieldItem name="lastName" label="Last Name" />
             </div>
             <FieldItem name="email" label="Email Address" />
+            <FieldItem name="phone" label="Phone Number" />
+            <div>
+              <FieldItem name="address.address1" label="Street Address" />
+              <FieldItem name="address.address2" label="Address Line 2" />
+              <FieldItem name="address.city" label="City" />
+              <FieldItem name="address.state" label="State" />
+              <FieldItem name="address.zipcode" label="Zipcode" />
+            </div>
           </div>
           <div className="section">
-            <h3>2. Payment Details</h3>
-            <FieldItem name="cardholderName" label="Name on card" />
+            {/* <h3>2. Payment Details</h3> */}
+            <FieldItem name="cardholderName" label="Cardholder's Name" />
             <label htmlFor="stripeInput">Card Information</label>
             <div className="stripe-input">
               <CardElement options={cardStyle} onChange={handleCardChange} />

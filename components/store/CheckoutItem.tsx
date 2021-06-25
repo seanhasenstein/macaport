@@ -15,10 +15,6 @@ const CheckoutItemStyles = styled.div`
   gap: 0 1rem;
   border-bottom: 1px solid #e5e7eb;
 
-  &:last-of-type {
-    border: none;
-  }
-
   .image {
     padding: 0.25rem;
     grid-area: image;

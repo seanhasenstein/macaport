@@ -6,6 +6,7 @@ import { Store } from '../../../interfaces';
 import { formatToMoney } from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
 import CheckoutItem from '../../../components/store/CheckoutItem';
+import CheckoutForm from '../../../components/store/CheckoutForm';
 import { stores } from '../../../data';
 
 const CheckoutStyles = styled.div`
@@ -14,10 +15,10 @@ const CheckoutStyles = styled.div`
   .wrapper {
     margin: 0 auto;
     padding: 4rem 0;
-    max-width: 66rem;
+    max-width: 70rem;
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr 28rem;
+    grid-template-columns: 1fr 34rem;
     grid-template-rows: auto auto;
     gap: 0 6rem;
   }
@@ -29,22 +30,22 @@ const CheckoutStyles = styled.div`
   }
 
   h3 {
-    margin: 0 0 1.75rem;
+    margin: 0 0 1.25rem;
     font-size: 1.125rem;
     color: #36383e;
   }
 
-  .order-summary {
-    margin: 3rem 0 0;
+  .sidebar {
+    padding: 2rem 2.5rem;
+    background-color: #fff;
+    border-radius: 0.375rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+  }
 
-    .box {
-      padding: 0.5rem 1.875rem 1.875rem;
-      background-color: #fff;
-      border-radius: 0.375rem;
-      border: 1px solid #e5e7eb;
-      box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-        rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
-    }
+  .order-summary {
+    padding: 3rem 0 0;
 
     .item {
       padding: 1.125rem 0;
@@ -83,19 +84,6 @@ const CheckoutStyles = styled.div`
         }
       }
     }
-
-    button {
-      margin: 0.25rem 0 0;
-      padding: 0.625rem 0;
-      width: 100%;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #fff;
-      background-color: #0f6fba;
-      border: none;
-      border-radius: 0.25rem;
-      cursor: pointer;
-    }
   }
 `;
 
@@ -116,42 +104,36 @@ export default function CheckoutV2({ store }: Props) {
         <div className="wrapper">
           <div>
             <h2>Checkout</h2>
+            <CheckoutForm />
           </div>
-          <div>
-            <div>
-              <div className="products">
-                <h3>Your Products</h3>
-                <div className="items">
-                  {items.map(item => (
-                    <CheckoutItem key={item.id} item={item} />
-                  ))}
-                </div>
+          <div className="sidebar">
+            <div className="products">
+              <h3>Your Products</h3>
+              <div className="items">
+                {items.map(item => (
+                  <CheckoutItem key={item.id} item={item} />
+                ))}
               </div>
             </div>
             <div className="order-summary">
               <h3>Order Summary</h3>
-              <div className="box">
-                <div className="item">
-                  <div className="key">Subtotal</div>
-                  <div className="value">
-                    {formatToMoney(cartSubtotal, true)}
-                  </div>
+              <div className="item">
+                <div className="key">Subtotal</div>
+                <div className="value">{formatToMoney(cartSubtotal, true)}</div>
+              </div>
+              <div className="item">
+                <div className="key">Shipping</div>
+                <div className="value">{formatToMoney(0, true)}</div>
+              </div>
+              <div className="item">
+                <div className="key">Sales Tax</div>
+                <div className="value">
+                  {formatToMoney(transactionFee, true)}
                 </div>
-                <div className="item">
-                  <div className="key">Shipping</div>
-                  <div className="value">{formatToMoney(0, true)}</div>
-                </div>
-                <div className="item">
-                  <div className="key">Sales Tax</div>
-                  <div className="value">
-                    {formatToMoney(transactionFee, true)}
-                  </div>
-                </div>
-                <div className="item total">
-                  <div className="key">Order Total</div>
-                  <div className="value">{formatToMoney(cartTotal, true)}</div>
-                </div>
-                <button type="submit">Submit order</button>
+              </div>
+              <div className="item total">
+                <div className="key">Order Total</div>
+                <div className="value">{formatToMoney(cartTotal, true)}</div>
               </div>
             </div>
           </div>
