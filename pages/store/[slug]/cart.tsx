@@ -6,9 +6,9 @@ import useHasMounted from '../../../hooks/useHasMounted';
 import StoreLayout from '../../../components/store/StoreLayout';
 import styled from 'styled-components';
 import CartItem from '../../../components/store/CartItem';
-import OrderTotals from '../../../components/store/OrderTotals';
 import { CartItem as CartItemInterface, Store } from '../../../interfaces';
-import Button from '../../../components/store/Button';
+import { formatToMoney } from '../../../utils'
+import LinkButton from '../../../components/store/Link';
 import { stores } from '../../../data';
 
 const CartStyles = styled.div`
@@ -16,7 +16,7 @@ const CartStyles = styled.div`
 
   .wrapper {
     margin: 4rem auto;
-    max-width: 70rem;
+    max-width: 72rem;
     width: 100%;
   }
 
@@ -34,7 +34,7 @@ const CartStyles = styled.div`
 
   .grid {
     display: grid;
-    grid-template-columns: 1fr 20.5rem;
+    grid-template-columns: 1fr 25rem;
     gap: 0 6rem;
   }
 
@@ -44,26 +44,63 @@ const CartStyles = styled.div`
   }
 
   .order-summary {
+    padding: 1.875rem 2.5rem;
     width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-
-    .inner {
-      width: 100%;
-      display: grid;
-      gap: 1rem 0;
-    }
+    background-color: #fff;
+    border-radius: 0.375rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
 
     h3 {
-      margin: 0 0 1.5rem;
-      font-size: 1rem;
+      margin: 0 0 1rem;
+      font-size: 1.125rem;
       font-weight: 600;
+    }
+
+    .item {
+      padding: 1.125rem 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e5e7eb;
+
+      &:last-of-type {
+        border: none;
+      }
+
+      .key,
+      .value {
+        font-size: 0.9375rem;
+        font-weight: 500;
+      }
+
+      .key {
+        color: #6b7280;
+      }
+
+      .value {
+        color: #111827;
+      }
+
+      &.total {
+        .key, .value {
+          color: #374151;
+          font-size: 1rem;
+          font-weight: 700;
+        }
+
+        .value {
+          color: #059669;
+        }
+      }
     }
   }
 
   .link-btn {
-    margin: 1.5rem 0 0;
+    margin: 1.875rem 0 0;
     padding: 0.75rem 1.5rem;
     background-color: #3f6ed4;
     font-size: 0.875rem;
@@ -125,7 +162,6 @@ const CartStyles = styled.div`
     .order-summary {
       margin: 3rem 0 0;
       max-width: 100%;
-      align-items: center;
     }
 
     .empty-cart {
@@ -188,21 +224,31 @@ export default function Cart({ store, error }: Props) {
                     ))
                   )}
                 </div>
-                <div className="order-summary">
-                  <div className="inner">
+                <div>
+                  <div className="order-summary">
                     <h3>Order Summary</h3>
-                    <OrderTotals
-                      subtotal={cartSubtotal}
-                      transactionFee={transactionFee}
-                      total={cartTotal}
-                    />
-                    <Button
-                      as="a"
-                      color="black"
+                    <div className="item">
+                      <div className="key">Subtotal</div>
+                      <div className="value">{formatToMoney(cartSubtotal, true)}</div>
+                    </div>
+                    <div className="item">
+                      <div className="key">Estimated Shipping</div>
+                      <div className="value">{formatToMoney(0, true)}</div>
+                    </div>
+                    <div className="item">
+                      <div className="key">Estimated Sales Tax</div>
+                      <div className="value">
+                        {formatToMoney(transactionFee, true)}
+                      </div>
+                    </div>
+                    <div className="item total">
+                      <div className="key">Order Total</div>
+                      <div className="value">{formatToMoney(cartTotal, true)}</div>
+                    </div>
+                    <LinkButton
                       href={`/store/${store.slug}/checkout`}
-                    >
-                      Checkout
-                    </Button>
+                      label="Checkout"
+                    />
                   </div>
                 </div>
               </div>

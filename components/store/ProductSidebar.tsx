@@ -3,7 +3,7 @@ import Link from 'next/link';
 import styled from 'styled-components';
 import { formatToMoney } from '../../utils';
 import { Item, Size } from '../../interfaces';
-import Button from './Button';
+import LinkButton from './Link';
 
 const ProductSidebarStyles = styled.div`
   .fullscreen {
@@ -151,6 +151,35 @@ const ProductSidebarStyles = styled.div`
     gap: 1rem;
   }
 
+  .white-link-button {
+    padding: 0.75rem 1.25rem;
+    height: 2.625rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff;
+    color: #3a3f4a;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.011em;
+    line-height: 1;
+    border: 1px solid #d1d5db;
+    border-radius: 0.25rem;
+    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+      rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background-color: #fff;
+    }
+
+    &:focus {
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4F46E5 0px 0px 0px 4px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+    }
+  }
+
   .store-home-link {
     margin: 1rem 0 0;
     font-size: 0.9375rem;
@@ -277,16 +306,13 @@ export default function ProductSidebar({
               </div>
             </div>
             <div className="actions">
-              <Button as="a" href={`/store/${storeSlug}/cart`} color="white">
-                View Cart
-              </Button>
-              <Button
-                as="a"
+              <Link href={`/store/${storeSlug}/cart`}>
+                <a className="white-link-button">View Cart</a>
+              </Link>
+              <LinkButton
                 href={`/store/${storeSlug}/checkout`}
-                color="black"
-              >
-                Checkout
-              </Button>
+                label="Checkout"
+              />
             </div>
             <div className="store-home-link">
               <Link href={`/store/${storeSlug}`}>

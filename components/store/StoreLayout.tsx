@@ -71,6 +71,7 @@ a {
 
 * {
   box-sizing: border-box;
+  outline-color: #4F46E5;
 }
 
 .sr-only {
@@ -99,13 +100,59 @@ input, select {
   box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
 }
 
-input {
-  padding: 0.625rem 0.75rem;
+input:not([type="checkbox"], [type="radio"]) {
+  padding: 0.6875rem 0.75rem;
+
+  &:focus {
+    outline-color: #4F46E5;
+  }
+}
+
+input[type="checkbox"]:checked, input[type='radio']:checked {
+  border-color: transparent;
+  background-color: currentColor;
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+input[type='checkbox']:focus, input[type='radio']:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, rgb(99, 102, 241) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px;
+}
+
+input[type='checkbox'] {
+  padding: 0;
+  width: 1rem;
+  height: 1rem;
+  display: inline-block;
+  vertical-align: middle;
+  user-select: none;
+  flex-shrink: 0;
+  border-radius: 0.25rem;
+  color: rgb(79, 70, 229);
+}
+
+input[type="checkbox"]:checked {
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+}
+
+input[type="radio"] {
+  margin: 0%;
+  height: 1rem;
+  width: 1rem;
+  border-radius: 100%;
+  flex-shrink: 0;
+  color: rgb(79,70,229);
+}
+
+input[type="radio"]:checked {
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e");
 }
 
 select {
-  padding: 0 2.5rem 0 0.75rem;
-  height: 42px;
+  padding: 0.6875rem 2.5rem 0.75rem 0.75rem;
   background-color: #fff;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M7 7l3-3 3 3m0 6l-3 3-3-3' stroke='%239fa6b2' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-position: right 0.5rem center;

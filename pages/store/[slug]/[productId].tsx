@@ -66,6 +66,7 @@ const ColorStyles = styled.div`
     background-color: transparent;
     border: none;
     box-shadow: none;
+    z-index: -1;
 
     &:focus {
       outline: 2px solid transparent;
@@ -74,6 +75,11 @@ const ColorStyles = styled.div`
 
     &:focus + .label-wrapper {
       border-color: rgb(99, 102, 241);
+    }
+
+    &:checked {
+      background-image: none;
+      color: transparent;
     }
   }
 `;
@@ -89,9 +95,8 @@ const Color = (props: ColorProps) => (
       checked={props.color === props.label}
     />
     <div
-      className={`label-wrapper ${
-        props.color === props.label ? 'checked' : ''
-      }`}
+      className={`label-wrapper ${props.color === props.label ? 'checked' : ''
+        }`}
     >
       <label htmlFor={props.label}>
         <span className="sr-only">{props.label}</span>
@@ -303,8 +308,7 @@ const ProductStyles = styled.div`
     &:focus {
       outline: 2px solid transparent;
       outline-offset: 2px;
-      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px,
-        rgb(99, 102, 241) 0px 0px 0px 4px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4F46E5 0px 0px 0px 4px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     }
   }
 
@@ -575,9 +579,8 @@ export default function Product({ store, product, error }: Props) {
                   {product.sizes.map(s => (
                     <div
                       key={s.id}
-                      className={`size ${
-                        size && size.label === s.label ? 'checked' : ''
-                      }`}
+                      className={`size ${size && size.label === s.label ? 'checked' : ''
+                        }`}
                     >
                       <input
                         type="radio"

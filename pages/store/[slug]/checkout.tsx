@@ -2,152 +2,116 @@ import React from 'react';
 import { GetServerSideProps } from 'next';
 import styled from 'styled-components';
 import { useCart } from '../../../hooks/useCart';
-import useHasMounted from '../../../hooks/useHasMounted';
+import { Store } from '../../../interfaces';
+import { formatToMoney } from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
+import CheckoutItem from '../../../components/store/CheckoutItem';
 import CheckoutForm from '../../../components/store/CheckoutForm';
-import CheckoutOrderItem from '../../../components/store/CheckoutOrderItem';
-import OrderTotals from '../../../components/store/OrderTotals';
-import { CartItem, Store } from '../../../interfaces';
 import { stores } from '../../../data';
 
 const CheckoutStyles = styled.div`
-  margin: 3rem auto;
   padding: 0 1.5rem;
-  max-width: 65rem;
-  width: 100%;
 
   h2 {
-    margin: 0 0 2.5rem;
-    font-size: 1.5rem;
-    text-align: center;
+    margin: 4rem auto 0;
+    max-width: 72rem;
+    font-size: 1.625rem;
   }
 
-  .row {
+  .wrapper {
+    margin: 0 auto;
+    max-width: 72rem;
+    width: 100%;
     display: grid;
-    grid-template-columns: minmax(32rem, 1fr) minmax(22rem, 24rem);
+    grid-template-columns: minmax(0, 32rem) 32rem;
+    grid-template-rows: auto auto;
+    justify-content: space-between;
+    gap: 0 3rem;
+  }
+
+  .sidebar {
+    padding: 2rem 2.5rem;
     background-color: #fff;
-    border-radius: 0.5rem;
-    box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
-  }
-
-  .main {
-    margin: 2rem 0;
-    border-right: 1px solid #e5e7eb;
-  }
-
-  .order-details-btn {
-    display: none;
-  }
-
-  .order {
-    margin: 3rem auto;
-    max-width: 18rem;
-
-    &.open,
-    &.closed {
-      display: block;
-    }
+    border-radius: 0.375rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
 
     h3 {
       margin: 0 0 1.25rem;
-      font-size: 1rem;
-      font-weight: 600;
-    }
-
-    .summary {
-      margin: 1.5rem 0 0;
+      font-size: 1.125rem;
+      color: #36383e;
     }
   }
 
-  @media (max-width: 930px) {
-    .row {
-      padding: 0;
-      display: flex;
-      flex-direction: column-reverse;
-      background-color: transparent;
-      box-shadow: none;
-    }
+  .order-summary {
+    padding: 3rem 0 0;
 
-    .main {
-      padding: 0 1.25rem;
-      border-right: none;
-      background-color: #fcfcfd;
-      border-radius: 0.5rem;
-      box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
-        rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
-    }
-
-    .order {
-      margin: 0 auto;
-      padding: 1rem 1.25rem 1.75rem;
-      max-width: unset;
-      background-color: #fcfcfd;
-      border-radius: 0 0 0.5rem 0.5rem;
-      box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
-        rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
-
-      &.closed {
-        display: none;
-      }
-
-      h3 {
-        display: none;
-      }
-    }
-
-    .order-details-btn {
-      position: relative;
-      margin: 0 auto;
-      padding: 0.75rem 1.25rem;
-      width: 100%;
+    .item {
+      padding: 1.125rem 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background-color: #3a3f4a;
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 0.875rem;
-      font-weight: 600;
-      border-radius: 0.375rem;
-      border: 2px solid transparent;
-      cursor: pointer;
-      z-index: 10;
+      border-bottom: 1px solid #e5e7eb;
 
-      svg {
-        height: 1.125rem;
-        width: 1.125rem;
+      &:last-of-type {
+        border: none;
+      }
 
-        &.flipped {
-          transform: rotate(180deg);
+      .key,
+      .value {
+        font-size: 0.9375rem;
+        font-weight: 500;
+      }
+
+      .key {
+        color: #6b7280;
+      }
+
+      .value {
+        color: #111827;
+      }
+
+      &.total {
+        .key, .value {
+          color: #374151;
+          font-size: 1rem;
+          font-weight: 700;
+        }
+
+        .value {
+          color: #059669;
         }
       }
+    }
+  }
 
-      &.open {
-        border-radius: 0.5rem 0.5rem 0 0;
-      }
+  @media (max-width: 1024px) {
+    h2 {
+      margin: 3rem 0;
+      font-size: 1.5rem;
+      text-align: center;
+    }
 
-      &:hover {
-        background-color: #31363f;
-        border-color: #484a52;
-      }
+    .wrapper {
+      max-width: 38rem;
+      display: flex;
+      flex-direction: column-reverse;
+    }
+  }
 
-      &:focus {
-        outline: none;
-        box-shadow: 0 0 0 4px rgba(149, 152, 162, 0.35);
-        border-color: #303137;
-      }
+  @media (max-width: 500px) {
+    .sidebar {
+      padding: 1.75rem 1.5rem;
     }
   }
 `;
 
 type Props = {
   store: Store;
-  error: string;
 };
 
-export default function Checkout({ store, error }: Props) {
-  const hasMounted = useHasMounted();
-  const [isOpen, setIsOpen] = React.useState(false);
+export default function CheckoutV2({ store }: Props) {
   const { items, totalItems, cartSubtotal, transactionFee, cartTotal } =
     useCart();
 
@@ -157,53 +121,42 @@ export default function Checkout({ store, error }: Props) {
       storeSlug={store.slug}
     >
       <CheckoutStyles>
-        <h2>{store.name} Checkout</h2>
-        <div className="row">
-          <div className="main">
-            <CheckoutForm />
-          </div>
-          {hasMounted ? (
+        <h2>Order Checkout</h2>
+        <div className="wrapper">
+          <CheckoutForm />
+          <div>
             <div className="sidebar">
-              <button
-                className={`order-details-btn ${isOpen ? 'open' : ''}`}
-                onClick={() => setIsOpen(!isOpen)}
-              >
-                Order Details ({totalItems} Item
-                {totalItems > 1 ? 's' : totalItems === 0 ? 's' : null})
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className={isOpen ? 'flipped' : ''}
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-              <div className={`order ${isOpen ? 'open' : 'closed'}`}>
-                <h3>
-                  Order Details ({totalItems} Item
-                  {totalItems > 1 ? 's' : totalItems === 0 ? 's' : null})
-                </h3>
-                <div className="order-items">
-                  {items.map((item: CartItem) => (
-                    <CheckoutOrderItem key={item.id} item={item} />
+              <div className="products">
+                <h3>Your Products</h3>
+                <div className="items">
+                  {items.map(item => (
+                    <CheckoutItem key={item.id} item={item} />
                   ))}
                 </div>
-                <div className="summary">
-                  <h3>Order Summary</h3>
-                  <OrderTotals
-                    subtotal={cartSubtotal}
-                    transactionFee={transactionFee}
-                    total={cartTotal}
-                  />
+              </div>
+              <div className="order-summary">
+                <h3>Order Summary</h3>
+                <div className="item">
+                  <div className="key">Subtotal</div>
+                  <div className="value">{formatToMoney(cartSubtotal, true)}</div>
+                </div>
+                <div className="item">
+                  <div className="key">Estimated Shipping</div>
+                  <div className="value">{formatToMoney(0, true)}</div>
+                </div>
+                <div className="item">
+                  <div className="key">Estimated Sales Tax</div>
+                  <div className="value">
+                    {formatToMoney(transactionFee, true)}
+                  </div>
+                </div>
+                <div className="item total">
+                  <div className="key">Order Total</div>
+                  <div className="value">{formatToMoney(cartTotal, true)}</div>
                 </div>
               </div>
             </div>
-          ) : null}
+          </div>
         </div>
       </CheckoutStyles>
     </StoreLayout>
