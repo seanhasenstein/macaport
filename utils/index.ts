@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
 import { CartItem } from '../interfaces';
 
-const months = [
+export const months = [
   'January',
   'February',
   'March',

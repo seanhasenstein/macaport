@@ -16,7 +16,7 @@ import {
 import * as Yup from 'yup';
 import { useCart } from '../../hooks/useCart';
 import useHasMounted from '../../hooks/useHasMounted';
-import { unitedStates } from '../../utils'
+import { unitedStates } from '../../utils';
 
 const CheckoutFormStyles = styled.div`
   .section {
@@ -35,7 +35,7 @@ const CheckoutFormStyles = styled.div`
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.0375em;
-    color: #6B7280;
+    color: #6b7280;
   }
 
   .radio-shipping-group {
@@ -51,12 +51,12 @@ const CheckoutFormStyles = styled.div`
     position: relative;
 
     &.checked {
-      background-color: #EEF2FF;
-      border-color: #C7D2FE;
+      background-color: #eef2ff;
+      border-color: #c7d2fe;
       z-index: 100;
 
       label {
-        color: #3730A3;
+        color: #3730a3;
       }
     }
 
@@ -93,8 +93,8 @@ const CheckoutFormStyles = styled.div`
     margin: 0 0 1.5rem;
 
     input {
-    margin: 0 0.75rem 0 0;
-  }
+      margin: 0 0.75rem 0 0;
+    }
   }
 
   .section-title {
@@ -138,8 +138,8 @@ const CheckoutFormStyles = styled.div`
     letter-spacing: 0.011em;
     border: 1px solid #181a1e;
     border-radius: 0.375rem;
-    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     cursor: pointer;
 
     &:hover:not(:disabled) {
@@ -149,7 +149,8 @@ const CheckoutFormStyles = styled.div`
     &:focus {
       outline: 2px solid transparent;
       outline-offset: 2px;
-      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4F46E5 0px 0px 0px 4px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4f46e5 0px 0px 0px 4px,
+        rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     }
 
     &:disabled {
@@ -420,7 +421,7 @@ export default function CheckoutForm() {
           address2: '',
           city: '',
           state: '',
-          zipcode: ''
+          zipcode: '',
         },
         cardholderName: '',
       }}
@@ -431,7 +432,9 @@ export default function CheckoutForm() {
         <CheckoutFormStyles>
           <Form>
             <div className="section">
-              <h3 className="section-title"><span>Shipping Details</span></h3>
+              <h3 className="section-title">
+                <span>Shipping Details</span>
+              </h3>
               <div className="field-row">
                 <FieldItem name="firstName" label="First Name" />
                 <FieldItem name="lastName" label="Last Name" />
@@ -440,16 +443,34 @@ export default function CheckoutForm() {
               <FieldItem name="phone" label="Phone Number" />
               <h4>Choose a shipping method:</h4>
               <div className="radio-shipping-group">
-                <div className={`radio-shipping-item ${values.shippingMethod === 'PRIMARY' ? 'checked' : ''}`}>
+                <div
+                  className={`radio-shipping-item ${
+                    values.shippingMethod === 'PRIMARY' ? 'checked' : ''
+                  }`}
+                >
                   <label htmlFor="primaryShipping">
-                    <Field type="radio" name="shippingMethod" id="primaryShipping" value="PRIMARY" />
+                    <Field
+                      type="radio"
+                      name="shippingMethod"
+                      id="primaryShipping"
+                      value="PRIMARY"
+                    />
                     <div>Pick up at New London HS</div>
                     <div className="shipping-price">Free</div>
                   </label>
                 </div>
-                <div className={`radio-shipping-item ${values.shippingMethod === 'CUSTOM' ? 'checked' : ''}`}>
+                <div
+                  className={`radio-shipping-item ${
+                    values.shippingMethod === 'CUSTOM' ? 'checked' : ''
+                  }`}
+                >
                   <label htmlFor="secondaryShipping">
-                    <Field type="radio" name="shippingMethod" id="secondaryShipping" value="CUSTOM" />
+                    <Field
+                      type="radio"
+                      name="shippingMethod"
+                      id="secondaryShipping"
+                      value="CUSTOM"
+                    />
                     <div>Ship directly to you</div>
                     <div className="shipping-price">$4.99</div>
                   </label>
@@ -457,16 +478,24 @@ export default function CheckoutForm() {
               </div>
               {values.shippingMethod === 'CUSTOM' && (
                 <div>
-                  <FieldItem name="shippingAddress.address1" label="Street Address" />
-                  <FieldItem name="shippingAddress.address2" label="Address Line 2" />
+                  <FieldItem
+                    name="shippingAddress.address1"
+                    label="Street Address"
+                  />
+                  <FieldItem
+                    name="shippingAddress.address2"
+                    label="Address Line 2"
+                  />
                   <div className="field-row">
                     <FieldItem name="shippingAddress.city" label="City" />
                     <FieldItemStyles>
                       <label htmlFor="shippingAddress.state">State</label>
                       <Field name="shippingAddress.state" as="select">
-                        <option value="default">Select your state</option>
+                        <option value="default">Select state</option>
                         {unitedStates.map((s, i) => (
-                          <option key={i} value={s}>{s}</option>
+                          <option key={i} value={s}>
+                            {s}
+                          </option>
                         ))}
                       </Field>
                     </FieldItemStyles>
@@ -476,19 +505,34 @@ export default function CheckoutForm() {
               )}
             </div>
             <div className="section">
-              <h3 className="section-title"><span>Billing Details</span></h3>
+              <h3 className="section-title">
+                <span>Billing Details</span>
+              </h3>
               {values.shippingMethod === 'CUSTOM' && (
                 <div className="checkbox-item">
-                  <Field type="checkbox" name="billingShippingSameAddress" id="billingShippingSameAddress" />
-                  <label htmlFor="billingShippingSameAddress">Billing and shipping address are the same
+                  <Field
+                    type="checkbox"
+                    name="billingShippingSameAddress"
+                    id="billingShippingSameAddress"
+                  />
+                  <label htmlFor="billingShippingSameAddress">
+                    Billing and shipping address are the same
                   </label>
                 </div>
               )}
               <FieldItem name="cardholderName" label="Cardholder's Name" />
-              {!values.billingShippingSameAddress || (values.shippingMethod !== 'CUSTOM' && values.billingShippingSameAddress) ? (
+              {!values.billingShippingSameAddress ||
+              (values.shippingMethod !== 'CUSTOM' &&
+                values.billingShippingSameAddress) ? (
                 <div>
-                  <FieldItem name="billingAddress.address1" label="Street Address" />
-                  <FieldItem name="billingAddress.address2" label="Address Line 2" />
+                  <FieldItem
+                    name="billingAddress.address1"
+                    label="Street Address"
+                  />
+                  <FieldItem
+                    name="billingAddress.address2"
+                    label="Address Line 2"
+                  />
                   <div className="field-row">
                     <FieldItem name="billingAddress.city" label="City" />
                     <FieldItemStyles>
@@ -496,7 +540,9 @@ export default function CheckoutForm() {
                       <Field name="billingAddress.state" as="select">
                         <option value="default">Select your state</option>
                         {unitedStates.map((s, i) => (
-                          <option key={i} value={s}>{s}</option>
+                          <option key={i} value={s}>
+                            {s}
+                          </option>
                         ))}
                       </Field>
                     </FieldItemStyles>

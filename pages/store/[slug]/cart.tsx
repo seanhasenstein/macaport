@@ -7,7 +7,7 @@ import StoreLayout from '../../../components/store/StoreLayout';
 import styled from 'styled-components';
 import CartItem from '../../../components/store/CartItem';
 import { CartItem as CartItemInterface, Store } from '../../../interfaces';
-import { formatToMoney } from '../../../utils'
+import { formatToMoney } from '../../../utils';
 import LinkButton from '../../../components/store/Link';
 import { stores } from '../../../data';
 
@@ -86,7 +86,8 @@ const CartStyles = styled.div`
       }
 
       &.total {
-        .key, .value {
+        .key,
+        .value {
           color: #374151;
           font-size: 1rem;
           font-weight: 700;
@@ -97,30 +98,6 @@ const CartStyles = styled.div`
         }
       }
     }
-  }
-
-  .link-btn {
-    margin: 1.875rem 0 0;
-    padding: 0.75rem 1.5rem;
-    background-color: #3f6ed4;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.9);
-    text-align: center;
-    border-radius: 0.375rem;
-    border: 2px solid transparent;
-    cursor: pointer;
-  }
-
-  .link-btn:hover {
-    background-color: #3863be;
-    border-color: #3f6ed4;
-  }
-
-  .link-btn:focus {
-    outline: none;
-    box-shadow: 0 0 0 4px rgba(65, 141, 203, 0.3);
-    border-color: #2f62d0;
   }
 
   .empty-cart {
@@ -229,7 +206,9 @@ export default function Cart({ store, error }: Props) {
                     <h3>Order Summary</h3>
                     <div className="item">
                       <div className="key">Subtotal</div>
-                      <div className="value">{formatToMoney(cartSubtotal, true)}</div>
+                      <div className="value">
+                        {formatToMoney(cartSubtotal, true)}
+                      </div>
                     </div>
                     <div className="item">
                       <div className="key">Estimated Shipping</div>
@@ -243,7 +222,9 @@ export default function Cart({ store, error }: Props) {
                     </div>
                     <div className="item total">
                       <div className="key">Order Total</div>
-                      <div className="value">{formatToMoney(cartTotal, true)}</div>
+                      <div className="value">
+                        {formatToMoney(cartTotal, true)}
+                      </div>
                     </div>
                     <LinkButton
                       href={`/store/${store.slug}/checkout`}
