@@ -68,7 +68,8 @@ export interface Order {
 }
 
 export interface Store {
-  id: string;
+  _id: string;
+  storeId: string;
   name: string;
   slug: string;
   startDate: string;

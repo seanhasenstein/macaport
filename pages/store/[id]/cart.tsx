@@ -1,15 +1,15 @@
 import React from 'react';
 import { GetServerSideProps } from 'next';
+import { connectToDb, store } from '../../../db';
 import Link from 'next/link';
+import styled from 'styled-components';
 import { useCart } from '../../../hooks/useCart';
 import useHasMounted from '../../../hooks/useHasMounted';
-import StoreLayout from '../../../components/store/StoreLayout';
-import styled from 'styled-components';
-import CartItem from '../../../components/store/CartItem';
 import { CartItem as CartItemInterface, Store } from '../../../interfaces';
 import { formatToMoney } from '../../../utils';
+import StoreLayout from '../../../components/store/StoreLayout';
+import CartItem from '../../../components/store/CartItem';
 import LinkButton from '../../../components/store/Link';
-import { stores } from '../../../data';
 
 const CartStyles = styled.div`
   padding: 0 1.5rem;
@@ -168,10 +168,7 @@ export default function Cart({ store, error }: Props) {
   }
 
   return (
-    <StoreLayout
-      title={`Cart | ${store.name} | Macaport`}
-      storeSlug={store.slug}
-    >
+    <StoreLayout title={`Cart | ${store.name} | Macaport`}>
       <CartStyles>
         <div className="wrapper">
           <h2>Your Cart</h2>
@@ -186,18 +183,14 @@ export default function Cart({ store, error }: Props) {
                   {cartIsEmpty ? (
                     <div className="empty-cart">
                       Your cart is empty.{' '}
-                      <Link href={`/store/${store.slug}`}>
+                      <Link href={`/store/${store._id}`}>
                         Back to store home
                       </Link>
                       .
                     </div>
                   ) : (
                     items.map((item: CartItemInterface) => (
-                      <CartItem
-                        key={item.id}
-                        item={item}
-                        storeName={store.name}
-                      />
+                      <CartItem key={item.id} item={item} storeId={store._id} />
                     ))
                   )}
                 </div>
@@ -227,7 +220,7 @@ export default function Cart({ store, error }: Props) {
                       </div>
                     </div>
                     <LinkButton
-                      href={`/store/${store.slug}/checkout`}
+                      href={`/store/${store._id}/checkout`}
                       label="Checkout"
                     />
                   </div>
@@ -243,9 +236,18 @@ export default function Cart({ store, error }: Props) {
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
-    const store = stores.find(s => s.slug === context.query.slug);
+    const id = Array.isArray(context.query.id)
+      ? context.query.id[0]
+      : context.query.id;
 
-    if (!store) {
+    if (!id) {
+      throw new Error('No store id provided.');
+    }
+
+    const { db } = await connectToDb();
+    const storeRes = await store.getStoreById(db, id);
+
+    if (!storeRes) {
       return {
         redirect: {
           permanent: false,
@@ -255,8 +257,9 @@ export const getServerSideProps: GetServerSideProps = async context => {
     }
 
     const now = new Date();
-    const storeIsActive =
-      store.closeDate === null ? true : new Date(store.closeDate) > now;
+    const storeIsActive = !storeRes.closeDate
+      ? true
+      : new Date(storeRes.closeDate) > now;
 
     if (!storeIsActive) {
       return {
@@ -267,7 +270,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    return { props: { store } };
+    return { props: { store: storeRes } };
   } catch (err) {
     return {
       props: { error: err.message },

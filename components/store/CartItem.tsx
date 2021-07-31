@@ -176,10 +176,10 @@ const CartItemStyles = styled.div`
 
 type Props = {
   item: CartItemInterface;
-  storeName: string;
+  storeId: string;
 };
 
-export default function CartItem({ item, storeName }: Props) {
+export default function CartItem({ item, storeId }: Props) {
   const [size, setSize] = React.useState(item.size.label);
   const [quantity, setQuantity] = React.useState(item.quantity);
   const { removeItem, updateItemSize, updateItemQuantity } = useCart();
@@ -218,7 +218,9 @@ export default function CartItem({ item, storeName }: Props) {
   return (
     <CartItemStyles item={item}>
       <div className="item-image">
-        <Link href={`/store/${storeName}/${item.productId}`}>
+        <Link
+          href={`/store/${storeId}/product?productId=${item.productId}&color=${item.color}`}
+        >
           <a>
             <img src={item.image} alt={`${item.color} ${item.name}`} />
           </a>
@@ -226,7 +228,9 @@ export default function CartItem({ item, storeName }: Props) {
       </div>
       <div className="item-details">
         <h3 className="primary">
-          <Link href={`/store/${storeName}/${item.productId}`}>
+          <Link
+            href={`/store/${storeId}/product?productId=${item.productId}&color=${item.color}`}
+          >
             <a>{item.name}</a>
           </Link>
         </h3>

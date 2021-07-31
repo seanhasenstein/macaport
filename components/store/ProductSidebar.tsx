@@ -165,8 +165,8 @@ const ProductSidebarStyles = styled.div`
     line-height: 1;
     border: 1px solid #d1d5db;
     border-radius: 0.25rem;
-    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     cursor: pointer;
 
     &:hover:not(:disabled) {
@@ -176,7 +176,8 @@ const ProductSidebarStyles = styled.div`
     &:focus {
       outline: 2px solid transparent;
       outline-offset: 2px;
-      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4F46E5 0px 0px 0px 4px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4f46e5 0px 0px 0px 4px,
+        rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     }
   }
 
@@ -203,7 +204,7 @@ const ProductSidebarStyles = styled.div`
 `;
 
 type Props = {
-  storeSlug: string;
+  storeId: string;
   item: Item;
   color: string;
   size?: Size;
@@ -213,7 +214,7 @@ type Props = {
 };
 
 export default function ProductSidebar({
-  storeSlug,
+  storeId,
   item,
   color,
   size,
@@ -306,16 +307,16 @@ export default function ProductSidebar({
               </div>
             </div>
             <div className="actions">
-              <Link href={`/store/${storeSlug}/cart`}>
+              <Link href={`/store/${storeId}/cart`}>
                 <a className="white-link-button">View Cart</a>
               </Link>
               <LinkButton
-                href={`/store/${storeSlug}/checkout`}
+                href={`/store/${storeId}/checkout`}
                 label="Checkout"
               />
             </div>
             <div className="store-home-link">
-              <Link href={`/store/${storeSlug}`}>
+              <Link href={`/store/${storeId}`}>
                 <a>Back to store home</a>
               </Link>
             </div>

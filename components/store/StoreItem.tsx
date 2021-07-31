@@ -6,7 +6,7 @@ import { formatToMoney } from '../../utils';
 
 type Props = {
   item: Item;
-  storeSlug: string;
+  storeId: string;
 };
 
 const ColorStyles = styled.div`
@@ -105,12 +105,12 @@ const StoreItemStyles = styled.a`
   }
 `;
 
-export default function StoreItem({ item, storeSlug }: Props) {
+export default function StoreItem({ item, storeId }: Props) {
   const [activeColor, setActiveColor] = React.useState(item.colors[0]);
 
   return (
     <Link
-      href={`/store/${storeSlug}/${item.id}?color=${activeColor.label}`}
+      href={`/store/${storeId}/product?productId=${item.id}&color=${activeColor.label}`}
       passHref
     >
       <StoreItemStyles>

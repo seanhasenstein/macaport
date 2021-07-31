@@ -50,6 +50,7 @@ const GlobalStyles = createGlobalStyle`
   padding: 0;
   margin: 0;
   position: relative;
+  height: 100%;
   font-size: 16px;
   letter-spacing: -0.011em;
   background-color: #f9fafb;
@@ -60,6 +61,10 @@ const GlobalStyles = createGlobalStyle`
 html, body, button, input, select {
   font-family: 'Inter',-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+}
+
+#__next {
+  height: 100%;
 }
 
 a {
@@ -141,7 +146,9 @@ select:focus {
 `;
 
 const LayoutStyles = styled.div`
-  width: 100%;
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
 
   nav {
     padding: 0 1.5rem;
@@ -152,7 +159,7 @@ const LayoutStyles = styled.div`
   .wrapper {
     margin: 0 auto;
     padding: 0.875rem 0;
-    max-width: 1280px;
+    max-width: 90rem;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -162,6 +169,29 @@ const LayoutStyles = styled.div`
 
   .logo {
     width: 12rem;
+  }
+
+  footer {
+    margin: 0;
+    padding: 0 1.5rem;
+
+    .wrapper {
+      margin: 0 auto;
+      padding: 1.75rem 0;
+      max-width: 90rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .copyright {
+      font-size: 0.9375rem;
+      color: #9ca3af;
+      text-align: center;
+    }
   }
 
   @media (max-width: 500px) {
@@ -183,7 +213,7 @@ export default function NoNavLayout({ children, title = 'Macaport' }: Props) {
       <header>
         <nav>
           <div className="wrapper">
-            <Link href="/">
+            <Link href="/stores">
               <a>
                 <img
                   src="/images/logo.png"
@@ -195,8 +225,14 @@ export default function NoNavLayout({ children, title = 'Macaport' }: Props) {
           </div>
         </nav>
       </header>
-      <div>{children}</div>
-      <footer />
+      <main>{children}</main>
+      <footer>
+        <div className="wrapper">
+          <div className="copyright">
+            &copy; Macaport {new Date().getFullYear()}. All Rights Reserved.
+          </div>
+        </div>
+      </footer>
     </LayoutStyles>
   );
 }

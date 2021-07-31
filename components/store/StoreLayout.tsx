@@ -1,11 +1,10 @@
 import React, { ReactNode } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styled, { createGlobalStyle } from 'styled-components';
 
 type Props = {
-  storeId?: string;
-  storeSlug?: string;
   children: ReactNode;
   title?: string;
 };
@@ -51,6 +50,7 @@ const GlobalStyles = createGlobalStyle`
   body {
   padding: 0;
   margin: 0;
+  height: 100%;
   position: relative;
   font-size: 16px;
   letter-spacing: -0.011em;
@@ -62,6 +62,10 @@ const GlobalStyles = createGlobalStyle`
 html, body, button, input, select {
   font-family: 'Inter',-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+}
+
+#__next {
+  height: 100%;
 }
 
 a {
@@ -104,7 +108,10 @@ input:not([type="checkbox"], [type="radio"]) {
   padding: 0.6875rem 0.75rem;
 
   &:focus {
-    outline-color: #4F46E5;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px, #4F46E5 0px 0px 0px 1px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+    border: 1px solid #4F46E5;
   }
 }
 
@@ -167,9 +174,11 @@ select {
 }
 
 select:focus {
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(65, 141, 203, 0.2);
-  border-color: #8faef4;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px, #4F46E5 0px 0px 0px 1px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+  border: 1px solid #4F46E5;
+
 }
 
 @media (max-width: 500px) {
@@ -190,42 +199,67 @@ select:focus {
 `;
 
 const LayoutStyles = styled.div`
-  width: 100%;
-`;
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
 
-const Nav = styled.nav`
-  padding: 0 1.5rem;
-  position: relative;
-  background-color: #f9fafb;
+  nav {
+    padding: 0 1.5rem;
+    position: relative;
+    background-color: #f9fafb;
 
-  .wrapper {
-    margin: 0 auto;
-    padding: 0.875rem 0;
-    max-width: 1280px;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #e5e7eb;
-  }
+    .wrapper {
+      margin: 0 auto;
+      padding: 0.875rem 0;
+      max-width: 90rem;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e5e7eb;
+    }
 
-  svg {
-    height: 1.5rem;
-    width: 1.5rem;
-    color: #545c6b;
-  }
+    svg {
+      height: 1.5rem;
+      width: 1.5rem;
+      color: #545c6b;
+    }
 
-  a:hover svg {
-    color: #181a1e;
-  }
+    a:hover svg {
+      color: #181a1e;
+    }
 
-  .logo {
-    width: 12rem;
-  }
-
-  @media (max-width: 500px) {
     .logo {
-      width: 9rem;
+      width: 12rem;
+    }
+
+    @media (max-width: 500px) {
+      .logo {
+        width: 9rem;
+      }
+    }
+  }
+
+  footer {
+    margin: 0;
+    padding: 0 1.5rem;
+
+    .wrapper {
+      margin: 0 auto;
+      padding: 1.75rem 0;
+      max-width: 90rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .copyright {
+      font-size: 0.9375rem;
+      color: #9ca3af;
+      text-align: center;
     }
   }
 `;
@@ -233,8 +267,9 @@ const Nav = styled.nav`
 export default function StoreLayout({
   children,
   title = 'Macaport Store',
-  storeSlug,
 }: Props) {
+  const router = useRouter();
+
   return (
     <LayoutStyles>
       <GlobalStyles />
@@ -244,9 +279,9 @@ export default function StoreLayout({
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
       </Head>
       <header>
-        <Nav>
+        <nav>
           <div className="wrapper">
-            <Link href={`/store/${storeSlug}`}>
+            <Link href={`/store/${router.query.id}`}>
               <a title="Store Home">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -263,7 +298,7 @@ export default function StoreLayout({
                 </svg>
               </a>
             </Link>
-            <Link href={`/store/${storeSlug}`}>
+            <Link href={`/store/${router.query.id}`}>
               <a>
                 <img
                   src="/images/logo.png"
@@ -272,7 +307,7 @@ export default function StoreLayout({
                 />
               </a>
             </Link>
-            <Link href={`/store/${storeSlug}/cart`}>
+            <Link href={`/store/${router.query.id}/cart`}>
               <a title="Cart">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -290,10 +325,16 @@ export default function StoreLayout({
               </a>
             </Link>
           </div>
-        </Nav>
+        </nav>
       </header>
-      <div>{children}</div>
-      <footer />
+      <main>{children}</main>
+      <footer>
+        <div className="wrapper">
+          <div className="copyright">
+            &copy; Macaport {new Date().getFullYear()}. All Rights Reserved.
+          </div>
+        </div>
+      </footer>
     </LayoutStyles>
   );
 }

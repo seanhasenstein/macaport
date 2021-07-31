@@ -1,12 +1,12 @@
 import Link from 'next/link';
+import styled from 'styled-components';
 import NoNavLayout from '../components/store/NoNavLayout';
-import { MessageStyles } from '../styles/Message';
 
 export default function StoreNotFound() {
   return (
     <NoNavLayout>
-      <MessageStyles>
-        <div className="content">
+      <StoreNotFoundStyles>
+        <div className="wrapper">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="icon"
@@ -22,12 +22,65 @@ export default function StoreNotFound() {
             />
           </svg>
           <h3>Store Not Found</h3>
-          <p>The store you are looking for does not exist.</p>
-          <Link href="/stores">
-            <a className="button">See all available stores</a>
-          </Link>
+          <p>
+            The store you are looking for does not exist.
+            <br />
+            <Link href="/stores">
+              <a className="button">See all available stores</a>
+            </Link>
+            .
+          </p>
         </div>
-      </MessageStyles>
+      </StoreNotFoundStyles>
     </NoNavLayout>
   );
 }
+
+const StoreNotFoundStyles = styled.div`
+  padding: 6rem 1.5rem;
+
+  .wrapper {
+    padding: 1.875rem 0 2.5rem;
+    max-width: 40rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-top: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  h3 {
+    margin: 0.5rem 0 0.75rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  p {
+    margin: 0 auto;
+    max-width: 34rem;
+    width: 100%;
+    font-size: 1rem;
+    color: #6e788c;
+    line-height: 1.5;
+  }
+
+  a {
+    color: #3b82f6;
+    text-decoration: underline;
+
+    &:hover {
+      color: #2563eb;
+    }
+  }
+
+  svg {
+    margin: 0 0 0.5rem;
+    height: 1.75rem;
+    width: 1.75rem;
+    color: #f87171;
+  }
+`;

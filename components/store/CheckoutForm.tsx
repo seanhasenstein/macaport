@@ -302,7 +302,7 @@ function ErrorMessage({ name }: ErrorMessageProps) {
   );
 }
 
-export default function CheckoutForm() {
+export default function CheckoutForm({ storeId }: { storeId: string }) {
   const hasMounted = useHasMounted();
   const router = useRouter();
   const {
@@ -394,7 +394,7 @@ export default function CheckoutForm() {
       setServerResponseError(undefined);
       emptyCart();
       router.push(
-        `/demo-store/order-confirmation?id=${serverResponse.orderId!}`
+        `/store/${storeId}/order-confirmation?orderId=${serverResponse.orderId!}`
       );
     }
   };
@@ -568,7 +568,7 @@ export default function CheckoutForm() {
               {hasMounted && cartIsEmpty && !isSubmitting && (
                 <div className="empty-cart">
                   Your cart is empty.{' '}
-                  <Link href="/demo-store">
+                  <Link href={`/store/${storeId}`}>
                     <a>Go to add items</a>
                   </Link>
                   .

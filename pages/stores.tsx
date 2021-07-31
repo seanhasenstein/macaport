@@ -1,10 +1,10 @@
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import styled from 'styled-components';
-import Layout from '../components/Layout';
-import { stores } from '../data';
+import { connectToDb, store } from '../db';
 import { Store } from '../interfaces';
 import { formatDate } from '../utils';
+import Layout from '../components/Layout';
 
 type Props = {
   stores: Store[];
@@ -73,7 +73,7 @@ export default function Stores({ stores }: Props) {
               <span>Close Date</span>
             </div>
             {stores.map(s => (
-              <Link key={s.id} href={`/store/${s.slug}`}>
+              <Link key={s._id} href={`/store/${s._id}`}>
                 <a>
                   <div className="item">
                     <span className="store-name">{s.name}</span>
@@ -94,10 +94,11 @@ export default function Stores({ stores }: Props) {
 }
 
 export const getServerSideProps: GetServerSideProps = async () => {
+  const { db } = await connectToDb();
+  const stores: Store[] = await store.getStores(db);
   const activeStores = stores.filter(s => {
     const now = new Date();
-    const isActive = s.closeDate === null ? true : new Date(s.closeDate) > now;
-
+    const isActive = !s.closeDate ? true : new Date(s.closeDate) > now;
     return isActive;
   });
 

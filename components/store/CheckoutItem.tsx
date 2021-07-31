@@ -3,7 +3,6 @@ import { CartItem } from '../../interfaces';
 import { formatToMoney } from '../../utils';
 
 const CheckoutItemStyles = styled.div`
-  /* max-width: 26rem; */
   width: 100%;
   padding: 1.5rem 0;
   display: grid;

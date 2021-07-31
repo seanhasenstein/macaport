@@ -79,7 +79,6 @@ function createSkusFromSizesAndColors(
     skus = [...skus, ...skusResult];
   });
 
-  console.log('skus: ', skus);
   return skus;
 }
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { GetServerSideProps } from 'next';
+import { connectToDb, store } from '../../../db';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { useCart } from '../../../hooks/useCart';
@@ -10,7 +11,6 @@ import StoreLayout from '../../../components/store/StoreLayout';
 import ProductSidebar from '../../../components/store/ProductSidebar';
 import Lightbox from '../../../components/store/Lightbox';
 import { MessageStyles } from '../../../styles/Message';
-import { stores } from '../../../data';
 
 type Props = {
   store: Store;
@@ -95,8 +95,9 @@ const Color = (props: ColorProps) => (
       checked={props.color === props.label}
     />
     <div
-      className={`label-wrapper ${props.color === props.label ? 'checked' : ''
-        }`}
+      className={`label-wrapper ${
+        props.color === props.label ? 'checked' : ''
+      }`}
     >
       <label htmlFor={props.label}>
         <span className="sr-only">{props.label}</span>
@@ -308,7 +309,8 @@ const ProductStyles = styled.div`
     &:focus {
       outline: 2px solid transparent;
       outline-offset: 2px;
-      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4F46E5 0px 0px 0px 4px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4f46e5 0px 0px 0px 4px,
+        rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     }
   }
 
@@ -413,7 +415,7 @@ export default function Product({ store, product, error }: Props) {
     if (error) return;
 
     router.push(
-      `/store/${store.slug}/${product.id}?color=${color}`,
+      `/store/${store._id}/product?productId=${product.id}&color=${color}`,
       undefined,
       { shallow: true }
     );
@@ -502,7 +504,7 @@ export default function Product({ store, product, error }: Props) {
               </svg>
               <h3>Error</h3>
               <p>{error}</p>
-              <Link href={`/store/${router.query.slug}`}>
+              <Link href={`/store/${store._id}`}>
                 <a className="button">Back to store home</a>
               </Link>
             </div>
@@ -514,11 +516,7 @@ export default function Product({ store, product, error }: Props) {
 
   return (
     <>
-      <StoreLayout
-        storeId={store.id}
-        storeSlug={store.slug}
-        title={`${product.name} | ${store.name} | Macaport`}
-      >
+      <StoreLayout title={`${product.name} | ${store.name} | Macaport`}>
         <ProductStyles>
           <div className="wrapper">
             <div className="mobile-header">
@@ -579,8 +577,9 @@ export default function Product({ store, product, error }: Props) {
                   {product.sizes.map(s => (
                     <div
                       key={s.id}
-                      className={`size ${size && size.label === s.label ? 'checked' : ''
-                        }`}
+                      className={`size ${
+                        size && size.label === s.label ? 'checked' : ''
+                      }`}
                     >
                       <input
                         type="radio"
@@ -629,7 +628,7 @@ export default function Product({ store, product, error }: Props) {
           </div>
         </ProductStyles>
         <ProductSidebar
-          storeSlug={store.slug}
+          storeId={store._id}
           item={product}
           color={color}
           size={size}
@@ -653,9 +652,18 @@ export default function Product({ store, product, error }: Props) {
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
-    const store = stores.find(s => s.slug === context.query.slug);
+    const id = Array.isArray(context.query.id)
+      ? context.query.id[0]
+      : context.query.id;
 
-    if (!store) {
+    if (!id) {
+      throw new Error('No store id provided.');
+    }
+
+    const { db } = await connectToDb();
+    const storeRes: Store = await store.getStoreById(db, id);
+
+    if (!storeRes) {
       return {
         redirect: {
           permanent: false,
@@ -665,8 +673,9 @@ export const getServerSideProps: GetServerSideProps = async context => {
     }
 
     const now = new Date();
-    const storeIsActive =
-      store.closeDate === null ? true : new Date(store.closeDate) > now;
+    const storeIsActive = !storeRes.closeDate
+      ? true
+      : new Date(storeRes.closeDate) > now;
 
     if (!storeIsActive) {
       return {
@@ -677,13 +686,15 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    const product = store.products.find(p => p.id === context.query.productId);
+    const product = storeRes.products.find(
+      p => p.id === context.query.productId
+    );
 
     if (!product) {
       throw new Error('Product not found.');
     }
 
-    return { props: { store, product } };
+    return { props: { store: storeRes, product } };
   } catch (err) {
     return {
       props: { error: err.message },

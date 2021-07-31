@@ -1,5 +1,6 @@
 import React from 'react';
 import { GetServerSideProps } from 'next';
+import { connectToDb, store } from '../../../db';
 import styled from 'styled-components';
 import { useCart } from '../../../hooks/useCart';
 import { Store } from '../../../interfaces';
@@ -7,7 +8,6 @@ import { formatToMoney } from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
 import CheckoutItem from '../../../components/store/CheckoutItem';
 import CheckoutForm from '../../../components/store/CheckoutForm';
-import { stores } from '../../../data';
 
 const CheckoutStyles = styled.div`
   padding: 0 1.5rem;
@@ -44,6 +44,10 @@ const CheckoutStyles = styled.div`
     }
   }
 
+  .empty {
+    color: #6b7280;
+  }
+
   .order-summary {
     padding: 3rem 0 0;
 
@@ -73,7 +77,8 @@ const CheckoutStyles = styled.div`
       }
 
       &.total {
-        .key, .value {
+        .key,
+        .value {
           color: #374151;
           font-size: 1rem;
           font-weight: 700;
@@ -111,23 +116,22 @@ type Props = {
   store: Store;
 };
 
-export default function CheckoutV2({ store }: Props) {
-  const { items, totalItems, cartSubtotal, transactionFee, cartTotal } =
-    useCart();
+export default function Checkout({ store }: Props) {
+  const { items, cartSubtotal, transactionFee, cartTotal } = useCart();
 
   return (
-    <StoreLayout
-      title={`Checkout | ${store.name} | Macaport`}
-      storeSlug={store.slug}
-    >
+    <StoreLayout title={`Checkout | ${store.name} | Macaport`}>
       <CheckoutStyles>
         <h2>Order Checkout</h2>
         <div className="wrapper">
-          <CheckoutForm />
+          <CheckoutForm storeId={store._id} />
           <div>
             <div className="sidebar">
               <div className="products">
-                <h3>Your Products</h3>
+                <h3>Order Items</h3>
+                {items.length < 1 && (
+                  <div className="empty">There are no items in your order.</div>
+                )}
                 <div className="items">
                   {items.map(item => (
                     <CheckoutItem key={item.id} item={item} />
@@ -138,7 +142,9 @@ export default function CheckoutV2({ store }: Props) {
                 <h3>Order Summary</h3>
                 <div className="item">
                   <div className="key">Subtotal</div>
-                  <div className="value">{formatToMoney(cartSubtotal, true)}</div>
+                  <div className="value">
+                    {formatToMoney(cartSubtotal, true)}
+                  </div>
                 </div>
                 <div className="item">
                   <div className="key">Estimated Shipping</div>
@@ -165,9 +171,18 @@ export default function CheckoutV2({ store }: Props) {
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
-    const store = stores.find(s => s.slug === context.query.slug);
+    const id = Array.isArray(context.query.id)
+      ? context.query.id[0]
+      : context.query.id;
 
-    if (!store) {
+    if (!id) {
+      throw new Error('No store id provided.');
+    }
+
+    const { db } = await connectToDb();
+    const storeRes = await store.getStoreById(db, id);
+
+    if (!storeRes) {
       return {
         redirect: {
           permanent: false,
@@ -177,8 +192,9 @@ export const getServerSideProps: GetServerSideProps = async context => {
     }
 
     const now = new Date();
-    const storeIsActive =
-      store.closeDate === null ? true : new Date(store.closeDate) > now;
+    const storeIsActive = !storeRes.closeDate
+      ? true
+      : new Date(storeRes.closeDate) > now;
 
     if (!storeIsActive) {
       return {
@@ -189,7 +205,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    return { props: { store } };
+    return { props: { store: storeRes } };
   } catch (err) {
     return {
       props: { error: err.message },
