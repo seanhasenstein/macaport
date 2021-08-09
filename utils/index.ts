@@ -1,21 +1,6 @@
 import * as crypto from 'crypto';
 import { CartItem } from '../interfaces';
 
-export const months = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
 export const unitedStates = [
   'Alaska',
   'Alabama',
