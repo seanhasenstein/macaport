@@ -679,7 +679,7 @@ function generateReceiptHtml(order: Order) {
                                 <a
                                   href="mailto:support@macaport.com?subject=Order Inquiry [Order #${
                                     order.orderId
-                                  }"
+                                  }]"
                                   style="color: #4338CA; text-decoration: none"
                                   >support@macaport.com</a
                                 >.

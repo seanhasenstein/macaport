@@ -142,8 +142,9 @@ select:focus {
 
 const LayoutStyles = styled.div`
   min-height: 100%;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 `;
 
 type Props = {
