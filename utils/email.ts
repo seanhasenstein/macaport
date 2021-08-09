@@ -1,4 +1,5 @@
-import { formatPhoneNumber, formatDate, formatToMoney } from './index';
+import { format } from 'date-fns';
+import { formatPhoneNumber, formatToMoney } from './index';
 import { Order } from '../interfaces';
 
 interface Message {
@@ -45,25 +46,29 @@ export function generateContactFormEmail(
 function generateReceiptText(order: Order) {
   return `Hi ${
     order.customer.firstName
-  },\n\nThis is confirmation for your Macaport Demo Apparel Order. \n\nOrder ID: ${
-    order._id
-  } \nDate: ${formatDate(`${order.createdAt}`)} \nName: ${
-    order.customer.firstName
-  } ${order.customer.lastName} \nEmail: ${
+  },\n\nThis is confirmation for your Macaport Apparel Order. \n\nOrder #: ${
+    order.orderId
+  } \nDate: ${format(
+    new Date(order.createdAt!),
+    'EEE. LLL dd, yyyy'
+  )} \nName: ${order.customer.firstName} ${order.customer.lastName} \nEmail: ${
     order.customer.email
-  } \n\nOrder Summary:
+  } \nPhone: ${formatPhoneNumber(order.customer.phone)} \n\nOrder Summary:
   ${order.items
     .map(
       i =>
-        `\n${i.name} (${i.size}) Qty: ${i.quantity} - ${formatToMoney(
+        `\n${i.name} (${i.sku.size.label}) Qty: ${i.quantity} - ${formatToMoney(
           i.itemTotal!
         )}`
     )
     .join('')} \n\nSubtotal: ${formatToMoney(
     order.summary.subtotal,
     true
-  )} \nTransaction Fee: ${formatToMoney(
-    order.summary.transactionFee,
+  )} \nShipping: ${formatToMoney(
+    order.summary.shipping,
+    true
+  )} \nSales Tax: ${formatToMoney(
+    order.summary.salesTax,
     true
   )} \nTotal: ${formatToMoney(order.summary.total, true)}
   `;
@@ -177,7 +182,7 @@ function generateReceiptHtml(order: Order) {
       style="
         margin: 0 !important;
         padding: 0 !important;
-        background-color: #edf0f3;
+        background-color: #E5E7EB;
       "
     >
       <table
@@ -199,7 +204,7 @@ function generateReceiptHtml(order: Order) {
               bgcolor="#ffffff"
               style="
                 background-color: #ffffff;
-                color: #242a37;
+                color: #1F2937;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
                   Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue',
                   sans-serif;
@@ -210,7 +215,7 @@ function generateReceiptHtml(order: Order) {
               "
             >
               <tr>
-                <td style="padding: 0 64px" class="mobile-padding">
+                <td style="padding: 0 64px;" class="mobile-padding">
                   <table
                     class="mobile"
                     border="0"
@@ -221,11 +226,11 @@ function generateReceiptHtml(order: Order) {
                   >
                     <!-- Logo -->
                     <tr>
-                      <td align="center" style="padding: 42px 0 18px">
+                      <td align="center" style="padding: 40px 0 24px">
                         <img
-                          src="https://res.cloudinary.com/dra3wumrv/image/upload/v1621535049/macaport/logo-main-bg.png"
+                          src="https://res.cloudinary.com/dra3wumrv/image/upload/v1621535049/macaport/logo-horizontal-transparent.png"
                           alt="Macaport logo with mountains"
-                          width="64"
+                          width="200"
                           style="display: block; margin: 0 auto"
                         />
                       </td>
@@ -239,7 +244,7 @@ function generateReceiptHtml(order: Order) {
                             margin: 0;
                             font-size: 20px;
                             font-weight: 400;
-                            color: #232c35;
+                            color: #111827;
                             text-align: center;
                           "
                         >
@@ -256,7 +261,7 @@ function generateReceiptHtml(order: Order) {
                             margin: 0;
                             font-size: 15px;
                             font-weight: 400;
-                            color: #8398ad;
+                            color: #868f9d;
                             text-align: center;
                           "
                         >
@@ -266,6 +271,7 @@ function generateReceiptHtml(order: Order) {
                     </tr>
   
                     <!-- Order Details -->
+                    <!-- Order Date -->
                     <tr>
                       <td style="font-size: 15px; line-height: 1.5">
                         <table
@@ -279,7 +285,7 @@ function generateReceiptHtml(order: Order) {
                         >
                           <tr>
                             <td
-                              style="color: #242a37; font-weight: 500"
+                              style="color: #1F2937; font-weight: 500"
                               class="item-title"
                             >
                               Date:
@@ -296,13 +302,17 @@ function generateReceiptHtml(order: Order) {
                           width="300"
                         >
                           <tr>
-                            <td style="color: #52677b">
-                              ${formatDate(`${order.createdAt}`)}
+                            <td style="color: #6B7280">
+                              ${format(
+                                new Date(order.createdAt!),
+                                'EEE. LLL dd, yyyy'
+                              )}
                             </td>
                           </tr>
                         </table>
                       </td>
                     </tr>
+                    <!-- First and Last Name -->
                     <tr>
                       <td style="font-size: 15px; line-height: 1.5">
                         <table
@@ -317,7 +327,7 @@ function generateReceiptHtml(order: Order) {
                           <tr>
                             <td
                               class="item-title"
-                              style="color: #242a37; font-weight: 500"
+                              style="color: #1F2937; font-weight: 500"
                             >
                               Name:
                             </td>
@@ -333,7 +343,7 @@ function generateReceiptHtml(order: Order) {
                           width="300"
                         >
                           <tr>
-                            <td style="color: #52677b">
+                            <td style="color: #6B7280">
                               ${order.customer.firstName}
                               ${order.customer.lastName}
                             </td>
@@ -341,6 +351,7 @@ function generateReceiptHtml(order: Order) {
                         </table>
                       </td>
                     </tr>
+                    <!-- Email Address -->
                     <tr>
                       <td style="font-size: 15px; line-height: 1.5">
                         <table
@@ -355,7 +366,7 @@ function generateReceiptHtml(order: Order) {
                           <tr>
                             <td
                               class="item-title"
-                              style="color: #242a37; font-weight: 500"
+                              style="color: #1F2937; font-weight: 500"
                             >
                               Email:
                             </td>
@@ -371,8 +382,98 @@ function generateReceiptHtml(order: Order) {
                           width="300"
                         >
                           <tr>
-                            <td style="color: #52677b">
+                            <td style="color: #6B7280">
                               ${order.customer.email}
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <!-- Phone Number -->
+                    <tr>
+                      <td style="font-size: 15px; line-height: 1.5">
+                        <table
+                          class="mobile-full-width"
+                          align="left"
+                          border="0"
+                          cellpadding="0"
+                          cellspacing="0"
+                          role="presentation"
+                          width="70"
+                        >
+                          <tr>
+                            <td
+                              class="item-title"
+                              style="color: #1F2937; font-weight: 500"
+                            >
+                              Phone:
+                            </td>
+                          </tr>
+                        </table>
+                        <table
+                          class="mobile-full-width"
+                          align="left"
+                          border="0"
+                          cellpadding="0"
+                          cellspacing="0"
+                          role="presentation"
+                          width="300"
+                        >
+                          <tr>
+                            <td style="color: #6B7280">
+                              ${formatPhoneNumber(order.customer.phone)}
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <!-- Shipping Address -->
+                    <tr>
+                      <td style="padding: 24px 0 0; font-size: 15px; line-height: 1.5">
+                        <table
+                          class="mobile-full-width"
+                          border="0"
+                          cellpadding="0"
+                          cellspacing="0"
+                          role="presentation"
+                        >
+                          <tr>
+                            <td
+                              class="item-title"
+                              style="color: #1F2937; font-weight: 500"
+                            >
+                              Shipping Address:
+                            </td>
+                          </tr>
+                        </table>
+                        <table
+                          class="mobile-full-width"
+                          border="0"
+                          cellpadding="0"
+                          cellspacing="0"
+                          role="presentation"
+                        >
+                        <tr>
+                          <td style="color: #6B7280">
+                            ${
+                              order.shippingMethod === 'Primary'
+                                ? order.shippingAddress.name
+                                : `${order.customer.firstName} ${order.customer.lastName}`
+                            }
+                          </td>
+                        </tr>
+                          <tr>
+                            <td style="color: #6B7280">
+                              ${order.shippingAddress.street} ${
+    order.shippingAddress.street2
+  }
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="color: #6B7280">
+                              ${order.shippingAddress.city}, ${
+    order.shippingAddress.state
+  } ${order.shippingAddress.zipcode}
                             </td>
                           </tr>
                         </table>
@@ -394,7 +495,7 @@ function generateReceiptHtml(order: Order) {
                               style="
                                 font-size: 12px;
                                 font-weight: 500;
-                                color: #8398ad;
+                                color: #6B7280;
                                 text-transform: uppercase;
                                 letter-spacing: 0.5px;
                                 line-height: 1.65;
@@ -414,7 +515,7 @@ function generateReceiptHtml(order: Order) {
                           cellspacing="0"
                           role="presentation"
                           width="100%"
-                          style="background-color: #f8f8f8"
+                          style="background-color: #F3F4F6"
                         >
                           <tr>
                             <td style="padding: 0 20px">
@@ -429,15 +530,15 @@ function generateReceiptHtml(order: Order) {
                                 ${order.items
                                   .map(
                                     (item, index) => `
-                                <tr key="${item.id}">
+                                <tr key="${item.sku.id}">
                                   <td
                                     style="${`
                                       padding: 18px 0;
-                                      color: #242a37;
+                                      color: #1F2937;
                                       line-height: 1;
                                       ${
                                         index !== 0
-                                          ? 'border-top: 1px solid #e5e5e5;'
+                                          ? 'border-top: 1px solid #dadde2;'
                                           : ''
                                       }
                                     `}"
@@ -463,11 +564,15 @@ function generateReceiptHtml(order: Order) {
                                           <div
                                             style="
                                               font-size: 14px;
-                                              color: #627b93;
+                                              color: #595f6b;
                                             "
                                           >
-                                            Color: ${item.color} | Size:
-                                            ${item.size} | Qty: ${item.quantity}
+                                            Color: ${
+                                              item.sku.color.label
+                                            } | Size:
+                                            ${item.sku.size.label} | Qty: ${
+                                      item.quantity
+                                    }
                                           </div>
                                         </td>
                                         <td
@@ -499,7 +604,7 @@ function generateReceiptHtml(order: Order) {
                         style="
                           padding: 32px 0 42px;
                           font-size: 15px;
-                          color: #52677b;
+                          color: #6B7280;
                           line-height: 1.5;
                         "
                       >
@@ -512,29 +617,32 @@ function generateReceiptHtml(order: Order) {
                           width="240"
                         >
                           <tr>
-                            <td>Subtotal:</td>
-                            <td style="text-align: right">
+                            <td style="padding: 0 0 2px">Subtotal:</td>
+                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
                               ${formatToMoney(order.summary.subtotal, true)}
                             </td>
                           </tr>
                           <tr>
-                            <td>Transaction Fee:</td>
-                            <td style="text-align: right">
-                              ${formatToMoney(
-                                order.summary.transactionFee,
-                                true
-                              )}
+                            <td style="padding: 0 0 2px">Sales Tax:</td>
+                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
+                              ${formatToMoney(order.summary.salesTax, true)}
                             </td>
                           </tr>
                           <tr>
-                            <td style="font-weight: bold; color: #242a37">
+                            <td style="padding: 0 0 2px">Shipping:</td>
+                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
+                              ${formatToMoney(order.summary.shipping, true)}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="font-weight: 600; color: #1F2937">
                               Total:
                             </td>
                             <td
                               style="
                                 text-align: right;
-                                font-weight: bold;
-                                color: #10b981;
+                                font-weight: 600;
+                                color: #059669;
                               "
                             >
                               ${formatToMoney(order.summary.total, true)}
@@ -559,25 +667,21 @@ function generateReceiptHtml(order: Order) {
                               style="
                                 padding: 28px 0;
                                 font-size: 16px;
-                                color: #5a7187;
+                                color: #6B7280;
                                 line-height: 1.5;
-                                border-top: 1px solid #e6ebf1;
-                                border-bottom: 1px solid #e6ebf1;
+                                border-top: 1px solid #E5E7EB;
+                                border-bottom: 1px solid #E5E7EB;
                               "
                             >
                               <p style="margin: 0">
-                                If you have any questions about your order,
-                                contact us at
+                                If you have any questions about your payment or order,
+                                please feel free to contact us at
                                 <a
-                                  href="#"
-                                  style="color: #2563eb; text-decoration: none"
-                                  >test@email.com</a
-                                >
-                                or call at
-                                <a
-                                  href="#"
-                                  style="color: #2563eb; text-decoration: none"
-                                  >(123) 456-7890</a
+                                  href="mailto:support@macaport.com?subject=Order Inquiry [Order #${
+                                    order.orderId
+                                  }"
+                                  style="color: #4338CA; text-decoration: none"
+                                  >support@macaport.com</a
                                 >.
                               </p>
                             </td>
@@ -591,22 +695,26 @@ function generateReceiptHtml(order: Order) {
                       <td
                         style="
                           padding: 40px 0;
-                          color: #5a7187;
+                          color: #6B7280;
                           font-size: 14px;
                           line-height: 1.3;
                         "
                       >
                         <p style="margin: 0 0 20px 0">
                           You're receiving this email because you made a purchase
-                          from
-                          <a
-                            href="#"
-                            style="color: #2563eb; text-decoration: none"
-                            >Macaport Demo Apparel Store</a
-                          >.
+                        from the ${
+                          order.store.name
+                        } store by <a href="https://macaport.com/" style="color: #4338CA; text-decoration: none">Macaport LLC</a>.
+                        </p>
+                        <p style="margin: 0 0 20px 0">
+                          <a href="https://macaport.com/store/${
+                            order.store.id
+                          }/order-confirmation?orderId=${
+    order.orderId
+  }" style="color: #4338CA; text-decoration: none">Click here</a> to view your order in the web browser.
                         </p>
                         <p style="margin: 0">
-                          1234 Test Street, New London, WI 12345
+                          Macaport LLC, E8644 Casey Rd, New London, WI 54961
                         </p>
                       </td>
                     </tr>

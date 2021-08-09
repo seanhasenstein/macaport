@@ -14,9 +14,333 @@ import {
   ErrorMessage as FormikErrorMessage,
 } from 'formik';
 import * as Yup from 'yup';
+import { unitedStates, removeNonDigits } from '../../utils';
 import { useCart } from '../../hooks/useCart';
 import useHasMounted from '../../hooks/useHasMounted';
-import { unitedStates } from '../../utils';
+
+type FormProps = {
+  customer: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+  };
+  shippingAddress: {
+    street: string;
+    street2: string;
+    city: string;
+    state: string;
+    zipcode: string;
+  };
+  shippingMethod: 'Primary' | 'Direct' | 'None';
+  cardholderName: string;
+};
+
+type FieldItemProps = {
+  name: string;
+  label: string;
+};
+
+type ErrorMessageProps = {
+  name: string;
+};
+
+type ServerResponse = {
+  success?: true;
+  orderId?: string;
+  error?: string;
+};
+
+const CheckoutSchema = Yup.object().shape({
+  customer: Yup.object().shape({
+    firstName: Yup.string().required('First name is required'),
+    lastName: Yup.string().required('Last name is required'),
+    email: Yup.string().email('Invalid email').required('Email is required'),
+    phone: Yup.string()
+      .transform(value => {
+        return removeNonDigits(value);
+      })
+      .matches(
+        new RegExp(/^\d{10}$/),
+        'Phone number must be 10 digits (123) 456-7890'
+      )
+      .required('Phone number is required'),
+  }),
+  cardholderName: Yup.string().required("Cardholder's name is required"),
+});
+
+function FieldItem({ name, label }: FieldItemProps) {
+  return (
+    <FieldItemStyles>
+      <label htmlFor={name}>{label}</label>
+      <Field id={name} name={name} />
+      <ErrorMessage name={name} />
+    </FieldItemStyles>
+  );
+}
+
+function ErrorMessage({ name }: ErrorMessageProps) {
+  return (
+    <FormikErrorMessage
+      name={name}
+      render={msg => <ErrorMessageStyles>{msg}</ErrorMessageStyles>}
+    />
+  );
+}
+
+type Props = {
+  storeId: string;
+  storeName: string;
+  allowDirectShipping: boolean;
+  primaryShippingAddress: {
+    name: string;
+    street: string;
+    street2: string;
+    city: string;
+    state: string;
+    zipcode: string;
+  };
+};
+
+export default function CheckoutForm({
+  storeId,
+  storeName,
+  allowDirectShipping,
+  primaryShippingAddress,
+}: Props) {
+  const hasMounted = useHasMounted();
+  const router = useRouter();
+  const { items, cartSubtotal, salesTax, cartTotal, cartIsEmpty, emptyCart } =
+    useCart();
+  const [stripeError, setStripeError] = React.useState<string>();
+  const [serverResponseError, setServerResponseError] =
+    React.useState<string>();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const stripe = useStripe();
+  const elements = useElements();
+
+  const handleCardChange = (e: StripeCardElementChangeEvent) => {
+    if (e.error) {
+      setStripeError(e.error.message);
+      return;
+    }
+    setStripeError(undefined);
+  };
+
+  const handleSubmit = async (data: FormProps) => {
+    setIsSubmitting(true);
+    const cardElement = elements?.getElement(CardElement);
+
+    if (!stripe || !cardElement) {
+      setStripeError(
+        'An error has occured loading the page. Please refresh and try again.'
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    const result = await stripe.createPaymentMethod({
+      type: 'card',
+      card: cardElement,
+      billing_details: {
+        name: data.cardholderName,
+        email: data.customer.email,
+      },
+    });
+
+    if (result) handlePaymentMethodResult(result, data);
+  };
+
+  const handlePaymentMethodResult = async (
+    result: PaymentMethodResult,
+    data: FormProps
+  ) => {
+    if (result.error) {
+      setStripeError(result.error.message);
+      setIsSubmitting(false);
+      return;
+    } else {
+      const response = await fetch('/api/stripe-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storeId,
+          storeName,
+          payment_method_id: result.paymentMethod.id,
+          items,
+          customer: data.customer,
+          shippingMethod: data.shippingMethod,
+          shippingAddress:
+            data.shippingMethod === 'Direct'
+              ? data.shippingAddress
+              : data.shippingMethod === 'Primary'
+              ? primaryShippingAddress
+              : undefined,
+          summary: {
+            subtotal: cartSubtotal,
+            shipping: 0,
+            salesTax,
+            total: cartTotal,
+          },
+        }),
+      });
+
+      const serverResponse = await response.json();
+
+      handleServerResponse(serverResponse);
+    }
+  };
+
+  const handleServerResponse = (serverResponse: ServerResponse) => {
+    if (serverResponse.error) {
+      setServerResponseError(serverResponse.error);
+      console.error(serverResponse.error);
+      setIsSubmitting(false);
+    } else {
+      setServerResponseError(undefined);
+      emptyCart();
+      router.push(
+        `/store/${storeId}/order-confirmation?orderId=${serverResponse.orderId!}`
+      );
+    }
+  };
+
+  return (
+    <Formik
+      initialValues={{
+        customer: {
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+        },
+        shippingAddress: {
+          street: '',
+          street2: '',
+          city: '',
+          state: '',
+          zipcode: '',
+        },
+        shippingMethod: 'Primary',
+        cardholderName: '',
+      }}
+      validationSchema={CheckoutSchema}
+      onSubmit={handleSubmit}
+    >
+      {({ values }: { values: FormProps }) => (
+        <CheckoutFormStyles>
+          <Form>
+            <div className="section">
+              <h3 className="section-title">
+                <span>Shipping Details</span>
+              </h3>
+              <div className="field-row">
+                <FieldItem name="customer.firstName" label="First Name" />
+                <FieldItem name="customer.lastName" label="Last Name" />
+              </div>
+              <FieldItem name="customer.email" label="Email Address" />
+              <FieldItem name="customer.phone" label="Phone Number" />
+              <h4>Choose a shipping method:</h4>
+              <div className="radio-shipping-group">
+                <div
+                  className={`radio-shipping-item ${
+                    values.shippingMethod === 'Primary' ? 'checked' : ''
+                  }`}
+                >
+                  <label htmlFor="primaryShipping">
+                    <Field
+                      type="radio"
+                      name="shippingMethod"
+                      id="primaryShipping"
+                      value="Primary"
+                    />
+                    <div>Pick up at {primaryShippingAddress.name}</div>
+                    <div className="shipping-price">Free</div>
+                  </label>
+                </div>
+                {allowDirectShipping && (
+                  <div
+                    className={`radio-shipping-item ${
+                      values.shippingMethod === 'Direct' ? 'checked' : ''
+                    }`}
+                  >
+                    <label htmlFor="secondaryShipping">
+                      <Field
+                        type="radio"
+                        name="shippingMethod"
+                        id="secondaryShipping"
+                        value="Direct"
+                      />
+                      <div>Ship directly to you</div>
+                      <div className="shipping-price">$0.00</div>
+                    </label>
+                  </div>
+                )}
+              </div>
+              {values.shippingMethod === 'Direct' && (
+                <div>
+                  <FieldItem
+                    name="shippingAddress.street"
+                    label="Street Address"
+                  />
+                  <FieldItem
+                    name="shippingAddress.street2"
+                    label="Address Line 2"
+                  />
+                  <div className="field-row">
+                    <FieldItem name="shippingAddress.city" label="City" />
+                    <FieldItemStyles>
+                      <label htmlFor="shippingAddress.state">State</label>
+                      <Field name="shippingAddress.state" as="select">
+                        <option value="default">Select state</option>
+                        {unitedStates.map((s, i) => (
+                          <option key={i} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </Field>
+                    </FieldItemStyles>
+                  </div>
+                  <FieldItem name="shippingAddress.zipcode" label="Zipcode" />
+                </div>
+              )}
+            </div>
+            <div className="section">
+              <h3 className="section-title">
+                <span>Billing Details</span>
+              </h3>
+              <FieldItem name="cardholderName" label="Cardholder's Name" />
+              <label htmlFor="stripeInput">Card Information</label>
+              <div className="stripe-input">
+                <CardElement options={cardStyle} onChange={handleCardChange} />
+              </div>
+              {stripeError && <div className="stripe-error">{stripeError}</div>}
+              <button
+                type="submit"
+                disabled={!stripe || cartIsEmpty || isSubmitting}
+              >
+                {isSubmitting ? <LoadingSpinner /> : 'Place your order'}
+              </button>
+
+              {serverResponseError && (
+                <div className="stripe-error">{serverResponseError}</div>
+              )}
+              {hasMounted && cartIsEmpty && !isSubmitting && (
+                <div className="empty-cart">
+                  You have no items in your order.{' '}
+                  <Link href={`/store/${storeId}`}>
+                    <a>Go to store homepage</a>
+                  </Link>
+                  .
+                </div>
+              )}
+            </div>
+          </Form>
+        </CheckoutFormStyles>
+      )}
+    </Formik>
+  );
+}
 
 const CheckoutFormStyles = styled.div`
   .section {
@@ -199,7 +523,8 @@ const FieldItemStyles = styled.div`
 const ErrorMessageStyles = styled.div`
   margin: 0.25rem 0 0;
   font-size: 0.75rem;
-  color: #de1d3b;
+  font-weight: 500;
+  color: #b91c1c;
 `;
 
 const cardStyle = {
@@ -243,341 +568,3 @@ const LoadingSpinner = styled.span`
     animation: spinner 0.6s linear infinite;
   }
 `;
-
-type FormData = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  shippingAddress: {
-    address1: string;
-    address2: string;
-    city: string;
-    state: string;
-    zipcode: string;
-  };
-  shippingMethod: 'NONE' | 'PRIMARY' | 'CUSTOM';
-  billingShippingSameAddress: boolean;
-  cardholderName: string;
-};
-
-type FieldItemProps = {
-  name: string;
-  label: string;
-};
-
-type ErrorMessageProps = {
-  name: string;
-};
-
-type ServerResponse = {
-  success?: true;
-  orderId?: string;
-  error?: string;
-};
-
-const CheckoutSchema = Yup.object().shape({
-  firstName: Yup.string().required('First name is required'),
-  lastName: Yup.string().required('Last name is required'),
-  email: Yup.string().email('Invalid email').required('Email is required'),
-  cardholderName: Yup.string().required("Cardholder's name is required"),
-});
-
-function FieldItem({ name, label }: FieldItemProps) {
-  return (
-    <FieldItemStyles>
-      <label htmlFor={name}>{label}</label>
-      <Field id={name} name={name} />
-      <ErrorMessage name={name} />
-    </FieldItemStyles>
-  );
-}
-
-function ErrorMessage({ name }: ErrorMessageProps) {
-  return (
-    <FormikErrorMessage
-      name={name}
-      render={msg => <ErrorMessageStyles>{msg}</ErrorMessageStyles>}
-    />
-  );
-}
-
-export default function CheckoutForm({ storeId }: { storeId: string }) {
-  const hasMounted = useHasMounted();
-  const router = useRouter();
-  const {
-    items,
-    cartSubtotal,
-    transactionFee,
-    cartTotal,
-    cartIsEmpty,
-    emptyCart,
-  } = useCart();
-  const [stripeError, setStripeError] = React.useState<string>();
-  const [serverResponseError, setServerResponseError] =
-    React.useState<string>();
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const stripe = useStripe();
-  const elements = useElements();
-
-  const handleCardChange = (e: StripeCardElementChangeEvent) => {
-    if (e.error) {
-      setStripeError(e.error.message);
-      return;
-    }
-    setStripeError(undefined);
-  };
-
-  const handleSubmit = async (data: FormData) => {
-    setIsSubmitting(true);
-    const cardElement = elements?.getElement(CardElement);
-
-    if (!stripe || !cardElement) {
-      setStripeError(
-        'An error has occured loading the page. Please refresh and try again.'
-      );
-      setIsSubmitting(false);
-      return;
-    }
-
-    const result = await stripe.createPaymentMethod({
-      type: 'card',
-      card: cardElement,
-      billing_details: {
-        name: data.cardholderName,
-        email: data.email,
-      },
-    });
-
-    if (result) handlePaymentMethodResult(result, data);
-  };
-
-  const handlePaymentMethodResult = async (
-    result: PaymentMethodResult,
-    data: FormData
-  ) => {
-    if (result.error) {
-      setStripeError(result.error.message);
-      setIsSubmitting(false);
-      return;
-    } else {
-      // Don't want cardholderName in db
-      // eslint-disable-next-line
-      const { cardholderName, ...customer } = data;
-      const response = await fetch('/api/stripe-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          payment_method_id: result.paymentMethod.id,
-          items,
-          customer,
-          summary: {
-            subtotal: cartSubtotal,
-            transactionFee,
-            total: cartTotal,
-          },
-        }),
-      });
-
-      const serverResponse = await response.json();
-
-      handleServerResponse(serverResponse);
-    }
-  };
-
-  const handleServerResponse = (serverResponse: ServerResponse) => {
-    if (serverResponse.error) {
-      setServerResponseError(serverResponse.error);
-      console.error(serverResponse.error);
-      setIsSubmitting(false);
-    } else {
-      setServerResponseError(undefined);
-      emptyCart();
-      router.push(
-        `/store/${storeId}/order-confirmation?orderId=${serverResponse.orderId!}`
-      );
-    }
-  };
-
-  return (
-    <Formik
-      initialValues={{
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        shippingAddress: {
-          address1: '',
-          address2: '',
-          city: '',
-          state: '',
-          zipcode: '',
-        },
-        // TODO: Set shippingMethod value from database store settings
-        shippingMethod: 'PRIMARY',
-        billingShippingSameAddress: true,
-        billingAddress: {
-          address1: '',
-          address2: '',
-          city: '',
-          state: '',
-          zipcode: '',
-        },
-        cardholderName: '',
-      }}
-      validationSchema={CheckoutSchema}
-      onSubmit={handleSubmit}
-    >
-      {({ values }: { values: FormData }) => (
-        <CheckoutFormStyles>
-          <Form>
-            <div className="section">
-              <h3 className="section-title">
-                <span>Shipping Details</span>
-              </h3>
-              <div className="field-row">
-                <FieldItem name="firstName" label="First Name" />
-                <FieldItem name="lastName" label="Last Name" />
-              </div>
-              <FieldItem name="email" label="Email Address" />
-              <FieldItem name="phone" label="Phone Number" />
-              <h4>Choose a shipping method:</h4>
-              <div className="radio-shipping-group">
-                <div
-                  className={`radio-shipping-item ${
-                    values.shippingMethod === 'PRIMARY' ? 'checked' : ''
-                  }`}
-                >
-                  <label htmlFor="primaryShipping">
-                    <Field
-                      type="radio"
-                      name="shippingMethod"
-                      id="primaryShipping"
-                      value="PRIMARY"
-                    />
-                    <div>Pick up at New London HS</div>
-                    <div className="shipping-price">Free</div>
-                  </label>
-                </div>
-                <div
-                  className={`radio-shipping-item ${
-                    values.shippingMethod === 'CUSTOM' ? 'checked' : ''
-                  }`}
-                >
-                  <label htmlFor="secondaryShipping">
-                    <Field
-                      type="radio"
-                      name="shippingMethod"
-                      id="secondaryShipping"
-                      value="CUSTOM"
-                    />
-                    <div>Ship directly to you</div>
-                    <div className="shipping-price">$4.99</div>
-                  </label>
-                </div>
-              </div>
-              {values.shippingMethod === 'CUSTOM' && (
-                <div>
-                  <FieldItem
-                    name="shippingAddress.address1"
-                    label="Street Address"
-                  />
-                  <FieldItem
-                    name="shippingAddress.address2"
-                    label="Address Line 2"
-                  />
-                  <div className="field-row">
-                    <FieldItem name="shippingAddress.city" label="City" />
-                    <FieldItemStyles>
-                      <label htmlFor="shippingAddress.state">State</label>
-                      <Field name="shippingAddress.state" as="select">
-                        <option value="default">Select state</option>
-                        {unitedStates.map((s, i) => (
-                          <option key={i} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                      </Field>
-                    </FieldItemStyles>
-                  </div>
-                  <FieldItem name="shippingAddress.zipcode" label="Zipcode" />
-                </div>
-              )}
-            </div>
-            <div className="section">
-              <h3 className="section-title">
-                <span>Billing Details</span>
-              </h3>
-              {values.shippingMethod === 'CUSTOM' && (
-                <div className="checkbox-item">
-                  <Field
-                    type="checkbox"
-                    name="billingShippingSameAddress"
-                    id="billingShippingSameAddress"
-                  />
-                  <label htmlFor="billingShippingSameAddress">
-                    Billing and shipping address are the same
-                  </label>
-                </div>
-              )}
-              <FieldItem name="cardholderName" label="Cardholder's Name" />
-              {!values.billingShippingSameAddress ||
-              (values.shippingMethod !== 'CUSTOM' &&
-                values.billingShippingSameAddress) ? (
-                <div>
-                  <FieldItem
-                    name="billingAddress.address1"
-                    label="Street Address"
-                  />
-                  <FieldItem
-                    name="billingAddress.address2"
-                    label="Address Line 2"
-                  />
-                  <div className="field-row">
-                    <FieldItem name="billingAddress.city" label="City" />
-                    <FieldItemStyles>
-                      <label htmlFor="billingAddress.state">State</label>
-                      <Field name="billingAddress.state" as="select">
-                        <option value="default">Select your state</option>
-                        {unitedStates.map((s, i) => (
-                          <option key={i} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                      </Field>
-                    </FieldItemStyles>
-                  </div>
-                  <FieldItem name="billingAddress.zipcode" label="Zipcode" />
-                </div>
-              ) : null}
-              <label htmlFor="stripeInput">Card Information</label>
-              <div className="stripe-input">
-                <CardElement options={cardStyle} onChange={handleCardChange} />
-              </div>
-              {stripeError && <div className="stripe-error">{stripeError}</div>}
-              <button
-                type="submit"
-                disabled={!stripe || cartIsEmpty || isSubmitting}
-              >
-                {isSubmitting ? <LoadingSpinner /> : 'Place your order'}
-              </button>
-
-              {serverResponseError && (
-                <div className="stripe-error">{serverResponseError}</div>
-              )}
-              {hasMounted && cartIsEmpty && !isSubmitting && (
-                <div className="empty-cart">
-                  Your cart is empty.{' '}
-                  <Link href={`/store/${storeId}`}>
-                    <a>Go to add items</a>
-                  </Link>
-                  .
-                </div>
-              )}
-            </div>
-          </Form>
-        </CheckoutFormStyles>
-      )}
-    </Formik>
-  );
-}

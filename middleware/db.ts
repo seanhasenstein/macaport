@@ -1,6 +1,6 @@
 import { NextApiResponse } from 'next';
 import { connectToDb } from '../db/connect';
-import { Request } from '../interfaces/api';
+import { Request } from '../interfaces';
 
 declare global {
   namespace NodeJS {

@@ -1,7 +1,6 @@
 import { NextApiResponse } from 'next';
 import nc from 'next-connect';
-import { Request } from '../../interfaces/api';
-import { Order } from '../../interfaces';
+import { Request, Order } from '../../interfaces';
 import database from '../../middleware/db';
 import { order } from '../../db';
 

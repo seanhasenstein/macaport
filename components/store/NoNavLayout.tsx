@@ -189,7 +189,7 @@ const LayoutStyles = styled.div`
 
     .copyright {
       font-size: 0.9375rem;
-      color: #9ca3af;
+      color: #6b7280;
       text-align: center;
     }
   }

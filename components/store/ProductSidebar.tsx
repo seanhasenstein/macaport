@@ -2,8 +2,134 @@ import React from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { formatToMoney } from '../../utils';
-import { Item, Size } from '../../interfaces';
+import { Product, Size } from '../../interfaces';
 import LinkButton from './Link';
+
+type Props = {
+  storeId: string;
+  item: Product;
+  color: string;
+  size?: Size;
+  image: string | undefined;
+  isSidebarOpen: boolean;
+  closeSidebar: () => void;
+};
+
+export default function ProductSidebar({
+  storeId,
+  item,
+  color,
+  size,
+  image,
+  isSidebarOpen,
+  closeSidebar,
+}: Props) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const closeButton = React.useRef<HTMLButtonElement>(null);
+
+  React.useEffect(() => {
+    const handleEscapeKeyup = (e: KeyboardEvent) => {
+      if (e.code === 'Escape') closeSidebar();
+    };
+
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node))
+        closeSidebar();
+    };
+
+    if (isSidebarOpen) {
+      closeButton?.current && closeButton.current.focus();
+      document.addEventListener('keyup', handleEscapeKeyup);
+      document.addEventListener('click', handleOutsideClick);
+
+      const timeout = setTimeout(() => {
+        closeSidebar();
+      }, 5000);
+
+      return () => {
+        document.removeEventListener('keyup', handleEscapeKeyup);
+        document.removeEventListener('click', handleOutsideClick);
+        clearTimeout(timeout);
+      };
+    }
+  }, [closeSidebar, isSidebarOpen]);
+
+  if (!size) {
+    // This is impossible
+    return null;
+  }
+
+  return (
+    <ProductSidebarStyles>
+      <div className={isSidebarOpen ? 'fullscreen' : ''}>
+        <div className={`sidebar ${isSidebarOpen ? 'show' : 'hide'}`} ref={ref}>
+          <div className="heading">
+            <div className="title">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="check-icon"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <h2>Added to Order</h2>
+            </div>
+            <button
+              ref={closeButton}
+              aria-label="Close panel"
+              className="close-button"
+              onClick={() => closeSidebar()}
+            >
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+          <div className="main">
+            <div className="item">
+              <div className="item-img">
+                <img src={image} alt={`${color} ${item.name}`} />
+              </div>
+              <div className="item-details">
+                <h3 className="item-name">{item.name}</h3>
+                <p className="item-specs">
+                  <div>Color: {color}</div>
+                  <span>|</span>
+                  <div className="size">Size: {size.label}</div>
+                </p>
+                <p className="item-price">{formatToMoney(size.price, true)}</p>
+              </div>
+            </div>
+            <div className="actions">
+              <Link href={`/store/${storeId}/cart`}>
+                <a className="white-link-button">View Cart</a>
+              </Link>
+              <LinkButton
+                href={`/store/${storeId}/checkout`}
+                label="Checkout"
+              />
+            </div>
+            <div className="store-home-link">
+              <Link href={`/store/${storeId}`}>
+                <a>Back to store home</a>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ProductSidebarStyles>
+  );
+}
 
 const ProductSidebarStyles = styled.div`
   .fullscreen {
@@ -129,15 +255,22 @@ const ProductSidebarStyles = styled.div`
     text-align: center;
   }
 
-  .item-size,
+  .item-specs,
   .item-price {
-    margin: 0.25rem 0 0;
+    margin: 0.375rem 0 0;
     font-size: 0.875rem;
     font-weight: 500;
   }
 
-  .item-size {
-    color: #6b7280;
+  .item-specs {
+    color: #6f7b8a;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+
+    span {
+      color: #e5e7eb;
+    }
   }
 
   .item-price {
@@ -170,7 +303,7 @@ const ProductSidebarStyles = styled.div`
     cursor: pointer;
 
     &:hover:not(:disabled) {
-      background-color: #fff;
+      background-color: #f9fafb;
     }
 
     &:focus {
@@ -202,127 +335,3 @@ const ProductSidebarStyles = styled.div`
     }
   }
 `;
-
-type Props = {
-  storeId: string;
-  item: Item;
-  color: string;
-  size?: Size;
-  image: string | undefined;
-  isSidebarOpen: boolean;
-  closeSidebar: () => void;
-};
-
-export default function ProductSidebar({
-  storeId,
-  item,
-  color,
-  size,
-  image,
-  isSidebarOpen,
-  closeSidebar,
-}: Props) {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const closeButton = React.useRef<HTMLButtonElement>(null);
-
-  React.useEffect(() => {
-    const handleEscapeKeyup = (e: KeyboardEvent) => {
-      if (e.code === 'Escape') closeSidebar();
-    };
-
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node))
-        closeSidebar();
-    };
-
-    if (isSidebarOpen) {
-      closeButton?.current && closeButton.current.focus();
-      document.addEventListener('keyup', handleEscapeKeyup);
-      document.addEventListener('click', handleOutsideClick);
-
-      const timeout = setTimeout(() => {
-        closeSidebar();
-      }, 5000);
-
-      return () => {
-        document.removeEventListener('keyup', handleEscapeKeyup);
-        document.removeEventListener('click', handleOutsideClick);
-        clearTimeout(timeout);
-      };
-    }
-  }, [closeSidebar, isSidebarOpen]);
-
-  if (!size) {
-    // todo: figure out best way to handle this situation (if no size is passed to productSidebar)
-    return null;
-  }
-
-  return (
-    <ProductSidebarStyles>
-      <div className={isSidebarOpen ? 'fullscreen' : ''}>
-        <div className={`sidebar ${isSidebarOpen ? 'show' : 'hide'}`} ref={ref}>
-          <div className="heading">
-            <div className="title">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="check-icon"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <h2>Added to Order</h2>
-            </div>
-            <button
-              ref={closeButton}
-              aria-label="Close panel"
-              className="close-button"
-              onClick={() => closeSidebar()}
-            >
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-          <div className="main">
-            <div className="item">
-              <div className="item-img">
-                <img src={image} alt={`${color} ${item.name}`} />
-              </div>
-              <div className="item-details">
-                <h3 className="item-name">{item.name}</h3>
-                <p className="item-size">
-                  Color: {color} | Size: {size.label}
-                </p>
-                <p className="item-price">{formatToMoney(size.price, true)}</p>
-              </div>
-            </div>
-            <div className="actions">
-              <Link href={`/store/${storeId}/cart`}>
-                <a className="white-link-button">View Cart</a>
-              </Link>
-              <LinkButton
-                href={`/store/${storeId}/checkout`}
-                label="Checkout"
-              />
-            </div>
-            <div className="store-home-link">
-              <Link href={`/store/${storeId}`}>
-                <a>Back to store home</a>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </ProductSidebarStyles>
-  );
-}

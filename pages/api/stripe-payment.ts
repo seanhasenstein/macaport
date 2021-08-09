@@ -1,12 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 import fetch from 'node-fetch';
-import { products } from '../../data';
-import { CartItem, Order } from '../../interfaces/';
+import { connectToDb, store } from '../../db';
+import { CartItem, Order, Product } from '../../interfaces/';
 import {
   calculateCartTotal,
   calculateTransactionFee,
   createReceiptNumber,
+  removeNonDigits,
 } from '../../utils';
 
 type CartAccumulator = {
@@ -56,19 +57,35 @@ async function generateResponse(
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   try {
-    const { payment_method_id, items, customer, summary } = req.body;
+    const {
+      storeId,
+      storeName,
+      payment_method_id,
+      items,
+      customer,
+      shippingMethod,
+      shippingAddress,
+      summary,
+    } = req.body;
+
+    // go get the products from the db
+    const { db } = await connectToDb();
+    const { products }: { products: Product[] } = await store.getStoreById(
+      db,
+      storeId
+    );
 
     // 1. verify order items and order subtotal
     const { verifiedItems, verifiedSubtotal } = items.reduce(
       (cartAccumulator: CartAccumulator, currentItem: CartItem) => {
-        const item = products.find(p => p.id === currentItem.productId);
+        const product = products.find(p => p.id === currentItem.sku.productId);
+        const item = product?.skus.find(s => s.id === currentItem.sku.id);
 
         if (item) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { skus, ...verifiedItem } = {
+          const verifiedItem = {
             ...currentItem,
-            price: item.price,
-            itemTotal: item.price * currentItem.quantity!,
+            price: item.size.price,
+            itemTotal: item.size.price * currentItem.quantity!,
           };
 
           const verifiedSubtotal =
@@ -107,8 +124,20 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     // 4. handle stripe payment response
     return generateResponse(res, intent, {
       orderId,
+      store: {
+        id: storeId,
+        name: storeName,
+      },
       items: verifiedItems,
-      customer,
+      customer: {
+        firstName: customer.firstName.trim(),
+        lastName: customer.lastName.trim(),
+        email: customer.email.toLowerCase().trim(),
+        phone: removeNonDigits(customer.phone),
+      },
+      orderStatus: 'Unfulfilled',
+      shippingMethod,
+      shippingAddress,
       summary,
     });
   } catch (e) {

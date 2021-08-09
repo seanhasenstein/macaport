@@ -1,13 +1,133 @@
 import React from 'react';
 import { GetServerSideProps } from 'next';
 import { connectToDb, store } from '../../../db';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
 import styled from 'styled-components';
 import { useCart } from '../../../hooks/useCart';
+import useHasMounted from '../../../hooks/useHasMounted';
 import { Store } from '../../../interfaces';
 import { formatToMoney } from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
 import CheckoutItem from '../../../components/store/CheckoutItem';
 import CheckoutForm from '../../../components/store/CheckoutForm';
+
+type Props = {
+  store: Store;
+};
+
+export default function Checkout({ store }: Props) {
+  const hasMounted = useHasMounted();
+  const router = useRouter();
+  const { items, cartSubtotal, salesTax, cartTotal } = useCart();
+
+  return (
+    <StoreLayout title={`Checkout | ${store.name} | Macaport`}>
+      <CheckoutStyles>
+        <h2>Order Checkout</h2>
+        <div className="wrapper">
+          <CheckoutForm
+            storeId={store._id}
+            storeName={store.name}
+            allowDirectShipping={store.allowDirectShipping}
+            primaryShippingAddress={store.primaryShippingLocation}
+          />
+          {hasMounted && (
+            <div>
+              <div className="sidebar">
+                <div className="products">
+                  <h3>Order Items</h3>
+                  {items.length < 1 && (
+                    <div className="empty">
+                      You have no items in your order.
+                      <br />
+                      <Link href={`/store/${router.query.id}`}>
+                        <a>Go to store homepage</a>
+                      </Link>
+                      .
+                    </div>
+                  )}
+                  <div className="items">
+                    {items.map(item => (
+                      <CheckoutItem key={item.sku.id} item={item} />
+                    ))}
+                  </div>
+                </div>
+                <div className="order-summary">
+                  <h3>Order Summary</h3>
+                  <div className="item">
+                    <div className="key">Subtotal</div>
+                    <div className="value">
+                      {formatToMoney(cartSubtotal, true)}
+                    </div>
+                  </div>
+                  <div className="item">
+                    <div className="key">Sales Tax</div>
+                    <div className="value">{formatToMoney(salesTax, true)}</div>
+                  </div>
+                  <div className="item">
+                    <div className="key">Shipping &amp; Handling</div>
+                    <div className="value">{formatToMoney(0, true)}</div>
+                  </div>
+                  <div className="item total">
+                    <div className="key">Order Total</div>
+                    <div className="value">
+                      {formatToMoney(cartTotal, true)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </CheckoutStyles>
+    </StoreLayout>
+  );
+}
+
+export const getServerSideProps: GetServerSideProps = async context => {
+  try {
+    const id = Array.isArray(context.query.id)
+      ? context.query.id[0]
+      : context.query.id;
+
+    if (!id) {
+      throw new Error('No store id provided.');
+    }
+
+    const { db } = await connectToDb();
+    const storeRes = await store.getStoreById(db, id);
+
+    if (!storeRes) {
+      return {
+        redirect: {
+          permanent: false,
+          destination: '/store-not-found',
+        },
+      };
+    }
+
+    const now = new Date();
+    const storeIsActive = !storeRes.closeDate
+      ? true
+      : new Date(storeRes.closeDate) > now;
+
+    if (!storeIsActive) {
+      return {
+        redirect: {
+          permanent: false,
+          destination: '/store-closed',
+        },
+      };
+    }
+
+    return { props: { store: storeRes } };
+  } catch (err) {
+    return {
+      props: { error: err.message },
+    };
+  }
+};
 
 const CheckoutStyles = styled.div`
   padding: 0 1.5rem;
@@ -46,6 +166,16 @@ const CheckoutStyles = styled.div`
 
   .empty {
     color: #6b7280;
+    line-height: 1.5;
+
+    a {
+      color: #3f6ed4;
+      text-decoration: underline;
+
+      &:hover {
+        color: #2f62d0;
+      }
+    }
   }
 
   .order-summary {
@@ -99,7 +229,7 @@ const CheckoutStyles = styled.div`
     }
 
     .wrapper {
-      max-width: 38rem;
+      max-width: 40rem;
       display: flex;
       flex-direction: column-reverse;
     }
@@ -111,104 +241,3 @@ const CheckoutStyles = styled.div`
     }
   }
 `;
-
-type Props = {
-  store: Store;
-};
-
-export default function Checkout({ store }: Props) {
-  const { items, cartSubtotal, transactionFee, cartTotal } = useCart();
-
-  return (
-    <StoreLayout title={`Checkout | ${store.name} | Macaport`}>
-      <CheckoutStyles>
-        <h2>Order Checkout</h2>
-        <div className="wrapper">
-          <CheckoutForm storeId={store._id} />
-          <div>
-            <div className="sidebar">
-              <div className="products">
-                <h3>Order Items</h3>
-                {items.length < 1 && (
-                  <div className="empty">There are no items in your order.</div>
-                )}
-                <div className="items">
-                  {items.map(item => (
-                    <CheckoutItem key={item.id} item={item} />
-                  ))}
-                </div>
-              </div>
-              <div className="order-summary">
-                <h3>Order Summary</h3>
-                <div className="item">
-                  <div className="key">Subtotal</div>
-                  <div className="value">
-                    {formatToMoney(cartSubtotal, true)}
-                  </div>
-                </div>
-                <div className="item">
-                  <div className="key">Estimated Shipping</div>
-                  <div className="value">{formatToMoney(0, true)}</div>
-                </div>
-                <div className="item">
-                  <div className="key">Estimated Sales Tax</div>
-                  <div className="value">
-                    {formatToMoney(transactionFee, true)}
-                  </div>
-                </div>
-                <div className="item total">
-                  <div className="key">Order Total</div>
-                  <div className="value">{formatToMoney(cartTotal, true)}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </CheckoutStyles>
-    </StoreLayout>
-  );
-}
-
-export const getServerSideProps: GetServerSideProps = async context => {
-  try {
-    const id = Array.isArray(context.query.id)
-      ? context.query.id[0]
-      : context.query.id;
-
-    if (!id) {
-      throw new Error('No store id provided.');
-    }
-
-    const { db } = await connectToDb();
-    const storeRes = await store.getStoreById(db, id);
-
-    if (!storeRes) {
-      return {
-        redirect: {
-          permanent: false,
-          destination: '/store-not-found',
-        },
-      };
-    }
-
-    const now = new Date();
-    const storeIsActive = !storeRes.closeDate
-      ? true
-      : new Date(storeRes.closeDate) > now;
-
-    if (!storeIsActive) {
-      return {
-        redirect: {
-          permanent: false,
-          destination: '/store-closed',
-        },
-      };
-    }
-
-    return { props: { store: storeRes } };
-  } catch (err) {
-    return {
-      props: { error: err.message },
-    };
-  }
-};

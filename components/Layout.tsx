@@ -1,6 +1,6 @@
 import React from 'react';
 import Head from 'next/head';
-import { createGlobalStyle } from 'styled-components';
+import styled, { createGlobalStyle } from 'styled-components';
 import Header from './Header';
 import Footer from './Footer';
 
@@ -45,6 +45,7 @@ html,
   body {
   padding: 0;
   margin: 0;
+  height: 100%;
   font-size: 16px;
   letter-spacing: -0.011em;
   background-color: #F9FAFB;
@@ -58,10 +59,7 @@ html, body, button, input, textarea {
 }
 
 #__next {
-  display: flex;
-  min-height: 100vh;
-  flex-direction: column;
-  justify-content: flex-start;
+  height: 100%;
 }
 
 a {
@@ -142,6 +140,12 @@ select:focus {
 }
 `;
 
+const LayoutStyles = styled.div`
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+`;
+
 type Props = {
   children: React.ReactNode;
   title?: string;
@@ -152,7 +156,7 @@ export default function Layout({
   title = 'Macaport | Screen Printing Company',
 }: Props) {
   return (
-    <>
+    <LayoutStyles>
       <GlobalStyles />
       <Head>
         <title>{title}</title>
@@ -160,8 +164,8 @@ export default function Layout({
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
       </Head>
       <Header />
-      {children}
+      <main>{children}</main>
       <Footer />
-    </>
+    </LayoutStyles>
   );
 }

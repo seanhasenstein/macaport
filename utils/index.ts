@@ -106,13 +106,8 @@ export function createId(prefix?: string | false, len = 14) {
   return id;
 }
 
-// Demo store code...
-
 export function calculateCartSubtotal(items: CartItem[]) {
-  return items.reduce(
-    (total, item) => total + item.quantity! * item.size.price,
-    0
-  );
+  return items.reduce((total, item) => total + item.quantity! * item.price, 0);
 }
 
 export function calculateTransactionFee(subtotal: number) {
@@ -122,8 +117,16 @@ export function calculateTransactionFee(subtotal: number) {
   return Math.ceil((subtotal + 30) / (1 - 0.029)) - subtotal;
 }
 
-export function calculateCartTotal(subtotal: number, transactionFee = 0) {
-  return subtotal + transactionFee;
+export function calculateSalesTax(subtotal: number) {
+  return Math.ceil(subtotal * 0.055);
+}
+
+export function calculateCartTotal(
+  subtotal: number,
+  salesTax = 0,
+  shipping = 0
+) {
+  return subtotal + salesTax + shipping;
 }
 
 export function formatToMoney(input: number, includeDecimal = false) {
@@ -150,14 +153,6 @@ export function slugify(input: string) {
   // remove dash if it's the last character
   result = result.replace(/-$/, '');
   return result;
-}
-
-export function formatDate(input: string) {
-  const dateObj = new Date(input);
-  const month = months[dateObj.getMonth()];
-  const date = dateObj.getDate();
-  const year = dateObj.getFullYear();
-  return `${month} ${date}, ${year}`;
 }
 
 const NUM = '0123456789';

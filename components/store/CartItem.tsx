@@ -3,7 +3,127 @@ import Link from 'next/link';
 import styled from 'styled-components';
 import { useCart } from '../../hooks/useCart';
 import { formatToMoney } from '../../utils';
-import { CartItem as CartItemInterface } from '../../interfaces';
+import { CartItem as CartItemInterface, Sku, Size } from '../../interfaces';
+
+type Props = {
+  item: CartItemInterface;
+  storeId: string;
+  skus: Sku[];
+  sizes: Size[];
+};
+
+export default function CartItem({ item, storeId, skus, sizes }: Props) {
+  const [size, setSize] = React.useState(item.sku.size.label);
+  const [quantity, setQuantity] = React.useState(item.quantity);
+  const { removeItem, updateItemSize, updateItemQuantity } = useCart();
+
+  React.useEffect(() => {
+    setSize(item.sku.size.label);
+    setQuantity(item.quantity);
+  }, [item]);
+
+  const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const sku = skus.find(
+      sku =>
+        sku.size.label === e.target.value &&
+        sku.color.label === item.sku.color.label
+    );
+
+    if (!sku) {
+      // todo: look at this and figure out how to alert the user if no sku is found
+      // possible message: 'an error has occured, please refresh and try again'.
+      throw new Error('No sku found!');
+    }
+
+    setSize(sku.size.label);
+    updateItemSize(item.sku.id, {
+      ...item,
+      sku,
+      quantity,
+    });
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newQuantity = parseInt(e.target.value);
+    setQuantity(newQuantity);
+    updateItemQuantity(item.sku.id, newQuantity);
+  };
+
+  return (
+    <CartItemStyles item={item}>
+      <div className="item-image">
+        <Link
+          href={`/store/${storeId}/product?productId=${item.sku.productId}&color=${item.sku.color.label}`}
+        >
+          <a>
+            <img
+              src={item.image}
+              alt={`${item.sku.color.label} ${item.name}`}
+            />
+          </a>
+        </Link>
+      </div>
+      <div className="item-details">
+        <h3 className="primary">
+          <Link
+            href={`/store/${storeId}/product?productId=${item.sku.productId}&color=${item.sku.color.label}`}
+          >
+            <a>{item.name}</a>
+          </Link>
+        </h3>
+
+        <p className="secondary">
+          {item.sku.color.label} <span className="color" />
+        </p>
+      </div>
+      <div className="total">{formatToMoney(item.itemTotal!)}</div>
+      <div className="inputs">
+        <div className="size">
+          <label htmlFor="size">Size</label>
+          <select
+            name="size"
+            id="size"
+            value={size}
+            onChange={handleSizeChange}
+            onBlur={handleSizeChange}
+          >
+            {sizes.map(size => (
+              <option key={size.id} value={size.label}>
+                {size.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="quantity">
+          <label htmlFor="quantity">Qty</label>
+          <select
+            name="quantity"
+            id="quantity"
+            value={quantity}
+            onChange={handleQuantityChange}
+            onBlur={handleQuantityChange}
+          >
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+      </div>
+      <div className="remove-btn">
+        <button type="button" onClick={() => removeItem(item.sku.id)}>
+          Remove from cart
+        </button>
+      </div>
+    </CartItemStyles>
+  );
+}
 
 const CartItemStyles = styled.div`
   padding: 2.25rem 0;
@@ -65,12 +185,10 @@ const CartItemStyles = styled.div`
     margin: 0.125rem 0 0 0.5rem;
     height: 0.9375rem;
     width: 0.9375rem;
-    background-color: ${(props: { item: CartItemInterface }) => {
-      const color = props.item.colors.find(c => c.label === props.item.color);
-      return color ? color.hex : props.item.color.toLowerCase();
-    }};
+    background-color: ${(props: { item: CartItemInterface }) =>
+      props.item.sku.color.hex};
     border-radius: 9999px;
-    border: 1px solid #374151;
+    border: 1px solid #9ca3af;
   }
 
   .inputs {
@@ -116,6 +234,10 @@ const CartItemStyles = styled.div`
       border: none;
       border-radius: 4px;
       cursor: pointer;
+
+      &:hover {
+        color: #374151;
+      }
     }
   }
 
@@ -123,7 +245,7 @@ const CartItemStyles = styled.div`
     color: #4b5563;
   }
 
-  @media (max-width: 1000px) {
+  @media (max-width: 700px) {
     margin: 0 auto;
     width: 100%;
     grid-template-areas:
@@ -173,117 +295,3 @@ const CartItemStyles = styled.div`
     }
   }
 `;
-
-type Props = {
-  item: CartItemInterface;
-  storeId: string;
-};
-
-export default function CartItem({ item, storeId }: Props) {
-  const [size, setSize] = React.useState(item.size.label);
-  const [quantity, setQuantity] = React.useState(item.quantity);
-  const { removeItem, updateItemSize, updateItemQuantity } = useCart();
-
-  React.useEffect(() => {
-    setSize(item.size.label);
-    setQuantity(item.quantity);
-  }, [item]);
-
-  const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const sku = item.skus.find(
-      sku => sku.size.label === e.target.value && sku.color.label === item.color
-    );
-
-    if (!sku) {
-      // todo: look at this and figure out how to alert the user if no sku is found
-      // possible message: 'an error has occured, please refresh and try again'.
-      throw new Error('No sku found!');
-    }
-
-    setSize(sku.size.label);
-    updateItemSize(item.id, {
-      ...item,
-      id: sku?.id,
-      size: sku.size,
-      quantity,
-    });
-  };
-
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newQuantity = parseInt(e.target.value);
-    setQuantity(newQuantity);
-    updateItemQuantity(item.id, newQuantity);
-  };
-
-  return (
-    <CartItemStyles item={item}>
-      <div className="item-image">
-        <Link
-          href={`/store/${storeId}/product?productId=${item.productId}&color=${item.color}`}
-        >
-          <a>
-            <img src={item.image} alt={`${item.color} ${item.name}`} />
-          </a>
-        </Link>
-      </div>
-      <div className="item-details">
-        <h3 className="primary">
-          <Link
-            href={`/store/${storeId}/product?productId=${item.productId}&color=${item.color}`}
-          >
-            <a>{item.name}</a>
-          </Link>
-        </h3>
-
-        <p className="secondary">
-          {item.color} <span className="color" />
-        </p>
-      </div>
-      <div className="total">{formatToMoney(item.itemTotal!)}</div>
-      <div className="inputs">
-        <div className="size">
-          <label htmlFor="size">Size</label>
-          <select
-            name="size"
-            id="size"
-            value={size}
-            onChange={handleSizeChange}
-            onBlur={handleSizeChange}
-          >
-            {item.sizes.map(size => (
-              <option key={size.id} value={size.label}>
-                {size.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="quantity">
-          <label htmlFor="quantity">Qty</label>
-          <select
-            name="quantity"
-            id="quantity"
-            value={quantity}
-            onChange={handleQuantityChange}
-            onBlur={handleQuantityChange}
-          >
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-          </select>
-        </div>
-      </div>
-      <div className="remove-btn">
-        <button type="button" onClick={() => removeItem(item.id)}>
-          Remove from cart
-        </button>
-      </div>
-    </CartItemStyles>
-  );
-}

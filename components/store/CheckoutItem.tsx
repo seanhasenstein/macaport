@@ -2,6 +2,24 @@ import styled from 'styled-components';
 import { CartItem } from '../../interfaces';
 import { formatToMoney } from '../../utils';
 
+export default function CheckoutItem({ item }: { item: CartItem }) {
+  return (
+    <CheckoutItemStyles item={item}>
+      <div className="image">
+        <img src={item.image} alt={`${item.sku.color.label} ${item.name}`} />
+      </div>
+      <div className="name">{item.name}</div>
+      <div className="total">{formatToMoney(item.itemTotal!)}</div>
+      <div className="color">
+        <span />
+        {item.sku.color.label}
+      </div>
+      <div className="size">Size: {item.sku.size.label}</div>
+      <div className="quantity">Qty: {item.quantity}</div>
+    </CheckoutItemStyles>
+  );
+}
+
 const CheckoutItemStyles = styled.div`
   width: 100%;
   padding: 1.5rem 0;
@@ -56,12 +74,10 @@ const CheckoutItemStyles = styled.div`
       display: inline-block;
       height: 0.9375rem;
       width: 0.9375rem;
-      background-color: ${(props: { item: CartItem }) => {
-        const color = props.item.colors.find(c => c.label === props.item.color);
-        return color ? color.hex : props.item.color.toLowerCase();
-      }};
+      background-color: ${(props: { item: CartItem }) =>
+        props.item.sku.color.hex};
       border-radius: 9999px;
-      border: 1px solid #374151;
+      border: 1px solid #9ca3af;
     }
   }
 
@@ -83,21 +99,3 @@ const CheckoutItemStyles = styled.div`
     text-align: right;
   }
 `;
-
-export default function CheckoutItem({ item }: { item: CartItem }) {
-  return (
-    <CheckoutItemStyles item={item}>
-      <div className="image">
-        <img src={item.image} alt={`${item.color} ${item.name}`} />
-      </div>
-      <div className="name">{item.name}</div>
-      <div className="total">{formatToMoney(item.itemTotal!)}</div>
-      <div className="color">
-        <span />
-        {item.color}
-      </div>
-      <div className="size">Size: {item.size.label}</div>
-      <div className="quantity">Qty: {item.quantity}</div>
-    </CheckoutItemStyles>
-  );
-}

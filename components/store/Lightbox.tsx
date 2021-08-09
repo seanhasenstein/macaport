@@ -1,12 +1,11 @@
 import React from 'react';
 import styled from 'styled-components';
-import { SecondaryImage } from '../../interfaces';
 
 type Props = {
   setShowLightbox: (b: boolean) => void;
   primaryImage: string;
   primaryAlt: string;
-  secondaryImages: SecondaryImage[] | undefined;
+  secondaryImages: string[] | undefined;
   clickedImage: string;
 };
 
@@ -118,8 +117,8 @@ export default function Lightbox({
           <img src={primaryImage} alt={primaryAlt} />
         </div>
         {secondaryImages?.map((image, i) => (
-          <div key={image.id} className="img" id={`image-${i + 1}`}>
-            <img src={image.url} alt={image.alt} />
+          <div key={image} className="img" id={`image-${i + 1}`}>
+            <img src={image} alt={'TODO'} />
           </div>
         ))}
       </div>

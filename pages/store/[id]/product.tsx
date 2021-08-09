@@ -5,7 +5,7 @@ import { connectToDb, store } from '../../../db';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { useCart } from '../../../hooks/useCart';
-import { Store, Item, Size } from '../../../interfaces';
+import { Store, Product as ProductInterface, Size } from '../../../interfaces';
 import { formatToMoney } from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
 import ProductSidebar from '../../../components/store/ProductSidebar';
@@ -14,10 +14,285 @@ import { MessageStyles } from '../../../styles/Message';
 
 type Props = {
   store: Store;
-  product: Item;
+  product: ProductInterface;
   active: boolean;
   error: string;
 };
+
+export default function Product({ store, product, error }: Props) {
+  const router = useRouter();
+  const [showSidebar, setShowSidebar] = React.useState(false);
+  const [showLightbox, setShowLightbox] = React.useState(false);
+  const [color, setColor] = React.useState(() => {
+    if (error) return 'error';
+    if (router.query.color) {
+      const color = Array.isArray(router.query.color)
+        ? router.query.color[0]
+        : router.query.color;
+
+      const verifiedColor = product.colors.find(c => c.label === color);
+
+      return verifiedColor ? verifiedColor.label : product.colors[0].label;
+    } else {
+      return product.colors[0].label;
+    }
+  });
+  const [primaryImage, setPrimaryImage] = React.useState(() => {
+    if (error) return 'error';
+    const c = product.colors.find(c => c.label === color);
+    return c?.primaryImage;
+  });
+  const [secondaryImages, setSecondaryImages] = React.useState(() => {
+    if (error) return ['error'];
+    const c = product.colors.find(c => c.label === color);
+    return c?.secondaryImages;
+  });
+  const [clickedImage, setClickedImage] = React.useState('image-0');
+  const [size, setSize] = React.useState<Size>({
+    id: 9999,
+    label: 'DEFAULT',
+    price: 0,
+  });
+  const [validationError, setValidationError] = React.useState<string>();
+  const { addItem } = useCart();
+
+  React.useEffect(() => {
+    if (error) return;
+
+    router.push(
+      `/store/${store._id}/product?productId=${product.id}&color=${color}`,
+      undefined,
+      { shallow: true }
+    );
+
+    setPrimaryImage(() => {
+      const c = product.colors.find(c => c.label === color);
+      return c?.primaryImage;
+    });
+
+    setSecondaryImages(() => {
+      const c = product.colors.find(c => c.label === color);
+      return c?.secondaryImages;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [color]);
+
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setColor(e.target.value);
+  };
+
+  const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (validationError && e.target.value !== undefined)
+      setValidationError(undefined);
+    const s = product.sizes.find(s => s.label === e.target.value);
+
+    if (!s) {
+      // todo: look at this error and figure out if its the best way to alert user
+      // should I setSize(undefined)?
+      throw new Error('No size was found!');
+    }
+
+    setSize(s);
+  };
+
+  const handleImageClick = (imageIndex: string) => {
+    setClickedImage(imageIndex);
+    setShowLightbox(true);
+  };
+
+  const handleAddToOrderClick = () => {
+    if (size.label === 'DEFAULT') {
+      setValidationError('Please select a size');
+      return;
+    }
+
+    const sku = product.skus.find(
+      sku => sku.size.label === size.label && sku.color.label === color
+    );
+
+    // TODO: figure out what to do when no sku or item is found
+    if (sku)
+      addItem({
+        // ...product,
+        sku: sku,
+        name: product.name,
+        image: primaryImage,
+        price: sku.size.price,
+      });
+    setShowSidebar(true);
+  };
+
+  const handleCloseSidebar = () => {
+    setShowSidebar(false);
+  };
+
+  if (error) {
+    return (
+      <StoreLayout>
+        <MessageStyles>
+          <div className="wrapper">
+            <div className="content">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="icon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <h3>Error</h3>
+              <p>{error}</p>
+              <Link href={`/store/${store._id}`}>
+                <a className="button">Back to store home</a>
+              </Link>
+            </div>
+          </div>
+        </MessageStyles>
+      </StoreLayout>
+    );
+  }
+
+  return (
+    <>
+      <StoreLayout title={`${product.name} | ${store.name} | Macaport`}>
+        <ProductStyles>
+          <div className="wrapper">
+            <div className="mobile-header">
+              <h2 className="name">{product.name}</h2>
+              <h3 className="price">
+                {formatToMoney(
+                  size.label !== 'DEFAULT' ? size.price : product.sizes[0].price
+                )}
+              </h3>
+            </div>
+            <div className="images">
+              <button
+                className="primary-img"
+                onClick={() => handleImageClick('image-0')}
+              >
+                <img src={primaryImage} alt={`${color} ${product.name}`} />
+              </button>
+              <div className="secondary-imgs">
+                {secondaryImages &&
+                  secondaryImages.map((secImg, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleImageClick(`image-${index + 1}`)}
+                    >
+                      <img src={secImg} alt={'TODO'} />
+                    </button>
+                  ))}
+              </div>
+            </div>
+            <div className="main">
+              <div className="large-header">
+                <h2 className="name">{product.name}</h2>
+                <h3 className="price">
+                  {formatToMoney(
+                    size.label !== 'DEFAULT'
+                      ? size.price
+                      : product.sizes[0].price
+                  )}
+                </h3>
+              </div>
+              <div className="colors">
+                <h4>Colors</h4>
+                <div className="grid">
+                  {product.colors.map(c => (
+                    <Color
+                      key={c.id}
+                      hex={c.hex}
+                      label={c.label}
+                      color={color}
+                      handleColorChange={handleColorChange}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="sizes">
+                <h4>Sizes</h4>
+                <div className="grid">
+                  {product.sizes.map(s => (
+                    <div
+                      key={s.id}
+                      className={`size ${
+                        size && size.label === s.label ? 'checked' : ''
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        value={s.label}
+                        checked={size && size.label === s.label}
+                        onChange={handleSizeChange}
+                        name="size"
+                        id={s.label}
+                      />
+                      <label htmlFor={s.label}>{s.label}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="actions">
+                <button
+                  type="button"
+                  className="add-to-order-button"
+                  onClick={handleAddToOrderClick}
+                >
+                  Add to order
+                </button>
+                {validationError && (
+                  <div className="error">{validationError}</div>
+                )}
+              </div>
+              <div className="details">
+                {product.description && (
+                  <div className="description">
+                    <h4>Description</h4>
+                    <p>{product.description}</p>
+                  </div>
+                )}
+                {product.details && (
+                  <div className="other-details">
+                    <h4>Details</h4>
+                    <ul>
+                      {product.details.map((d, i) => (
+                        <li key={i}>{d}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </ProductStyles>
+        <ProductSidebar
+          storeId={store._id}
+          item={product}
+          color={color}
+          size={size}
+          image={primaryImage}
+          isSidebarOpen={showSidebar}
+          closeSidebar={handleCloseSidebar}
+        />
+      </StoreLayout>
+      {showLightbox && primaryImage ? (
+        <Lightbox
+          setShowLightbox={setShowLightbox}
+          primaryImage={primaryImage}
+          primaryAlt={`${color} ${product.name}`}
+          secondaryImages={secondaryImages}
+          clickedImage={clickedImage}
+        />
+      ) : null}
+    </>
+  );
+}
 
 type ColorProps = {
   label: string;
@@ -25,64 +300,6 @@ type ColorProps = {
   color: string;
   handleColorChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
-
-const ColorStyles = styled.div`
-  margin: 0 0.875rem 0 0;
-  position: relative;
-  height: 2.5rem;
-  width: 2.5rem;
-
-  .label-wrapper {
-    height: 2.5rem;
-    width: 2.5rem;
-    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.15) 0px 1px 3px 0px,
-      rgba(0, 0, 0, 0.1) 0px 1px 2px 0px;
-    border-radius: 9999px;
-
-    &.checked {
-      padding: 0.125rem;
-      border: 2px solid #111827;
-    }
-
-    label {
-      display: flex;
-      height: 100%;
-      width: 100%;
-      border-radius: 9999px;
-      background-color: ${(props: ColorProps) => props.hex};
-      cursor: pointer;
-    }
-  }
-
-  input {
-    margin: 0;
-    padding: 0;
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 1px;
-    width: 1px;
-    background-color: transparent;
-    border: none;
-    box-shadow: none;
-    z-index: -1;
-
-    &:focus {
-      outline: 2px solid transparent;
-      outline-offset: 2px;
-    }
-
-    &:focus + .label-wrapper {
-      border-color: rgb(99, 102, 241);
-    }
-
-    &:checked {
-      background-image: none;
-      color: transparent;
-    }
-  }
-`;
 
 const Color = (props: ColorProps) => (
   <ColorStyles {...props} title={props.label}>
@@ -370,285 +587,100 @@ const ProductStyles = styled.div`
 
     .name {
       font-size: 1.125rem;
+      font-weight: 600;
+    }
+
+    .images {
+      margin: 0 0 2rem;
+      display: flex;
+      flex-direction: row;
+      align-items: unset;
+      gap: 1rem;
+
+      .primary-img {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .secondary-imgs {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1rem;
+        width: 7rem;
+
+        button {
+          padding: 0.5rem;
+          flex: 1;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+      }
     }
   }
 `;
 
-export default function Product({ store, product, error }: Props) {
-  const router = useRouter();
-  const [showSidebar, setShowSidebar] = React.useState(false);
-  const [showLightbox, setShowLightbox] = React.useState(false);
-  const [color, setColor] = React.useState(() => {
-    if (error) return 'error';
-    if (router.query.color) {
-      const color = Array.isArray(router.query.color)
-        ? router.query.color[0]
-        : router.query.color;
+const ColorStyles = styled.div`
+  margin: 0 0.875rem 0 0;
+  position: relative;
+  height: 2.5rem;
+  width: 2.5rem;
 
-      const verifiedColor = product.colors.find(c => c.label === color);
+  .label-wrapper {
+    height: 2.5rem;
+    width: 2.5rem;
+    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.15) 0px 1px 3px 0px,
+      rgba(0, 0, 0, 0.1) 0px 1px 2px 0px;
+    border-radius: 9999px;
 
-      return verifiedColor ? verifiedColor.label : product.colors[0].label;
-    } else {
-      return product.colors[0].label;
-    }
-  });
-  const [primaryImage, setPrimaryImage] = React.useState(() => {
-    if (error) return 'error';
-    const c = product.colors.find(c => c.label === color);
-    return c?.primaryImage;
-  });
-  const [secondaryImages, setSecondaryImages] = React.useState(() => {
-    if (error) return [{ id: 1, url: 'error', alt: 'error' }];
-    const c = product.colors.find(c => c.label === color);
-    return c?.secondaryImages;
-  });
-  const [clickedImage, setClickedImage] = React.useState('image-0');
-  const [size, setSize] = React.useState<Size>({
-    id: 9999,
-    label: 'DEFAULT',
-    price: 0,
-  });
-  const [validationError, setValidationError] = React.useState<string>();
-  const { addItem } = useCart();
-
-  React.useEffect(() => {
-    if (error) return;
-
-    router.push(
-      `/store/${store._id}/product?productId=${product.id}&color=${color}`,
-      undefined,
-      { shallow: true }
-    );
-
-    setPrimaryImage(() => {
-      const c = product.colors.find(c => c.label === color);
-      return c?.primaryImage;
-    });
-
-    setSecondaryImages(() => {
-      const c = product.colors.find(c => c.label === color);
-      return c?.secondaryImages;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [color]);
-
-  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setColor(e.target.value);
-  };
-
-  const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (validationError && e.target.value !== undefined)
-      setValidationError(undefined);
-    const s = product.sizes.find(s => s.label === e.target.value);
-
-    if (!s) {
-      // todo: look at this error and figure out if its the best way to alert user
-      // should I setSize(undefined)?
-      throw new Error('No size was found!');
+    &.checked {
+      padding: 0.125rem;
+      border: 2px solid #111827;
     }
 
-    setSize(s);
-  };
-
-  const handleImageClick = (imageIndex: string) => {
-    setClickedImage(imageIndex);
-    setShowLightbox(true);
-  };
-
-  const handleAddToOrderClick = () => {
-    if (size.label === 'DEFAULT') {
-      setValidationError('Please select a size');
-      return;
+    label {
+      display: flex;
+      height: 100%;
+      width: 100%;
+      border-radius: 9999px;
+      background-color: ${(props: ColorProps) => props.hex};
+      cursor: pointer;
     }
-
-    const sku = product.skus.find(
-      sku => sku.size.label === size.label && sku.color.label === color
-    );
-
-    // todo: figure out what to do when no sku or item is found
-    if (sku)
-      addItem({
-        ...product,
-        id: sku.id,
-        productId: product.id,
-        image: primaryImage,
-        color,
-        size: sku.size,
-      });
-    setShowSidebar(true);
-  };
-
-  const handleCloseSidebar = () => {
-    setShowSidebar(false);
-  };
-
-  if (error) {
-    return (
-      <StoreLayout>
-        <MessageStyles>
-          <div className="wrapper">
-            <div className="content">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="icon"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <h3>Error</h3>
-              <p>{error}</p>
-              <Link href={`/store/${store._id}`}>
-                <a className="button">Back to store home</a>
-              </Link>
-            </div>
-          </div>
-        </MessageStyles>
-      </StoreLayout>
-    );
   }
 
-  return (
-    <>
-      <StoreLayout title={`${product.name} | ${store.name} | Macaport`}>
-        <ProductStyles>
-          <div className="wrapper">
-            <div className="mobile-header">
-              <h2 className="name">{product.name}</h2>
-              <h3 className="price">
-                {formatToMoney(
-                  size.label !== 'DEFAULT' ? size.price : product.sizes[0].price
-                )}
-              </h3>
-            </div>
-            <div className="images">
-              <button
-                className="primary-img"
-                onClick={() => handleImageClick('image-0')}
-              >
-                <img src={primaryImage} alt={`${color} ${product.name}`} />
-              </button>
-              <div className="secondary-imgs">
-                {secondaryImages &&
-                  secondaryImages.map((image, i) => (
-                    <button
-                      key={image.id}
-                      onClick={() => handleImageClick(`image-${i + 1}`)}
-                    >
-                      <img src={image.url} alt={image.alt} />
-                    </button>
-                  ))}
-              </div>
-            </div>
-            <div className="main">
-              <div className="large-header">
-                <h2 className="name">{product.name}</h2>
-                <h3 className="price">
-                  {formatToMoney(
-                    size.label !== 'DEFAULT'
-                      ? size.price
-                      : product.sizes[0].price
-                  )}
-                </h3>
-              </div>
-              <div className="colors">
-                <h4>Colors</h4>
-                <div className="grid">
-                  {product.colors.map(c => (
-                    <Color
-                      key={c.id}
-                      hex={c.hex}
-                      label={c.label}
-                      color={color}
-                      handleColorChange={handleColorChange}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="sizes">
-                <h4>Sizes</h4>
-                <div className="grid">
-                  {product.sizes.map(s => (
-                    <div
-                      key={s.id}
-                      className={`size ${
-                        size && size.label === s.label ? 'checked' : ''
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        value={s.label}
-                        checked={size && size.label === s.label}
-                        onChange={handleSizeChange}
-                        name="size"
-                        id={s.label}
-                      />
-                      <label htmlFor={s.label}>{s.label}</label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="actions">
-                <button
-                  type="button"
-                  className="add-to-order-button"
-                  onClick={handleAddToOrderClick}
-                >
-                  Add to order
-                </button>
-                {validationError && (
-                  <div className="error">{validationError}</div>
-                )}
-              </div>
-              <div className="details">
-                {product.description && (
-                  <div className="description">
-                    <h4>Description</h4>
-                    <p>{product.description}</p>
-                  </div>
-                )}
-                {product.details && (
-                  <div className="other-details">
-                    <h4>Details</h4>
-                    <ul>
-                      {product.details.map((d, i) => (
-                        <li key={i}>{d}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </ProductStyles>
-        <ProductSidebar
-          storeId={store._id}
-          item={product}
-          color={color}
-          size={size}
-          image={primaryImage}
-          isSidebarOpen={showSidebar}
-          closeSidebar={handleCloseSidebar}
-        />
-      </StoreLayout>
-      {showLightbox && primaryImage ? (
-        <Lightbox
-          setShowLightbox={setShowLightbox}
-          primaryImage={primaryImage}
-          primaryAlt={`${color} ${product.name}`}
-          secondaryImages={secondaryImages}
-          clickedImage={clickedImage}
-        />
-      ) : null}
-    </>
-  );
-}
+  input[type='radio'] {
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 1px;
+    width: 1px;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    z-index: -1;
+
+    &:focus {
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+      box-shadow: none;
+    }
+
+    &:focus + .label-wrapper {
+      border-color: rgb(99, 102, 241);
+    }
+
+    &:checked {
+      background-image: none;
+      color: transparent;
+    }
+  }
+`;
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {

@@ -3,6 +3,24 @@ import styled from 'styled-components';
 import { CartItem } from '../../interfaces';
 import { formatToMoney } from '../../utils';
 
+export default function CheckoutOrderItem({ item }: { item: CartItem }) {
+  return (
+    <OrderItemStyles>
+      <img src={item.image} alt={item.name} className="item-img" />
+      <div className="item-details">
+        <div className="item-primary">{item.name}</div>
+        <div className="item-secondary">
+          Color: {item.sku.color.label} | Size: {item.sku.size.label}
+        </div>
+        <div className="item-quantity">
+          Qty: {item.quantity} @ {formatToMoney(item.price)}
+        </div>
+        <div className="item-total">{formatToMoney(item.itemTotal!, true)}</div>
+      </div>
+    </OrderItemStyles>
+  );
+}
+
 const OrderItemStyles = styled.div`
   padding: 1.25rem 0;
   display: grid;
@@ -31,21 +49,3 @@ const OrderItemStyles = styled.div`
     margin: 0 0 0.125rem;
   }
 `;
-
-export default function CheckoutOrderItem({ item }: { item: CartItem }) {
-  return (
-    <OrderItemStyles>
-      <img src={item.image} alt={item.name} className="item-img" />
-      <div className="item-details">
-        <div className="item-primary">{item.name}</div>
-        <div className="item-secondary">
-          Color: {item.color} | Size: {item.size.label}
-        </div>
-        <div className="item-quantity">
-          Qty: {item.quantity} @ {formatToMoney(item.size.price)}
-        </div>
-        <div className="item-total">{formatToMoney(item.itemTotal!, true)}</div>
-      </div>
-    </OrderItemStyles>
-  );
-}

@@ -1,11 +1,11 @@
 import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
-import { Item, Color as ColorInterface } from '../../interfaces';
+import { Product, Color as ColorInterface } from '../../interfaces';
 import { formatToMoney } from '../../utils';
 
 type Props = {
-  item: Item;
+  item: Product;
   storeId: string;
 };
 
@@ -34,6 +34,36 @@ function Color(props: ColorProps) {
     >
       <span className="sr-only">{props.colorObj.label}</span>
     </ColorStyles>
+  );
+}
+
+export default function StoreItem({ item, storeId }: Props) {
+  const [activeColor, setActiveColor] = React.useState(item.colors[0]);
+
+  return (
+    <Link
+      href={`/store/${storeId}/product?productId=${item.id}&color=${activeColor.label}`}
+      passHref
+    >
+      <StoreItemStyles>
+        <div className="img-wrapper">
+          <img
+            src={activeColor.primaryImage}
+            alt={`${activeColor.label} ${item.name}`}
+          />
+        </div>
+        <div className="details">
+          <h3 className="primary">{item.name}</h3>
+          <h4 className="secondary">{item.tag}</h4>
+          <h4 className="price">{formatToMoney(item.sizes[0].price)}</h4>
+          <div className="colors">
+            {item.colors.map(c => (
+              <Color key={c.id} colorObj={c} setActiveColor={setActiveColor} />
+            ))}
+          </div>
+        </div>
+      </StoreItemStyles>
+    </Link>
   );
 }
 
@@ -78,6 +108,7 @@ const StoreItemStyles = styled.a`
 
   .primary {
     margin: 0 0 0.125rem;
+    font-weight: 600;
     color: #36383e;
     line-height: 1.25;
   }
@@ -103,34 +134,12 @@ const StoreItemStyles = styled.a`
     bottom: 0.875rem;
     right: 1rem;
   }
+
+  @media (max-width: 360px) {
+    .primary,
+    .secondary,
+    .price {
+      font-size: 0.8125rem;
+    }
+  }
 `;
-
-export default function StoreItem({ item, storeId }: Props) {
-  const [activeColor, setActiveColor] = React.useState(item.colors[0]);
-
-  return (
-    <Link
-      href={`/store/${storeId}/product?productId=${item.id}&color=${activeColor.label}`}
-      passHref
-    >
-      <StoreItemStyles>
-        <div className="img-wrapper">
-          <img
-            src={activeColor.primaryImage}
-            alt={`${activeColor.label} ${item.name}`}
-          />
-        </div>
-        <div className="details">
-          <h3 className="primary">{item.name}</h3>
-          <h4 className="secondary">{item.tag}</h4>
-          <h4 className="price">{formatToMoney(item.sizes[0].price)}</h4>
-          <div className="colors">
-            {item.colors.map(c => (
-              <Color key={c.id} colorObj={c} setActiveColor={setActiveColor} />
-            ))}
-          </div>
-        </div>
-      </StoreItemStyles>
-    </Link>
-  );
-}

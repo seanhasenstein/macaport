@@ -1,8 +1,5 @@
-export type SecondaryImage = {
-  id: number;
-  url: string;
-  alt: string;
-};
+import { NextApiRequest } from 'next';
+import { Db, MongoClient } from 'mongodb';
 
 export interface Size {
   id: number;
@@ -15,12 +12,17 @@ export interface Color {
   label: string;
   hex: string;
   primaryImage: string;
-  secondaryImages?: SecondaryImage[];
+  secondaryImages: string[];
 }
 
-type SkuColor = Omit<Color, 'hex' | 'primaryImage' | 'secondaryImages'>;
+export interface Sku {
+  id: string;
+  productId: string;
+  color: Color;
+  size: Size;
+}
 
-export interface Item {
+export interface Product {
   id: string;
   name: string;
   description?: string;
@@ -31,18 +33,11 @@ export interface Item {
   skus: Sku[];
 }
 
-export interface Sku {
-  id: string;
-  productId: Item['id'];
-  color: SkuColor;
-  size: Size;
-}
-
-export interface CartItem extends Item {
-  productId: string;
-  color: string;
-  size: Size;
+export interface CartItem {
+  sku: Sku;
+  name: string;
   image?: string;
+  price: number;
   quantity?: number;
   itemTotal?: number;
 }
@@ -50,37 +45,70 @@ export interface CartItem extends Item {
 export interface Order {
   _id?: string;
   orderId: string;
+  store: {
+    id: string;
+    name: string;
+  };
   stripeId?: string;
   items: CartItem[];
   customer: {
     firstName: string;
     lastName: string;
     email: string;
-    cardholderName: string;
+    phone: string;
+  };
+  orderStatus: 'Unfulfilled';
+  shippingMethod: 'Primary' | 'Direct' | 'None';
+  shippingAddress: {
+    name?: string;
+    street: string;
+    street2: string;
+    city: string;
+    state: string;
+    zipcode: string;
   };
   summary: {
     subtotal: number;
+    shipping: number;
     transactionFee: number;
+    salesTax: number;
     total: number;
   };
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Store {
   _id: string;
   storeId: string;
   name: string;
-  slug: string;
-  startDate: string;
-  closeDate: string | null;
-  contact: {
+  openDate: string;
+  hasCloseDate: boolean;
+  closeDate: string | undefined;
+  category: 'macaport' | 'client';
+  hasPrimaryShippingLocation: boolean;
+  primaryShippingLocation: {
     name: string;
+    street: string;
+    street2: string;
+    city: string;
+    state: string;
+    zipcode: string;
+  };
+  allowDirectShipping: boolean;
+  contact: {
+    firstName: string;
+    lastName: string;
     email: string;
     phone: string;
   };
-  primaryShippingAddress: string;
-  products: Item[];
+  products: Product[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Request extends NextApiRequest {
+  db: Db;
+  dbClient: MongoClient;
+  query: { id: string };
 }
