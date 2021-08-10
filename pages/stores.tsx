@@ -55,7 +55,7 @@ const StoresStyles = styled.div`
   .item {
     padding: 0.75rem 0;
     display: grid;
-    grid-template-columns: 1fr 1fr 6rem;
+    grid-template-columns: 1fr 1fr auto;
     align-items: center;
     gap: 0.25rem 0.5rem;
     font-size: 0.9375rem;
@@ -63,21 +63,22 @@ const StoresStyles = styled.div`
   }
 
   .store-link {
-    display: flex;
+    display: inline-flex;
     justify-content: flex-end;
     align-items: center;
     text-align: right;
     color: #4338ca;
+    border-bottom: 1px solid transparent;
 
     svg {
-      margin: 0 0 0 0.25rem;
-      height: 0.9375rem;
-      width: 0.9375rem;
+      margin: 0 0 0 0.1875rem;
+      height: 1rem;
+      width: 1rem;
       color: #4f46e5;
     }
 
     &:hover {
-      text-decoration: underline;
+      border-color: #4f46e5;
     }
   }
 
@@ -87,7 +88,7 @@ const StoresStyles = styled.div`
     }
 
     .item {
-      grid-template-columns: 1fr 6rem;
+      grid-template-columns: 1fr auto;
       grid-template-areas:
         'name link'
         'close link';
@@ -151,15 +152,13 @@ export default function Stores({ stores }: Props) {
                       Visit store
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
                       >
                         <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                          fillRule="evenodd"
+                          d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
+                          clipRule="evenodd"
                         />
                       </svg>
                     </a>

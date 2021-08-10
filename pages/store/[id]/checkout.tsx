@@ -38,11 +38,10 @@ export default function Checkout({ store }: Props) {
                 <div className="products">
                   <h3>Order Items</h3>
                   {items.length < 1 && (
-                    <div className="empty">
-                      You have no items in your order.
-                      <br />
+                    <div className="empty-order">
+                      Your order is empty.{' '}
                       <Link href={`/store/${router.query.id}`}>
-                        <a>Go to store homepage</a>
+                        <a>Continue shopping</a>
                       </Link>
                       .
                     </div>
@@ -161,19 +160,23 @@ const CheckoutStyles = styled.div`
       margin: 0 0 1.25rem;
       font-size: 1.125rem;
       color: #36383e;
+      font-weight: 600;
     }
   }
 
-  .empty {
+  .empty-order {
+    font-size: 0.9375rem;
     color: #6b7280;
     line-height: 1.5;
 
     a {
-      color: #3f6ed4;
+      display: inline-flex;
+      align-items: center;
+      color: #4f46e5;
       text-decoration: underline;
 
       &:hover {
-        color: #2f62d0;
+        color: #4338ca;
       }
     }
   }
@@ -211,7 +214,7 @@ const CheckoutStyles = styled.div`
         .value {
           color: #374151;
           font-size: 1rem;
-          font-weight: 700;
+          font-weight: 600;
         }
 
         .value {

@@ -326,9 +326,9 @@ export default function CheckoutForm({
               )}
               {hasMounted && cartIsEmpty && !isSubmitting && (
                 <div className="empty-cart">
-                  You have no items in your order.{' '}
+                  Your order is empty.{' '}
                   <Link href={`/store/${storeId}`}>
-                    <a>Go to store homepage</a>
+                    <a>Continue shopping</a>
                   </Link>
                   .
                 </div>
@@ -507,8 +507,14 @@ const CheckoutFormStyles = styled.div`
     text-align: center;
 
     a {
-      color: #3f6ed4;
+      display: inline-flex;
+      align-items: center;
+      color: #4f46e5;
       text-decoration: underline;
+
+      &:hover {
+        color: #4338ca;
+      }
     }
   }
 `;

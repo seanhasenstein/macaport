@@ -42,7 +42,7 @@ export default function Cart({ store, error }: Props) {
                     <div className="empty-cart">
                       Your cart is empty.{' '}
                       <Link href={`/store/${store._id}`}>
-                        Go to store homepage
+                        <a>Continue Shopping</a>
                       </Link>
                       .
                     </div>
@@ -248,14 +248,17 @@ const CartStyles = styled.div`
   }
 
   .empty-cart {
-    padding: 1.5rem 0;
+    padding: 1rem 0;
+    color: #374151;
 
     a {
-      color: #3f6ed4;
+      display: inline-flex;
+      align-items: center;
+      color: #4f46e5;
       text-decoration: underline;
 
       &:hover {
-        color: #2f62d0;
+        color: #4338ca;
       }
     }
   }
