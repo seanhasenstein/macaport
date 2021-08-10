@@ -135,39 +135,37 @@ export default function Stores({ stores }: Props) {
               <span>Close Date</span>
             </div>
             {stores.map(s => (
-              <Link key={s._id} href={`/store/${s._id}`}>
-                <a>
-                  <div className="item">
-                    <span className="store-name">{s.name}</span>
-                    <span className="store-close-date">
-                      {s.closeDate
-                        ? `${format(
-                            new Date(s.closeDate),
-                            'LLL. do, yyyy'
-                          )} at midnight (CT)`
-                        : 'Permanently Open'}
-                    </span>
-                    <Link href={`/store/${s._id}`}>
-                      <a className="store-link">
-                        Visit store
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                      </a>
-                    </Link>
-                  </div>
-                </a>
-              </Link>
+              <div key={s._id}>
+                <div className="item">
+                  <span className="store-name">{s.name}</span>
+                  <span className="store-close-date">
+                    {s.closeDate
+                      ? `${format(
+                          new Date(s.closeDate),
+                          'LLL. do, yyyy'
+                        )} at midnight (CT)`
+                      : 'Permanently Open'}
+                  </span>
+                  <Link href={`/store/${s._id}`}>
+                    <a className="store-link">
+                      Visit store
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </a>
+                  </Link>
+                </div>
+              </div>
             ))}
           </div>
         </div>

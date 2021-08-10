@@ -1,6 +1,6 @@
 import { NextApiResponse } from 'next';
 import nc from 'next-connect';
-import { Request, Order } from '../../interfaces';
+import { Request } from '../../interfaces';
 import database from '../../middleware/db';
 import { order } from '../../db';
 
@@ -8,7 +8,12 @@ const handler = nc<Request, NextApiResponse>()
   .use(database)
   .post(async (req, res) => {
     try {
-      const result: Order = await order.addOrder(req.db, req.body);
+      const result = await order.addOrderToStore(
+        req.db,
+        req.body.store.id,
+        req.body
+      );
+
       res.json(result);
     } catch (error) {
       console.error(error);

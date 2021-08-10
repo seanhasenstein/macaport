@@ -102,11 +102,11 @@ export default function ProductSidebar({
               </div>
               <div className="item-details">
                 <h3 className="item-name">{item.name}</h3>
-                <p className="item-specs">
+                <div className="item-specs">
                   <div>Color: {color}</div>
                   <span>|</span>
                   <div className="size">Size: {size.label}</div>
-                </p>
+                </div>
                 <p className="item-price">{formatToMoney(size.price, true)}</p>
               </div>
             </div>
@@ -121,7 +121,20 @@ export default function ProductSidebar({
             </div>
             <div className="store-home-link">
               <Link href={`/store/${storeId}`}>
-                <a>Back to store home</a>
+                <a>
+                  Continue shopping
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </a>
               </Link>
             </div>
           </div>
@@ -185,7 +198,7 @@ const ProductSidebarStyles = styled.div`
     margin: 0 0.75rem 0 0;
     height: 1.375rem;
     width: 1.375rem;
-    color: #2d9542;
+    color: #059669;
   }
 
   h2 {
@@ -317,15 +330,24 @@ const ProductSidebarStyles = styled.div`
   .store-home-link {
     margin: 1rem 0 0;
     font-size: 0.9375rem;
+    font-weight: 500;
     text-align: center;
+    color: #9ca3af;
 
     a {
-      color: #3b4a58;
-      text-decoration: underline;
+      display: inline-flex;
+      align-items: center;
+      color: #4f46e5;
 
       &:hover {
-        color: #000;
+        border-bottom: 1px solid #4f46e5;
       }
+    }
+
+    svg {
+      margin: 0 0 0 1px;
+      height: 1.125rem;
+      width: 1.125rem;
     }
   }
 

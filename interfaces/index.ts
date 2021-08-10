@@ -103,6 +103,7 @@ export interface Store {
     phone: string;
   };
   products: Product[];
+  orders: Order[];
   createdAt: string;
   updatedAt: string;
 }

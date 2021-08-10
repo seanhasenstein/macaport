@@ -186,7 +186,6 @@ export default function CheckoutForm({
       });
 
       const serverResponse = await response.json();
-
       handleServerResponse(serverResponse);
     }
   };

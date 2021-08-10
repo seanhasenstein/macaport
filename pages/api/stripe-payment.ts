@@ -43,10 +43,10 @@ async function generateResponse(
     await fetch(`${process.env.API_HOST}/api/email-receipt`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(result),
+      body: JSON.stringify({ store: result, orderId: order.orderId }),
     });
 
-    return response.json({ success: true, orderId: result.orderId });
+    return response.json({ success: true, orderId: order.orderId });
   } else {
     // any other status would be unexpected, so send as error
     return response

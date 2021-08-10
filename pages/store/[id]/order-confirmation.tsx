@@ -174,16 +174,23 @@ export default function Temp({ order }: { order: Order }) {
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
-    if (context.query === undefined || context.query.orderId === undefined) {
-      throw new Error('You must provide a valid order id.');
+    if (context.query === undefined || context.query.id === undefined) {
+      throw new Error('You must provide a store id.');
     }
+    if (context.query === undefined || context.query.orderId === undefined) {
+      throw new Error('You must provide an order id.');
+    }
+
+    const storeId = Array.isArray(context.query.id)
+      ? context.query.id[0]
+      : context.query.id;
 
     const orderId = Array.isArray(context.query.orderId)
       ? context.query.orderId[0]
       : context.query.orderId;
 
     const { db } = await connectToDb();
-    const result = await order.getOrder(db, orderId);
+    const result = await order.getOrderFromStore(db, storeId, orderId);
 
     return {
       props: {
