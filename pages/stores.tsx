@@ -3,6 +3,7 @@ import Link from 'next/link';
 import styled from 'styled-components';
 import { format } from 'date-fns';
 import { connectToDb, store } from '../db';
+import { isStoreActive } from '../utils';
 import { Store } from '../interfaces';
 import Layout from '../components/Layout';
 
@@ -177,8 +178,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
   const { db } = await connectToDb();
   const stores: Store[] = await store.getStores(db);
   const activeStores = stores.filter(s => {
-    const now = new Date();
-    const isActive = !s.closeDate ? true : new Date(s.closeDate) > now;
+    const isActive = isStoreActive(s.openDate, s.closeDate);
     return isActive;
   });
 

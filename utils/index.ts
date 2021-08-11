@@ -157,3 +157,17 @@ export function createReceiptNumber() {
 
   return value.join('');
 }
+
+export function isStoreActive(openDate: string, closeDate: string | undefined) {
+  const open = new Date(openDate);
+  const close = new Date(closeDate || 'Jan 01 9999');
+  const now = new Date();
+
+  if (now < open || now > close) {
+    return false;
+  }
+
+  if (now > open && now < close) {
+    return true;
+  }
+}

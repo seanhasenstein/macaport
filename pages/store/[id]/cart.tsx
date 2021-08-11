@@ -237,7 +237,7 @@ const CartStyles = styled.div`
         .value {
           color: #374151;
           font-size: 1rem;
-          font-weight: 700;
+          font-weight: 600;
         }
 
         .value {
