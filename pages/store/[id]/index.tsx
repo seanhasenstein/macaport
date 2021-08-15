@@ -72,7 +72,7 @@ export default function Store({ store, error }: Props) {
           </div>
         )}
         <h2>{store.name}</h2>
-        {store.products.length < 1 ? (
+        {!store.products || store.products.length < 1 ? (
           <div className="no-products">
             <div className="wrapper">
               <svg

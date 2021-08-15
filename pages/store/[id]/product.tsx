@@ -257,11 +257,11 @@ export default function Product({ store, product, error }: Props) {
                     <p>{product.description}</p>
                   </div>
                 )}
-                {product.details && (
+                {product.details && product.details.length > 0 && (
                   <div className="other-details">
                     <h4>Details</h4>
                     <ul>
-                      {product.details.map((d, i) => (
+                      {product?.details.map((d, i) => (
                         <li key={i}>{d}</li>
                       ))}
                     </ul>
