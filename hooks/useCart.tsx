@@ -174,13 +174,18 @@ export function CartProvider({
   };
 
   const updateItemSize = (prevId: string, payload: Record<string, any>) => {
-    if (!prevId || !payload || prevId === payload.id) return;
+    if (!prevId || !payload) return;
 
     const existingCartItem = state.items.find(
       (item: CartItem) => item.sku.id === payload.sku.id
     );
 
     if (existingCartItem) {
+      // same item (user opened select and kept the same size)
+      if (prevId === payload.sku.id) {
+        return;
+      }
+
       dispatch({
         type: 'UPDATE_ITEM',
         id: `${payload.sku.id}`,

@@ -83,10 +83,8 @@ export default function Product({ store, product, error }: Props) {
   }, [color]);
 
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('hellooooo');
     const updatedColor =
       product.colors.find(c => c.id === e.target.value) || product.colors[0];
-    console.log(updatedColor);
     setColor(updatedColor);
   };
 
