@@ -10,7 +10,7 @@ const stripePromise = loadStripe(
 
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
-  const cartId = router.query.slug || 'default_cart';
+  const cartId = router.query.id || 'default_cart';
 
   return (
     <Elements stripe={stripePromise}>
