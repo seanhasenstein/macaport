@@ -5,7 +5,12 @@ import { connectToDb, store } from '../../../db';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { useCart } from '../../../hooks/useCart';
-import { Store, Product as ProductInterface, Size } from '../../../interfaces';
+import {
+  Store,
+  Product as ProductInterface,
+  Color as ColorType,
+  Size,
+} from '../../../interfaces';
 import { formatToMoney } from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
 import ProductSidebar from '../../../components/store/ProductSidebar';
@@ -24,27 +29,27 @@ export default function Product({ store, product, error }: Props) {
   const [showSidebar, setShowSidebar] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
   const [color, setColor] = React.useState(() => {
-    if (error) return 'error';
-    if (router.query.color) {
-      const color = Array.isArray(router.query.color)
-        ? router.query.color[0]
-        : router.query.color;
+    if (error) throw new Error('No color provided.');
+    if (router.query.colorId) {
+      const colorIdQuery = Array.isArray(router.query.colorId)
+        ? router.query.colorId[0]
+        : router.query.colorId;
 
-      const verifiedColor = product.colors.find(c => c.label === color);
+      const verifiedColor = product.colors.find(c => c.id === colorIdQuery);
 
-      return verifiedColor ? verifiedColor.label : product.colors[0].label;
+      return verifiedColor ? verifiedColor : product.colors[0];
     } else {
-      return product.colors[0].label;
+      return product.colors[0];
     }
   });
   const [primaryImage, setPrimaryImage] = React.useState(() => {
     if (error) return 'error';
-    const c = product.colors.find(c => c.label === color);
+    const c = product.colors.find(c => c.id === color.id);
     return c?.primaryImage;
   });
   const [secondaryImages, setSecondaryImages] = React.useState(() => {
     if (error) return ['error'];
-    const c = product.colors.find(c => c.label === color);
+    const c = product.colors.find(c => c.id === color.id);
     return c?.secondaryImages;
   });
   const [clickedImage, setClickedImage] = React.useState('image-0');
@@ -60,25 +65,29 @@ export default function Product({ store, product, error }: Props) {
     if (error) return;
 
     router.push(
-      `/store/${store._id}/product?productId=${product.id}&color=${color}`,
+      `/store/${store._id}/product?productId=${product.id}&colorId=${color.id}`,
       undefined,
       { shallow: true }
     );
 
     setPrimaryImage(() => {
-      const c = product.colors.find(c => c.label === color);
+      const c = product.colors.find(c => c.id === color.id);
       return c?.primaryImage;
     });
 
     setSecondaryImages(() => {
-      const c = product.colors.find(c => c.label === color);
+      const c = product.colors.find(c => c.id === color.id);
       return c?.secondaryImages;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [color]);
 
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setColor(e.target.value);
+    console.log('hellooooo');
+    const updatedColor =
+      product.colors.find(c => c.id === e.target.value) || product.colors[0];
+    console.log(updatedColor);
+    setColor(updatedColor);
   };
 
   const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,7 +116,7 @@ export default function Product({ store, product, error }: Props) {
     }
 
     const sku = product.skus.find(
-      sku => sku.size.label === size.label && sku.color.label === color
+      sku => sku.size.label === size.label && sku.color.id === color.id
     );
 
     // TODO: figure out what to do when no sku or item is found
@@ -176,7 +185,10 @@ export default function Product({ store, product, error }: Props) {
                 className="primary-img"
                 onClick={() => handleImageClick('image-0')}
               >
-                <img src={primaryImage} alt={`${color} ${product.name}`} />
+                <img
+                  src={primaryImage}
+                  alt={`${color.label} ${product.name}`}
+                />
               </button>
               <div className="secondary-imgs">
                 {secondaryImages &&
@@ -185,7 +197,10 @@ export default function Product({ store, product, error }: Props) {
                       key={index}
                       onClick={() => handleImageClick(`image-${index + 1}`)}
                     >
-                      <img src={secImg} alt={'TODO'} />
+                      <img
+                        src={secImg}
+                        alt={`${color.label} ${product.name} ${index + 2}`}
+                      />
                     </button>
                   ))}
               </div>
@@ -207,9 +222,10 @@ export default function Product({ store, product, error }: Props) {
                   {product.colors.map(c => (
                     <Color
                       key={c.id}
+                      id={c.id}
                       hex={c.hex}
                       label={c.label}
-                      color={color}
+                      activeColor={color}
                       handleColorChange={handleColorChange}
                     />
                   ))}
@@ -285,7 +301,7 @@ export default function Product({ store, product, error }: Props) {
         <Lightbox
           setShowLightbox={setShowLightbox}
           primaryImage={primaryImage}
-          primaryAlt={`${color} ${product.name}`}
+          primaryAlt={`${color.label} ${product.name}`}
           secondaryImages={secondaryImages}
           clickedImage={clickedImage}
         />
@@ -295,9 +311,10 @@ export default function Product({ store, product, error }: Props) {
 }
 
 type ColorProps = {
+  id: string;
   label: string;
   hex: string;
-  color: string;
+  activeColor: ColorType;
   handleColorChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
@@ -306,17 +323,17 @@ const Color = (props: ColorProps) => (
     <input
       type="radio"
       name="color"
-      id={props.label}
-      value={props.label}
+      id={props.hex}
+      value={props.id}
       onChange={props.handleColorChange}
-      checked={props.color === props.label}
+      checked={props.id === props.activeColor.id}
     />
     <div
       className={`label-wrapper ${
-        props.color === props.label ? 'checked' : ''
+        props.id === props.activeColor.id ? 'checked' : ''
       }`}
     >
-      <label htmlFor={props.label}>
+      <label htmlFor={props.hex}>
         <span className="sr-only">{props.label}</span>
       </label>
     </div>

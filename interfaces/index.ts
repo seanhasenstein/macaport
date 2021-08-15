@@ -8,7 +8,7 @@ export interface Size {
 }
 
 export interface Color {
-  id: number;
+  id: string;
   label: string;
   hex: string;
   primaryImage: string;

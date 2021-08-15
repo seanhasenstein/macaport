@@ -2,13 +2,13 @@ import React from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { formatToMoney } from '../../utils';
-import { Product, Size } from '../../interfaces';
+import { Product, Size, Color } from '../../interfaces';
 import LinkButton from './Link';
 
 type Props = {
   storeId: string;
   item: Product;
-  color: string;
+  color: Color;
   size?: Size;
   image: string | undefined;
   isSidebarOpen: boolean;
@@ -98,12 +98,12 @@ export default function ProductSidebar({
           <div className="main">
             <div className="item">
               <div className="item-img">
-                <img src={image} alt={`${color} ${item.name}`} />
+                <img src={image} alt={`${color.label} ${item.name}`} />
               </div>
               <div className="item-details">
                 <h3 className="item-name">{item.name}</h3>
                 <div className="item-specs">
-                  <div>Color: {color}</div>
+                  <div>Color: {color.label}</div>
                   <span>|</span>
                   <div className="size">Size: {size.label}</div>
                 </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
-import { Product, Color as ColorInterface } from '../../interfaces';
+import { Product, Color as ColorType } from '../../interfaces';
 import { formatToMoney } from '../../utils';
 
 type Props = {
@@ -20,8 +20,8 @@ const ColorStyles = styled.div`
 `;
 
 type ColorProps = {
-  colorObj: ColorInterface;
-  setActiveColor: (c: ColorInterface) => void;
+  colorObj: ColorType;
+  setActiveColor: (c: ColorType) => void;
   onMouseEnter?: React.MouseEventHandler<HTMLDivElement>;
 };
 
@@ -42,7 +42,7 @@ export default function StoreItem({ item, storeId }: Props) {
 
   return (
     <Link
-      href={`/store/${storeId}/product?productId=${item.id}&color=${activeColor.label}`}
+      href={`/store/${storeId}/product?productId=${item.id}&colorId=${activeColor.id}`}
       passHref
     >
       <StoreItemStyles>

@@ -2,6 +2,7 @@ import React from 'react';
 import { GetServerSideProps } from 'next';
 import { connectToDb, store } from '../../../db';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { useCart } from '../../../hooks/useCart';
 import useHasMounted from '../../../hooks/useHasMounted';
@@ -18,11 +19,17 @@ type Props = {
 
 export default function Cart({ store, error }: Props) {
   const hasMounted = useHasMounted();
+  const router = useRouter();
   const { items, totalItems, cartSubtotal, salesTax, cartTotal, cartIsEmpty } =
     useCart();
 
   if (error) {
     // TODO
+  }
+
+  if (hasMounted && (!store.products || store.products.length < 1)) {
+    router.push(`/store/${router.query.id}`);
+    return <div />;
   }
 
   return (
