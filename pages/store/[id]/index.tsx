@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { GetServerSideProps } from 'next';
 import { connectToDb, store } from '../../../db';
 import { Store as StoreInterface, Product } from '../../../interfaces';
+import { isStoreActive } from '../../../utils';
 import { MessageStyles } from '../../../styles/Message';
 import StoreLayout from '../../../components/store/StoreLayout';
 import StoreItem from '../../../components/store/StoreItem';
@@ -125,10 +126,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    const now = new Date();
-    const storeIsActive = !storeRes.closeDate
-      ? true
-      : new Date(storeRes.closeDate) > now;
+    const storeIsActive = isStoreActive(storeRes.openDate, storeRes.closeDate);
 
     if (!storeIsActive) {
       return {

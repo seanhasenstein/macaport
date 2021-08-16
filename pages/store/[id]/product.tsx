@@ -11,7 +11,7 @@ import {
   Color as ColorType,
   Size,
 } from '../../../interfaces';
-import { formatToMoney } from '../../../utils';
+import { formatToMoney, isStoreActive } from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
 import ProductSidebar from '../../../components/store/ProductSidebar';
 import Lightbox from '../../../components/store/Lightbox';
@@ -719,10 +719,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    const now = new Date();
-    const storeIsActive = !storeRes.closeDate
-      ? true
-      : new Date(storeRes.closeDate) > now;
+    const storeIsActive = isStoreActive(storeRes.openDate, storeRes.closeDate);
 
     if (!storeIsActive) {
       return {

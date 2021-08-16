@@ -7,7 +7,7 @@ import styled from 'styled-components';
 import { useCart } from '../../../hooks/useCart';
 import useHasMounted from '../../../hooks/useHasMounted';
 import { Store } from '../../../interfaces';
-import { formatToMoney } from '../../../utils';
+import { formatToMoney, isStoreActive } from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
 import CheckoutItem from '../../../components/store/CheckoutItem';
 import CheckoutForm from '../../../components/store/CheckoutForm';
@@ -106,10 +106,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    const now = new Date();
-    const storeIsActive = !storeRes.closeDate
-      ? true
-      : new Date(storeRes.closeDate) > now;
+    const storeIsActive = isStoreActive(storeRes.openDate, storeRes.closeDate);
 
     if (!storeIsActive) {
       return {

@@ -151,7 +151,7 @@ export function createReceiptNumber() {
   return value.join('');
 }
 
-export function isStoreActive(openDate: string, closeDate: string | undefined) {
+export function isStoreActive(openDate: string, closeDate: string | null) {
   const open = new Date(openDate);
   const close = new Date(closeDate || 'Jan 01 9999');
   const now = new Date();
