@@ -35,7 +35,7 @@ export default function Store({ store, error }: Props) {
             </svg>
             <h3>An error has occurred</h3>
             <p>
-              {error} If you continue to have problems please contact us at{' '}
+              If you continue to have problems please contact us at{' '}
               <a href="mailto:support@macaport.com">support@macaport.com</a>.
             </p>
           </div>

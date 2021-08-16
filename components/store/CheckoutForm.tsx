@@ -145,6 +145,7 @@ export default function CheckoutForm({
       billing_details: {
         name: data.cardholderName,
         email: data.customer.email,
+        phone: data.customer.phone,
       },
     });
 

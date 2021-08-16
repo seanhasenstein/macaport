@@ -95,13 +95,6 @@ export function calculateCartSubtotal(items: CartItem[]) {
   return items.reduce((total, item) => total + item.quantity! * item.price, 0);
 }
 
-export function calculateTransactionFee(subtotal: number) {
-  if (subtotal === 0) {
-    return 0;
-  }
-  return Math.ceil((subtotal + 30) / (1 - 0.029)) - subtotal;
-}
-
 export function calculateSalesTax(subtotal: number) {
   return Math.ceil(subtotal * 0.055);
 }

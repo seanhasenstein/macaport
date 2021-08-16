@@ -70,7 +70,6 @@ export interface Order {
   summary: {
     subtotal: number;
     shipping: number;
-    transactionFee: number;
     salesTax: number;
     total: number;
   };

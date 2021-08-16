@@ -34,6 +34,12 @@ const StoresStyles = styled.div`
     max-width: 32rem;
   }
 
+  .empty {
+    margin: 1rem 0 0;
+    font-size: 1rem;
+    color: #6b7280;
+  }
+
   .grid {
     margin: 2rem 0;
   }
@@ -130,44 +136,49 @@ export default function Stores({ stores }: Props) {
     <Layout>
       <StoresStyles>
         <div className="wrapper">
-          <h2>Current Stores</h2>
-          <div className="grid">
-            <div className="header">
-              <span>Store Name</span>
-              <span>Close Date</span>
-            </div>
-            {stores.map(s => (
-              <div key={s._id}>
-                <div className="item">
-                  <span className="store-name">{s.name}</span>
-                  <span className="store-close-date">
-                    {s.closeDate
-                      ? `${format(
-                          new Date(s.closeDate),
-                          'LLL. do, yyyy'
-                        )} at midnight (CT)`
-                      : 'Permanently Open'}
-                  </span>
-                  <Link href={`/store/${s._id}`}>
-                    <a className="store-link">
-                      Visit store
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </a>
-                  </Link>
-                </div>
+          <h2>Active Stores</h2>
+          {(!stores || stores.length < 1) && (
+            <div className="empty">There are currently no active stores.</div>
+          )}
+          {stores && stores.length > 0 && (
+            <div className="grid">
+              <div className="header">
+                <span>Store Name</span>
+                <span>Close Date</span>
               </div>
-            ))}
-          </div>
+              {stores.map(s => (
+                <div key={s._id}>
+                  <div className="item">
+                    <span className="store-name">{s.name}</span>
+                    <span className="store-close-date">
+                      {s.closeDate
+                        ? `${format(
+                            new Date(s.closeDate),
+                            'LLL. do, yyyy'
+                          )} at midnight (CT)`
+                        : 'Permanently Open'}
+                    </span>
+                    <Link href={`/store/${s._id}`}>
+                      <a className="store-link">
+                        Visit store
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </a>
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </StoresStyles>
     </Layout>
@@ -177,10 +188,12 @@ export default function Stores({ stores }: Props) {
 export const getServerSideProps: GetServerSideProps = async () => {
   const { db } = await connectToDb();
   const stores: Store[] = await store.getStores(db);
-  const activeStores = stores.filter(s => {
+  const activeStores = stores?.filter(s => {
     const isActive = isStoreActive(s.openDate, s.closeDate);
     return isActive;
   });
 
-  return { props: { stores: activeStores } };
+  const res = activeStores || null;
+
+  return { props: { stores: res } };
 };

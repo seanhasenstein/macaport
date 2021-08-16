@@ -20,8 +20,15 @@ type Props = {
 export default function Cart({ store, error }: Props) {
   const hasMounted = useHasMounted();
   const router = useRouter();
-  const { items, totalItems, cartSubtotal, salesTax, cartTotal, cartIsEmpty } =
-    useCart();
+  const {
+    items,
+    totalItems,
+    cartSubtotal,
+    salesTax,
+    cartTotal,
+    cartIsEmpty,
+    removeItem,
+  } = useCart();
 
   if (error) {
     // TODO
@@ -60,11 +67,8 @@ export default function Cart({ store, error }: Props) {
                       );
 
                       if (!product) {
-                        // TODO: how do I handle no product?
-                        // Is this scenario possible?
-                        // Remove the item from the cart if it doesn't exist
-                        // in store.products?
-                        throw new Error('No product found!');
+                        removeItem(item.sku.id);
+                        return;
                       }
 
                       return (
@@ -72,8 +76,8 @@ export default function Cart({ store, error }: Props) {
                           key={item.sku.id}
                           item={item}
                           storeId={store._id}
-                          skus={product.skus}
-                          sizes={product.sizes}
+                          skus={product!.skus}
+                          sizes={product!.sizes}
                         />
                       );
                     })

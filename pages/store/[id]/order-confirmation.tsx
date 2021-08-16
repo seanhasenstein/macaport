@@ -1,12 +1,18 @@
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
+import Link from 'next/link';
 import styled, { createGlobalStyle } from 'styled-components';
 import { format } from 'date-fns';
 import { connectToDb, order } from '../../../db';
 import { Order } from '../../../interfaces';
 import { formatPhoneNumber, formatToMoney } from '../../../utils';
 
-export default function Temp({ order }: { order: Order }) {
+type Props = {
+  order: Order;
+  error?: string;
+};
+
+export default function Temp({ order, error }: Props) {
   return (
     <>
       <GlobalStyles />
@@ -19,10 +25,14 @@ export default function Temp({ order }: { order: Order }) {
         <div className="wrapper">
           <div className="header">
             <div className="logo">
-              <img
-                src="/images/logo.png"
-                alt="Macaport text in front of mountains."
-              />
+              <Link href="/">
+                <a>
+                  <img
+                    src="/images/logo.png"
+                    alt="Macaport text in front of mountains."
+                  />
+                </a>
+              </Link>
             </div>
             <div className="print-only">
               <div className="support-link">support@macaport.com</div>
@@ -51,118 +61,144 @@ export default function Temp({ order }: { order: Order }) {
               </button>
             </div> */}
           </div>
-          <div>
-            <div className="main-content">
-              <div>
-                <div className="explanation">
-                  <h5>Payment Successful</h5>
-                  <h2>Thank you for your order!</h2>
-                  <p>
-                    We have your order and are currently processing it. You
-                    should receive a confirmation email shortly. If you have any
-                    questions feel free to reach us at{' '}
-                    <a href="mailto:support@macaport.com">
-                      support@macaport.com
-                    </a>
-                    .
-                  </p>
-                </div>
-                <div className="order-metadata">
-                  <div className="order-number">
-                    <span>Order Number:</span>
-                    {order.orderId}
-                  </div>
-                  <div className="transaction-id">
-                    <span>Transaction ID:</span>
-                    {order.stripeId}
-                  </div>
-                  <div className="order-date">
-                    <span>Order Date:</span>
-                    {format(new Date(order.createdAt!), 'LLL dd, yyyy')}
-                  </div>
-                  <div className="store-name">
-                    <span>Store:</span>
-                    {order.store.name}
-                  </div>
-                </div>
-                <div className="order-info">
-                  <div className="customer">
-                    <h3>Customer Information</h3>
-                    <div className="name">
-                      {order.customer.firstName} {order.customer.lastName}
-                    </div>
-                    <div className="email">{order.customer.email}</div>
-                    <div className="phone">
-                      {formatPhoneNumber(order.customer.phone)}
-                    </div>
-                  </div>
-                  <div className="shipping-details">
-                    <h3>Shipping Address</h3>
-                    <div className="shipping-address">
-                      {order.shippingMethod === 'Direct'
-                        ? `${order.customer.firstName} ${order.customer.lastName}`
-                        : order.shippingAddress.name}
-                      <br />
-                      {order.shippingAddress.street}{' '}
-                      {order.shippingAddress.street2}
-                      <br />
-                      {order.shippingAddress.city},{' '}
-                      {order.shippingAddress.state}{' '}
-                      {order.shippingAddress.zipcode}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="order">
-                <h3>Order Items</h3>
-                <div>
-                  {order.items.map(item => (
-                    <div key={item.sku.id} className="item">
-                      <div className="item-img">
-                        <img
-                          src={item.sku.color.primaryImage}
-                          alt={`${item.sku.color.label} ${item.name}`}
-                        />
-                      </div>
-                      <div className="item-name">{item.name}</div>
-                      <div className="item-quantity">Qty: {item.quantity}</div>
-                      <div className="item-color">{item.sku.color.label}</div>
-                      <div className="item-size">{item.sku.size.label}</div>
-                      <div className="item-total">
-                        {formatToMoney(item.itemTotal!)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="order-summary">
-                  <div className="subtotal">
-                    <div className="label">Subtotal</div>
-                    <div className="value">
-                      {formatToMoney(order.summary.subtotal, true)}
-                    </div>
-                  </div>
-                  <div className="sales-tax">
-                    <div className="label">Sales Tax</div>
-                    <div className="value">
-                      {formatToMoney(order.summary.salesTax, true)}
-                    </div>
-                  </div>
-                  <div className="shipping-total">
-                    <div className="label">Shipping &amp; Handling</div>
-                    <div className="value">
-                      {formatToMoney(order.summary.shipping, true)}
-                    </div>
-                  </div>
-                  <div className="total">
-                    <div>Order Total</div>
-                    <div className="value">
-                      {formatToMoney(order.summary.total, true)}
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {error && (
+            <div className="error">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <h3>An error has occurred!</h3>
+              <p>
+                {error} Please contact us with any questions at{' '}
+                <a href="mailto:support@macaport.com">support@macaport.com</a>.
+              </p>
             </div>
-          </div>
+          )}
+          {order && (
+            <div className="main-content">
+              <>
+                <div>
+                  <div className="explanation">
+                    <h5>Payment Successful</h5>
+                    <h2>Thank you for your order!</h2>
+                    <p>
+                      We have your order and are currently processing it. You
+                      should receive a confirmation email shortly. If you have
+                      any questions feel free to reach us at{' '}
+                      <a href="mailto:support@macaport.com">
+                        support@macaport.com
+                      </a>
+                      .
+                    </p>
+                  </div>
+                  <div className="order-metadata">
+                    <div className="order-number">
+                      <span>Order Number:</span>
+                      {order.orderId}
+                    </div>
+                    <div className="transaction-id">
+                      <span>Transaction ID:</span>
+                      {order.stripeId}
+                    </div>
+                    <div className="order-date">
+                      <span>Order Date:</span>
+                      {format(new Date(order.createdAt!), 'LLL dd, yyyy')}
+                    </div>
+                    <div className="store-name">
+                      <span>Store:</span>
+                      {order.store.name}
+                    </div>
+                  </div>
+                  <div className="order-info">
+                    <div className="customer">
+                      <h3>Customer Information</h3>
+                      <div className="name">
+                        {order.customer.firstName} {order.customer.lastName}
+                      </div>
+                      <div className="email">{order.customer.email}</div>
+                      <div className="phone">
+                        {formatPhoneNumber(order.customer.phone)}
+                      </div>
+                    </div>
+                    <div className="shipping-details">
+                      <h3>Shipping Address</h3>
+                      <div className="shipping-address">
+                        {order.shippingMethod === 'Direct'
+                          ? `${order.customer.firstName} ${order.customer.lastName}`
+                          : order.shippingAddress.name}
+                        <br />
+                        {order.shippingAddress.street}{' '}
+                        {order.shippingAddress.street2}
+                        <br />
+                        {order.shippingAddress.city},{' '}
+                        {order.shippingAddress.state}{' '}
+                        {order.shippingAddress.zipcode}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="order">
+                  <h3>Order Items</h3>
+                  <div>
+                    {order.items.map(item => (
+                      <div key={item.sku.id} className="item">
+                        <div className="item-img">
+                          <img
+                            src={item.sku.color.primaryImage}
+                            alt={`${item.sku.color.label} ${item.name}`}
+                          />
+                        </div>
+                        <div className="item-name">{item.name}</div>
+                        <div className="item-quantity">
+                          Qty: {item.quantity}
+                        </div>
+                        <div className="item-color">{item.sku.color.label}</div>
+                        <div className="item-size">{item.sku.size.label}</div>
+                        <div className="item-total">
+                          {formatToMoney(item.itemTotal!)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="order-summary">
+                    <div className="subtotal">
+                      <div className="label">Subtotal</div>
+                      <div className="value">
+                        {formatToMoney(order.summary.subtotal, true)}
+                      </div>
+                    </div>
+                    <div className="sales-tax">
+                      <div className="label">Sales Tax</div>
+                      <div className="value">
+                        {formatToMoney(order.summary.salesTax, true)}
+                      </div>
+                    </div>
+                    <div className="shipping-total">
+                      <div className="label">Shipping &amp; Handling</div>
+                      <div className="value">
+                        {formatToMoney(order.summary.shipping, true)}
+                      </div>
+                    </div>
+                    <div className="total">
+                      <div>Order Total</div>
+                      <div className="value">
+                        {formatToMoney(order.summary.total, true)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            </div>
+          )}
           <div className="footer">
             &copy; 2021 Macaport. All Rights Reserved.
           </div>
@@ -208,11 +244,16 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
 const OrderConfirmationStyles = styled.div`
   padding: 0 1.5rem;
+  height: 100%;
 
   .wrapper {
     margin: 0 auto;
     max-width: 78rem;
     width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
 
   .header {
@@ -479,11 +520,55 @@ const OrderConfirmationStyles = styled.div`
   }
 
   .footer {
+    margin-top: auto;
     padding: 2rem 0;
     font-size: 1rem;
     color: #9ca3af;
     text-align: center;
     border-top: 1px solid #e5e7eb;
+  }
+
+  .error {
+    margin: 5rem auto 0;
+    padding: 2.5rem 2rem 3rem;
+    max-width: 40rem;
+    width: 100%;
+    text-align: center;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.3125rem;
+    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+
+    svg {
+      margin: 0 0 0.5rem;
+      height: 1.75rem;
+      width: 1.75rem;
+      color: #f87171;
+    }
+
+    h3 {
+      margin: 0.5rem 0 0.75rem;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    p {
+      margin: 0;
+      font-size: 1rem;
+      color: #6e788c;
+      line-height: 1.5;
+    }
+
+    a {
+      color: #3b82f6;
+      text-decoration: underline;
+
+      &:hover {
+        color: #2563eb;
+      }
+    }
   }
 
   @media screen and (max-width: 1024px) {
@@ -582,6 +667,10 @@ const OrderConfirmationStyles = styled.div`
     .footer {
       border-top: none;
     }
+
+    .error {
+      margin: 2rem auto 0;
+    }
   }
 
   @media print {
@@ -591,6 +680,10 @@ const OrderConfirmationStyles = styled.div`
     }
 
     @media (resolution: 300dpi) {
+      .wrapper {
+        display: block;
+      }
+
       .header {
         padding-top: 4rem;
         border-color: #d4d4d4;

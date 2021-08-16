@@ -15,12 +15,12 @@ export async function getOrderFromStore(
     }
     const order = result.orders.find(o => o.orderId === orderId);
     if (!order) {
-      throw new Error(`No order found with id: ${orderId}`);
+      throw new Error(`Order not found.`);
     }
     return order;
   } catch (error) {
     console.error(error);
-    throw new Error('An error occurred querying the order.');
+    throw new Error(error.message);
   }
 }
 

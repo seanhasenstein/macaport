@@ -4,8 +4,8 @@ import fetch from 'node-fetch';
 import { connectToDb, store } from '../../db';
 import { CartItem, Order, Product } from '../../interfaces/';
 import {
+  calculateSalesTax,
   calculateCartTotal,
-  calculateTransactionFee,
   createReceiptNumber,
   removeNonDigits,
 } from '../../utils';
@@ -79,7 +79,16 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     const { verifiedItems, verifiedSubtotal } = items.reduce(
       (cartAccumulator: CartAccumulator, currentItem: CartItem) => {
         const product = products.find(p => p.id === currentItem.sku.productId);
-        const item = product?.skus.find(s => s.id === currentItem.sku.id);
+
+        // if was in the cart but no longer exists in db store.products
+        // then  don't add the product to the verified items and return
+        if (!product)
+          return {
+            verifiedItems: cartAccumulator.verifiedItems,
+            verifiedSubtotal: cartAccumulator.verifiedSubtotal,
+          };
+
+        const item = product.skus.find(s => s.id === currentItem.sku.id);
 
         if (item) {
           const verifiedItem = {
@@ -100,10 +109,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       { verifiedItems: [], verifiedSubtotal: 0 }
     );
 
-    // 2. calculate order total from verified items and subtotal
+    // 2. calculate order salesTax and total from verified items and subtotal
+    const verifiedSalesTax = calculateSalesTax(verifiedSubtotal);
     const verifiedTotal = calculateCartTotal(
       verifiedSubtotal,
-      calculateTransactionFee(verifiedSubtotal)
+      verifiedSalesTax
     );
 
     // 2.5 create orderId
@@ -118,6 +128,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       error_on_requires_action: true,
       metadata: {
         orderId,
+        storeId,
+        store: storeName,
       },
     });
 
@@ -138,7 +150,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       orderStatus: 'Unfulfilled',
       shippingMethod,
       shippingAddress,
-      summary,
+      summary: {
+        subtotal: verifiedSubtotal,
+        shipping: summary.shipping,
+        salesTax: verifiedSalesTax,
+        total: verifiedTotal,
+      },
     });
   } catch (e) {
     if (e.type === 'StripeCardError') {
