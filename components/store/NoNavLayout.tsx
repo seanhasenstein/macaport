@@ -213,7 +213,7 @@ export default function NoNavLayout({ children, title = 'Macaport' }: Props) {
       <header>
         <nav>
           <div className="wrapper">
-            <Link href="/stores">
+            <Link href="/">
               <a>
                 <img
                   src="/images/logo.png"

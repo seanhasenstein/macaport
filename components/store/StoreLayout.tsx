@@ -298,7 +298,7 @@ export default function StoreLayout({
                 </svg>
               </a>
             </Link>
-            <Link href={`/store/${router.query.id}`}>
+            <Link href={`/`}>
               <a>
                 <img
                   src="/images/logo.png"
