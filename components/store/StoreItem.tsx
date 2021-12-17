@@ -9,16 +9,6 @@ type Props = {
   storeId: string;
 };
 
-const ColorStyles = styled.div`
-  margin: 0 0 0 0.375rem;
-  background-color: ${(props: ColorProps) => props.colorObj.hex};
-  height: 0.875rem;
-  width: 0.875rem;
-  box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-    rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
-  border-radius: 9999px;
-`;
-
 type ColorProps = {
   colorObj: ColorType;
   setActiveColor: (c: ColorType) => void;
@@ -36,6 +26,16 @@ function Color(props: ColorProps) {
     </ColorStyles>
   );
 }
+
+const ColorStyles = styled.div`
+  margin: 0 0 0 0.375rem;
+  background-color: ${(props: ColorProps) => props.colorObj.hex};
+  height: 0.875rem;
+  width: 0.875rem;
+  box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+    rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
+  border-radius: 9999px;
+`;
 
 export default function StoreItem({ item, storeId }: Props) {
   const [activeColor, setActiveColor] = React.useState(item.colors[0]);

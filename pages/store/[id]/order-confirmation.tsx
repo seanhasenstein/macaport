@@ -7,6 +7,40 @@ import { connectToDb, order } from '../../../db';
 import { Order } from '../../../interfaces';
 import { formatPhoneNumber, formatToMoney } from '../../../utils';
 
+export const getServerSideProps: GetServerSideProps = async context => {
+  try {
+    if (context.query === undefined || context.query.id === undefined) {
+      throw new Error('You must provide a store id.');
+    }
+    if (context.query === undefined || context.query.orderId === undefined) {
+      throw new Error('You must provide an order id.');
+    }
+
+    const storeId = Array.isArray(context.query.id)
+      ? context.query.id[0]
+      : context.query.id;
+
+    const orderId = Array.isArray(context.query.orderId)
+      ? context.query.orderId[0]
+      : context.query.orderId;
+
+    const { db } = await connectToDb();
+    const result = await order.getOrderFromStore(db, storeId, orderId);
+
+    return {
+      props: {
+        order: result,
+      },
+    };
+  } catch (error) {
+    return {
+      props: {
+        error: error.message,
+      },
+    };
+  }
+};
+
 type Props = {
   order: Order;
   error?: string;
@@ -207,40 +241,6 @@ export default function Temp({ order, error }: Props) {
     </>
   );
 }
-
-export const getServerSideProps: GetServerSideProps = async context => {
-  try {
-    if (context.query === undefined || context.query.id === undefined) {
-      throw new Error('You must provide a store id.');
-    }
-    if (context.query === undefined || context.query.orderId === undefined) {
-      throw new Error('You must provide an order id.');
-    }
-
-    const storeId = Array.isArray(context.query.id)
-      ? context.query.id[0]
-      : context.query.id;
-
-    const orderId = Array.isArray(context.query.orderId)
-      ? context.query.orderId[0]
-      : context.query.orderId;
-
-    const { db } = await connectToDb();
-    const result = await order.getOrderFromStore(db, storeId, orderId);
-
-    return {
-      props: {
-        order: result,
-      },
-    };
-  } catch (error) {
-    return {
-      props: {
-        error: error.message,
-      },
-    };
-  }
-};
 
 const OrderConfirmationStyles = styled.div`
   padding: 0 1.5rem;

@@ -67,6 +67,45 @@ const colors = [
   },
 ];
 
+export default function Colors() {
+  return (
+    <ColorsStyles>
+      <div className="wrapper" id="colors">
+        <h2>Ink Colors</h2>
+        <p>
+          These are the ink colors that we typically provide. Additional colors
+          are available upon request.
+        </p>
+        <ul className="color-list">
+          {colors.map(c => (
+            <Color key={c.id} color={c.hex}>
+              <span className="color" />
+              <p>{c.label}</p>
+            </Color>
+          ))}
+        </ul>
+        <p className="note">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          Please note that these colors are general representations.
+        </p>
+      </div>
+    </ColorsStyles>
+  );
+}
+
 const ColorsStyles = styled.div`
   padding: 0 1.5rem;
 
@@ -163,42 +202,3 @@ const Color = styled.li<ColorProps>`
     }
   }
 `;
-
-export default function Colors() {
-  return (
-    <ColorsStyles>
-      <div className="wrapper" id="colors">
-        <h2>Ink Colors</h2>
-        <p>
-          These are the ink colors that we typically provide. Additional colors
-          are available upon request.
-        </p>
-        <ul className="color-list">
-          {colors.map(c => (
-            <Color key={c.id} color={c.hex}>
-              <span className="color" />
-              <p>{c.label}</p>
-            </Color>
-          ))}
-        </ul>
-        <p className="note">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          Please note that these colors are general representations.
-        </p>
-      </div>
-    </ColorsStyles>
-  );
-}

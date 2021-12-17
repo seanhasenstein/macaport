@@ -1,5 +1,18 @@
 import NextLink from 'next/link';
-import styled from 'styled-components'
+import styled from 'styled-components';
+
+type Props = {
+  href: string;
+  label: string;
+};
+
+export default function Link({ href, label }: Props) {
+  return (
+    <NextLink href={href} passHref>
+      <LinkStyles>{label}</LinkStyles>
+    </NextLink>
+  );
+}
 
 const LinkStyles = styled.a`
   padding: 0.75rem 1.25rem;
@@ -26,17 +39,7 @@ const LinkStyles = styled.a`
   &:focus {
     outline: 2px solid transparent;
     outline-offset: 2px;
-    box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4F46E5 0px 0px 0px 4px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+    box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4f46e5 0px 0px 0px 4px,
+      rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
   }
 `;
-
-type Props = {
-  href: string;
-  label: string;
-}
-
-export default function Link({ href, label }: Props) {
-  return (
-    <NextLink href={href} passHref><LinkStyles>{label}</LinkStyles></NextLink>
-  )
-}

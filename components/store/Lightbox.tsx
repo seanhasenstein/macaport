@@ -9,59 +9,6 @@ type Props = {
   clickedImage: string;
 };
 
-const LightboxStyles = styled.div`
-  position: fixed;
-  overflow-y: scroll;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  background-color: #fff;
-
-  .close-button {
-    position: fixed;
-    top: 1.5rem;
-    right: 1.5rem;
-    padding: 0;
-    color: #000;
-    border: none;
-    background-color: transparent;
-    cursor: pointer;
-
-    svg {
-      height: 1.75rem;
-      width: 1.75rem;
-      color: #000;
-    }
-  }
-
-  .images {
-    margin: 0 auto;
-    padding: 0 3.5rem;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    .img {
-      margin: 2rem 0;
-      max-width: 30rem;
-      width: 100%;
-      background-color: #fff;
-
-      img {
-        width: 100%;
-      }
-    }
-  }
-
-  @media (max-width: 500px) {
-    .images .img {
-      margin: 3.5rem 0;
-    }
-  }
-`;
-
 export default function Lightbox({
   setShowLightbox,
   primaryImage,
@@ -125,3 +72,56 @@ export default function Lightbox({
     </LightboxStyles>
   );
 }
+
+const LightboxStyles = styled.div`
+  position: fixed;
+  overflow-y: scroll;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: #fff;
+
+  .close-button {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    padding: 0;
+    color: #000;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+
+    svg {
+      height: 1.75rem;
+      width: 1.75rem;
+      color: #000;
+    }
+  }
+
+  .images {
+    margin: 0 auto;
+    padding: 0 3.5rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .img {
+      margin: 2rem 0;
+      max-width: 30rem;
+      width: 100%;
+      background-color: #fff;
+
+      img {
+        width: 100%;
+      }
+    }
+  }
+
+  @media (max-width: 500px) {
+    .images .img {
+      margin: 3.5rem 0;
+    }
+  }
+`;

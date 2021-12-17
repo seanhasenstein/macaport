@@ -1,5 +1,33 @@
 import styled from 'styled-components';
 
+type TableProps = {
+  data: any[];
+  columns: string[];
+};
+
+export default function Table({ data, columns }: TableProps) {
+  return (
+    <TableStyles>
+      <thead>
+        <tr>
+          {columns.map(heading => (
+            <th key={heading}>{heading}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {data.map(item => (
+          <tr key={item.id}>
+            {columns.map(heading => (
+              <td key={heading}>{item[heading]}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </TableStyles>
+  );
+}
+
 const TableStyles = styled.table`
   width: 100%;
   border-collapse: collapse;
@@ -59,31 +87,3 @@ const TableStyles = styled.table`
     }
   }
 `;
-
-type TableProps = {
-  data: any[];
-  columns: string[];
-};
-
-export default function Table({ data, columns }: TableProps) {
-  return (
-    <TableStyles>
-      <thead>
-        <tr>
-          {columns.map(heading => (
-            <th key={heading}>{heading}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {data.map(item => (
-          <tr key={item.id}>
-            {columns.map(heading => (
-              <td key={heading}>{item[heading]}</td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </TableStyles>
-  );
-}

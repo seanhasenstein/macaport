@@ -9,6 +9,47 @@ import { MessageStyles } from '../../../styles/Message';
 import StoreLayout from '../../../components/store/StoreLayout';
 import StoreItem from '../../../components/store/StoreItem';
 
+export const getServerSideProps: GetServerSideProps = async context => {
+  try {
+    const id = Array.isArray(context.query.id)
+      ? context.query.id[0]
+      : context.query.id;
+
+    if (!id) {
+      throw new Error('No store id provided.');
+    }
+
+    const { db } = await connectToDb();
+    const storeRes = await store.getStoreById(db, id);
+
+    if (!storeRes) {
+      return {
+        redirect: {
+          permanent: false,
+          destination: '/store-not-found',
+        },
+      };
+    }
+
+    const storeIsActive = isStoreActive(storeRes.openDate, storeRes.closeDate);
+
+    if (!storeIsActive) {
+      return {
+        redirect: {
+          permanent: false,
+          destination: '/store-closed',
+        },
+      };
+    }
+
+    return { props: { store: storeRes } };
+  } catch (err) {
+    return {
+      props: { error: err.message },
+    };
+  }
+};
+
 type Props = {
   store: StoreInterface;
   active: boolean;
@@ -103,47 +144,6 @@ export default function Store({ store, error }: Props) {
     </StoreLayout>
   );
 }
-
-export const getServerSideProps: GetServerSideProps = async context => {
-  try {
-    const id = Array.isArray(context.query.id)
-      ? context.query.id[0]
-      : context.query.id;
-
-    if (!id) {
-      throw new Error('No store id provided.');
-    }
-
-    const { db } = await connectToDb();
-    const storeRes = await store.getStoreById(db, id);
-
-    if (!storeRes) {
-      return {
-        redirect: {
-          permanent: false,
-          destination: '/store-not-found',
-        },
-      };
-    }
-
-    const storeIsActive = isStoreActive(storeRes.openDate, storeRes.closeDate);
-
-    if (!storeIsActive) {
-      return {
-        redirect: {
-          permanent: false,
-          destination: '/store-closed',
-        },
-      };
-    }
-
-    return { props: { store: storeRes } };
-  } catch (err) {
-    return {
-      props: { error: err.message },
-    };
-  }
-};
 
 const StoreStyles = styled.div`
   padding: 2.5rem 0 4rem;

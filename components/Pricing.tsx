@@ -3,6 +3,82 @@ import styled from 'styled-components';
 import Table from './Table';
 import { pricing } from '../data/pricing';
 
+type ButtonProps = {
+  label: string;
+  category: activeState;
+  active: activeState;
+  setActive: (input: activeState) => void;
+};
+
+function Button({ label, category, active, setActive }: ButtonProps) {
+  return (
+    <button
+      onClick={() => setActive(category)}
+      className={category === active ? 'active' : ''}
+    >
+      {label}
+    </button>
+  );
+}
+
+const columns = [
+  'Quantity',
+  '1 Color',
+  '2 Colors',
+  '3 Colors',
+  '4 Colors',
+  '5 Colors',
+];
+
+type activeState = 'tshirt' | 'hoodie' | 'crewneck';
+
+export default function Pricing() {
+  const [active, setActive] = React.useState<activeState>('tshirt');
+
+  return (
+    <PricingStyles>
+      <div className="wrapper" id="pricing">
+        <h2>Pricing</h2>
+        <p>
+          The following is a breakdown of our prices per quantity and per number
+          of ink colors.
+        </p>
+        <div className="buttons">
+          <Button
+            label="T-Shirts"
+            category="tshirt"
+            active={active}
+            setActive={setActive}
+          />
+          <Button
+            label="Hooded Sweatshirts"
+            category="hoodie"
+            active={active}
+            setActive={setActive}
+          />
+          <Button
+            label="Crewneck Sweatshirts"
+            category="crewneck"
+            active={active}
+            setActive={setActive}
+          />
+        </div>
+        <div className="table">
+          {active === 'tshirt' ? (
+            <Table data={pricing.tshirts} columns={columns} />
+          ) : null}
+          {active === 'hoodie' ? (
+            <Table data={pricing.hoodies} columns={columns} />
+          ) : null}
+          {active === 'crewneck' ? (
+            <Table data={pricing.crewneck} columns={columns} />
+          ) : null}
+        </div>
+      </div>
+    </PricingStyles>
+  );
+}
+
 const PricingStyles = styled.div`
   padding: 0 1.5rem;
 
@@ -94,79 +170,3 @@ const PricingStyles = styled.div`
     }
   }
 `;
-
-type ButtonProps = {
-  label: string;
-  category: activeState;
-  active: activeState;
-  setActive: (input: activeState) => void;
-};
-
-function Button({ label, category, active, setActive }: ButtonProps) {
-  return (
-    <button
-      onClick={() => setActive(category)}
-      className={category === active ? 'active' : ''}
-    >
-      {label}
-    </button>
-  );
-}
-
-const columns = [
-  'Quantity',
-  '1 Color',
-  '2 Colors',
-  '3 Colors',
-  '4 Colors',
-  '5 Colors',
-];
-
-type activeState = 'tshirt' | 'hoodie' | 'crewneck';
-
-export default function Pricing() {
-  const [active, setActive] = React.useState<activeState>('tshirt');
-
-  return (
-    <PricingStyles>
-      <div className="wrapper" id="pricing">
-        <h2>Pricing</h2>
-        <p>
-          The following is a breakdown of our prices per quantity and per number
-          of ink colors.
-        </p>
-        <div className="buttons">
-          <Button
-            label="T-Shirts"
-            category="tshirt"
-            active={active}
-            setActive={setActive}
-          />
-          <Button
-            label="Hooded Sweatshirts"
-            category="hoodie"
-            active={active}
-            setActive={setActive}
-          />
-          <Button
-            label="Crewneck Sweatshirts"
-            category="crewneck"
-            active={active}
-            setActive={setActive}
-          />
-        </div>
-        <div className="table">
-          {active === 'tshirt' ? (
-            <Table data={pricing.tshirts} columns={columns} />
-          ) : null}
-          {active === 'hoodie' ? (
-            <Table data={pricing.hoodies} columns={columns} />
-          ) : null}
-          {active === 'crewneck' ? (
-            <Table data={pricing.crewneck} columns={columns} />
-          ) : null}
-        </div>
-      </div>
-    </PricingStyles>
-  );
-}

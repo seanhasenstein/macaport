@@ -1,6 +1,32 @@
 import Link from 'next/link';
 import styled from 'styled-components';
 
+export default function Hero() {
+  return (
+    <HeroStyles>
+      <div className="wrapper">
+        <div className="text-content">
+          <h1>Welcome to Macaport</h1>
+          <p>
+            Located in New London, Wisconsin, we specialize in custom screen
+            printing for fundraisers, family reunions, clubs, sports teams,
+            special events, and more.
+          </p>
+          <Link href="/#colors">
+            <a className="button">Learn More</a>
+          </Link>
+        </div>
+        <div className="hero-img">
+          <img
+            src="/images/hero.jpg"
+            alt="Hooded sweatshirt, t-shirt, and crewneck sweatshirt with Macaport logo"
+          />
+        </div>
+      </div>
+    </HeroStyles>
+  );
+}
+
 const HeroStyles = styled.div`
   padding: 0 1.5rem;
 
@@ -82,29 +108,3 @@ const HeroStyles = styled.div`
     }
   }
 `;
-
-export default function Hero() {
-  return (
-    <HeroStyles>
-      <div className="wrapper">
-        <div className="text-content">
-          <h1>Welcome to Macaport</h1>
-          <p>
-            Located in New London, Wisconsin, we specialize in custom screen
-            printing for fundraisers, family reunions, clubs, sports teams,
-            special events, and more.
-          </p>
-          <Link href="/#colors">
-            <a className="button">Learn More</a>
-          </Link>
-        </div>
-        <div className="hero-img">
-          <img
-            src="/images/hero.jpg"
-            alt="Hooded sweatshirt, t-shirt, and crewneck sweatshirt with Macaport logo"
-          />
-        </div>
-      </div>
-    </HeroStyles>
-  );
-}

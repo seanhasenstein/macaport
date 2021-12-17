@@ -17,6 +17,55 @@ import ProductSidebar from '../../../components/store/ProductSidebar';
 import Lightbox from '../../../components/store/Lightbox';
 import { MessageStyles } from '../../../styles/Message';
 
+export const getServerSideProps: GetServerSideProps = async context => {
+  try {
+    const id = Array.isArray(context.query.id)
+      ? context.query.id[0]
+      : context.query.id;
+
+    if (!id) {
+      throw new Error('No store id provided.');
+    }
+
+    const { db } = await connectToDb();
+    const storeRes: Store = await store.getStoreById(db, id);
+
+    if (!storeRes) {
+      return {
+        redirect: {
+          permanent: false,
+          destination: '/store-not-found',
+        },
+      };
+    }
+
+    const storeIsActive = isStoreActive(storeRes.openDate, storeRes.closeDate);
+
+    if (!storeIsActive) {
+      return {
+        redirect: {
+          permanent: false,
+          destination: '/store-closed',
+        },
+      };
+    }
+
+    const product = storeRes.products.find(
+      p => p.id === context.query.productId
+    );
+
+    if (!product) {
+      throw new Error('Product not found.');
+    }
+
+    return { props: { store: storeRes, product } };
+  } catch (err) {
+    return {
+      props: { error: err.message },
+    };
+  }
+};
+
 type Props = {
   store: Store;
   product: ProductInterface;
@@ -696,52 +745,3 @@ const ColorStyles = styled.div`
     }
   }
 `;
-
-export const getServerSideProps: GetServerSideProps = async context => {
-  try {
-    const id = Array.isArray(context.query.id)
-      ? context.query.id[0]
-      : context.query.id;
-
-    if (!id) {
-      throw new Error('No store id provided.');
-    }
-
-    const { db } = await connectToDb();
-    const storeRes: Store = await store.getStoreById(db, id);
-
-    if (!storeRes) {
-      return {
-        redirect: {
-          permanent: false,
-          destination: '/store-not-found',
-        },
-      };
-    }
-
-    const storeIsActive = isStoreActive(storeRes.openDate, storeRes.closeDate);
-
-    if (!storeIsActive) {
-      return {
-        redirect: {
-          permanent: false,
-          destination: '/store-closed',
-        },
-      };
-    }
-
-    const product = storeRes.products.find(
-      p => p.id === context.query.productId
-    );
-
-    if (!product) {
-      throw new Error('Product not found.');
-    }
-
-    return { props: { store: storeRes, product } };
-  } catch (err) {
-    return {
-      props: { error: err.message },
-    };
-  }
-};

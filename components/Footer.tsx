@@ -1,5 +1,15 @@
 import styled from 'styled-components';
 
+export default function Footer() {
+  return (
+    <FooterStyles>
+      <div className="wrapper">
+        &copy; Macaport {new Date().getFullYear()}. All Rights Reserved.
+      </div>
+    </FooterStyles>
+  );
+}
+
 const FooterStyles = styled.footer`
   margin-top: auto;
   padding: 0 1.5rem;
@@ -16,13 +26,3 @@ const FooterStyles = styled.footer`
     border-top: 1px solid #e5e7eb;
   }
 `;
-
-export default function Footer() {
-  return (
-    <FooterStyles>
-      <div className="wrapper">
-        &copy; Macaport {new Date().getFullYear()}. All Rights Reserved.
-      </div>
-    </FooterStyles>
-  );
-}
