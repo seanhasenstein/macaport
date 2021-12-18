@@ -10,7 +10,7 @@ import { CartItem as CartItemInterface, Store } from '../../../interfaces';
 import { formatToMoney, isStoreActive } from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
 import CartItem from '../../../components/store/CartItem';
-import LinkButton from '../../../components/store/Link';
+import LinkButton from '../../../components/store/LinkButton';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {

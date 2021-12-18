@@ -6,21 +6,21 @@ type Props = {
   label: string;
 };
 
-export default function Link({ href, label }: Props) {
+export default function LinkButton({ href, label }: Props) {
   return (
     <NextLink href={href} passHref>
-      <LinkStyles>{label}</LinkStyles>
+      <LinkButtonStyles>{label}</LinkButtonStyles>
     </NextLink>
   );
 }
 
-const LinkStyles = styled.a`
+const LinkButtonStyles = styled.a`
   padding: 0.75rem 1.25rem;
   height: 2.625rem;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #31363f;
+  background-color: #282d34;
   color: #f3f4f5;
   font-size: 0.875rem;
   font-weight: 600;
@@ -33,12 +33,15 @@ const LinkStyles = styled.a`
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    background-color: #3a3f4a;
+    background-color: #202329;
   }
 
   &:focus {
     outline: 2px solid transparent;
     outline-offset: 2px;
+  }
+
+  &:focus-visible {
     box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4f46e5 0px 0px 0px 4px,
       rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
   }

@@ -32,6 +32,7 @@ export default function CartItem({ item, storeId, skus, sizes }: Props) {
     if (!sku) {
       // todo: look at this and figure out how to alert the user if no sku is found
       // possible message: 'an error has occured, please refresh and try again'.
+      // should we just remove this item from the cart?
       throw new Error('No sku found!');
     }
 
@@ -53,7 +54,7 @@ export default function CartItem({ item, storeId, skus, sizes }: Props) {
     <CartItemStyles item={item}>
       <div className="item-image">
         <Link
-          href={`/store/${storeId}/product?productId=${item.sku.productId}&color=${item.sku.color.label}`}
+          href={`/store/${storeId}/product?productId=${item.sku.productId}&colorId=${item.sku.color.id}`}
         >
           <a>
             <img
@@ -66,7 +67,7 @@ export default function CartItem({ item, storeId, skus, sizes }: Props) {
       <div className="item-details">
         <h3 className="primary">
           <Link
-            href={`/store/${storeId}/product?productId=${item.sku.productId}&color=${item.sku.color.label}`}
+            href={`/store/${storeId}/product?productId=${item.sku.productId}&colorId=${item.sku.color.id}`}
           >
             <a>{item.name}</a>
           </Link>

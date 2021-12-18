@@ -113,7 +113,10 @@ const LayoutStyles = styled.div`
   nav {
     padding: 0 1.5rem;
     position: relative;
-    background-color: #f9fafb;
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    box-shadow: rgb(0 0 0 / 0%) 0px 0px 0px 0px, rgb(0 0 0 / 0%) 0px 0px 0px 0px,
+      rgb(0 0 0 / 5%) 0px 1px 2px 0px;
 
     .wrapper {
       margin: 0 auto;
@@ -123,7 +126,6 @@ const LayoutStyles = styled.div`
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #e5e7eb;
     }
 
     svg {
