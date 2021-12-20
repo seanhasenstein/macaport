@@ -20,7 +20,11 @@ type InitialState = {
 interface CartProviderState extends InitialState {
   addItem: (item: CartItem, quantity?: number) => void;
   removeItem: (id: string) => void;
-  updateItemSize: (prevId: string, payload: CartItem) => void;
+  updateItemSize: (
+    prevId: string,
+    prevSkuId: string,
+    payload: CartItem
+  ) => void;
   updateItem: (id: string, payload: Record<string, unknown>) => void;
   updateItemQuantity: (id: string, quantity: number) => void;
   emptyCart: () => void;
@@ -70,8 +74,7 @@ function reducer(state: CartProviderState, action: Actions) {
     }
     case 'UPDATE_ITEM': {
       const items = state.items.map((item: CartItem) => {
-        if (item.sku.id !== action.id) return item;
-
+        if (item.id !== action.id) return item;
         return {
           ...item,
           ...action.payload,
@@ -82,7 +85,7 @@ function reducer(state: CartProviderState, action: Actions) {
     }
     case 'REMOVE_ITEM': {
       const items = state.items.filter(
-        (item: CartItem) => item.sku.id !== action.id
+        (item: CartItem) => item.id !== action.id
       );
 
       return generateCartState(state, items);
@@ -98,8 +101,10 @@ const generateCartState = (state = initialState, items: CartItem[]) => {
   const totalUniqueItems = calculateUniqueItems(items);
   const cartIsEmpty = totalUniqueItems === 0;
   const cartItems = calculateItemTotals(items);
-  const cartSubtotal = calculateCartSubtotal(items);
+  // TODO: was calculateSubtotal(items)
+  const cartSubtotal = calculateCartSubtotal(cartItems);
   const salesTax = calculateSalesTax(cartSubtotal);
+  const cartTotal = calculateCartTotal(cartSubtotal, salesTax);
 
   return {
     ...initialState,
@@ -109,7 +114,7 @@ const generateCartState = (state = initialState, items: CartItem[]) => {
     totalUniqueItems,
     cartSubtotal,
     salesTax,
-    cartTotal: calculateCartTotal(cartSubtotal, salesTax),
+    cartTotal,
     cartIsEmpty,
   };
 };
@@ -123,7 +128,12 @@ const calculateTotalItems = (items: CartItem[]) => {
 const calculateItemTotals = (items: CartItem[]) => {
   return items.map(item => ({
     ...item,
-    itemTotal: item.price * item.quantity!,
+    // check for customName and customNumber
+    itemTotal:
+      (item.price +
+        (item.customName ? 500 : 0) +
+        (item.customNumber ? 500 : 0)) *
+      item.quantity!,
   }));
 };
 
@@ -152,43 +162,46 @@ export function CartProvider({
   };
 
   const addItem = (item: CartItem, quantity = 1) => {
-    if (!item.sku.id) throw new Error('You must provide an `id` for items');
+    // if (!item.id) throw error?
+    if (!item.id) throw new Error('You must provide an `id` for items');
     if (quantity <= 0) return;
 
     const currentItem = state.items.find(
-      (i: CartItem) => i.sku.id === item.sku.id
+      // instead of i.sku.id use i.id === item.id
+      (i: CartItem) => i.id === item.id
     );
 
     if (!currentItem) {
       const payload = { ...item, quantity };
       dispatch({ type: 'ADD_ITEM', payload });
-
       return;
     }
 
     const payload = { ...item, quantity: currentItem.quantity + quantity };
-
-    dispatch({ type: 'UPDATE_ITEM', id: item.sku.id, payload });
-
+    dispatch({ type: 'UPDATE_ITEM', id: item.id, payload });
     return;
   };
 
-  const updateItemSize = (prevId: string, payload: Record<string, any>) => {
+  const updateItemSize = (
+    prevId: string,
+    prevSkuId: string,
+    payload: Record<string, any>
+  ) => {
     if (!prevId || !payload) return;
 
     const existingCartItem = state.items.find(
-      (item: CartItem) => item.sku.id === payload.sku.id
+      (item: CartItem) => item.id === payload.id
     );
 
     if (existingCartItem) {
       // same item (user opened select and kept the same size)
-      if (prevId === payload.sku.id) {
+      if (prevSkuId === payload.sku.id) {
         return;
       }
 
       dispatch({
         type: 'UPDATE_ITEM',
-        id: `${payload.sku.id}`,
+        id: `${payload.id}`,
         payload: {
           quantity: existingCartItem.quantity + payload.quantity,
         },
@@ -206,15 +219,12 @@ export function CartProvider({
   const updateItemQuantity = (id: string, quantity: number) => {
     if (quantity <= 0) {
       dispatch({ type: 'REMOVE_ITEM', id });
-
       return;
     }
 
-    const currentItem = state.items.find(
-      (item: CartItem) => item.sku.id === id
-    );
+    const currentItem = state.items.find((item: CartItem) => item.id === id);
 
-    if (!currentItem) throw new Error('No such item to update');
+    if (!currentItem) throw new Error('No item found to update');
 
     const payload = { ...currentItem, quantity };
 

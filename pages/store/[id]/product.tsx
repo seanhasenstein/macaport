@@ -11,17 +11,21 @@ import {
   Color as ColorType,
   Size,
 } from '../../../interfaces';
-import { formatToMoney, isStoreActive } from '../../../utils';
+import {
+  formatToMoney,
+  getUrlParameter,
+  isStoreActive,
+  slugify,
+} from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
+import CustomOptions from '../../../components/store/product/CustomOptions';
 import ProductSidebar from '../../../components/store/ProductSidebar';
 import Lightbox from '../../../components/store/Lightbox';
 import { MessageStyles } from '../../../styles/Message';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
-    const id = Array.isArray(context.query.id)
-      ? context.query.id[0]
-      : context.query.id;
+    const id = getUrlParameter(context.query.id);
 
     if (!id) {
       throw new Error('No store id provided.');
@@ -78,15 +82,11 @@ export default function Product({ store, product, error }: Props) {
   const [showSidebar, setShowSidebar] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
   const [color, setColor] = React.useState(() => {
-    if (error) throw new Error('No color provided.');
+    // if (error) throw new Error('No color provided.');
     if (router.query.colorId) {
-      const colorIdQuery = Array.isArray(router.query.colorId)
-        ? router.query.colorId[0]
-        : router.query.colorId;
-
-      const verifiedColor = product.colors.find(c => c.id === colorIdQuery);
-
-      return verifiedColor ? verifiedColor : product.colors[0];
+      const colorId = getUrlParameter(router.query.colorId);
+      const verifiedColor = product.colors.find(c => c.id === colorId);
+      return verifiedColor || product.colors[0];
     } else {
       return product.colors[0];
     }
@@ -109,6 +109,22 @@ export default function Product({ store, product, error }: Props) {
   });
   const [validationError, setValidationError] = React.useState<string>();
   const { addItem } = useCart();
+
+  const [showName, setShowName] = React.useState(false);
+  const [showNumber, setShowNumber] = React.useState(false);
+  const [name, setName] = React.useState('');
+  const [number, setNumber] = React.useState('');
+  const [nameError, setNameError] = React.useState<string>();
+  const [numberError, setNumberError] = React.useState<string>();
+
+  React.useEffect(() => {
+    if (!showName) {
+      setName('');
+    }
+    if (!showNumber) {
+      setNumber('');
+    }
+  }, [showNumber, showName]);
 
   React.useEffect(() => {
     if (error) return;
@@ -156,9 +172,45 @@ export default function Product({ store, product, error }: Props) {
     setShowLightbox(true);
   };
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (nameError) {
+      setNameError(undefined);
+    }
+    setName(e.target.value);
+  };
+
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const numberCoercion = Number(e.target.value);
+    if (isNaN(numberCoercion) === true) {
+      return;
+    }
+    if (numberError) {
+      setNumberError(undefined);
+    }
+    setNumber(e.target.value.trim());
+  };
+
+  const handleProductReset = () => {
+    setShowName(false);
+    setShowNumber(false);
+    setShowSidebar(false);
+  };
+
   const handleAddToOrderClick = () => {
-    if (size.label === 'DEFAULT') {
-      setValidationError('Please select a size');
+    if (
+      size.label === 'DEFAULT' ||
+      (showName && name.trim() === '') ||
+      (showNumber && number.trim() === '')
+    ) {
+      if (size.label === 'DEFAULT') {
+        setValidationError('A size is required.');
+      }
+      if (showName && name === '') {
+        setNameError('Name is required if turned on.');
+      }
+      if (showNumber && number === '') {
+        setNumberError('Number is required if turned on.');
+      }
       return;
     }
 
@@ -166,20 +218,20 @@ export default function Product({ store, product, error }: Props) {
       sku => sku.size.label === size.label && sku.color.id === color.id
     );
 
-    // TODO: figure out what to do when no sku or item is found
     if (sku)
       addItem({
-        // ...product,
+        id: `${sku.id}${showName ? `-${slugify(name)}` : ''}${
+          showNumber ? `-${slugify(number)}` : ''
+        }`,
         sku: sku,
         name: product.name,
         image: primaryImage,
         price: sku.size.price,
+        customName: name.trim(),
+        customNumber: number.trim(),
       });
-    setShowSidebar(true);
-  };
 
-  const handleCloseSidebar = () => {
-    setShowSidebar(false);
+    setShowSidebar(true);
   };
 
   if (error) {
@@ -223,7 +275,11 @@ export default function Product({ store, product, error }: Props) {
               <h2 className="name">{product.name}</h2>
               <h3 className="price">
                 {formatToMoney(
-                  size.label !== 'DEFAULT' ? size.price : product.sizes[0].price
+                  size.label !== 'DEFAULT'
+                    ? size.price + (showName ? 500 : 0) + (showNumber ? 500 : 0)
+                    : product.sizes[0].price +
+                        (showName ? 500 : 0) +
+                        (showNumber ? 500 : 0)
                 )}
               </h3>
             </div>
@@ -258,8 +314,12 @@ export default function Product({ store, product, error }: Props) {
                 <h3 className="price">
                   {formatToMoney(
                     size.label !== 'DEFAULT'
-                      ? size.price
-                      : product.sizes[0].price
+                      ? size.price +
+                          (showName ? 500 : 0) +
+                          (showNumber ? 500 : 0)
+                      : product.sizes[0].price +
+                          (showName ? 500 : 0) +
+                          (showNumber ? 500 : 0)
                   )}
                 </h3>
               </div>
@@ -278,7 +338,7 @@ export default function Product({ store, product, error }: Props) {
                   ))}
                 </div>
               </div>
-              <div className="sizes">
+              <div className="section sizes">
                 <h4>Sizes</h4>
                 <div className="grid">
                   {product.sizes.map(s => (
@@ -301,6 +361,21 @@ export default function Product({ store, product, error }: Props) {
                   ))}
                 </div>
               </div>
+
+              <CustomOptions
+                className="section"
+                showName={showName}
+                setShowName={setShowName}
+                showNumber={showNumber}
+                setShowNumber={setShowNumber}
+                name={name}
+                setName={handleNameChange}
+                number={number}
+                setNumber={handleNumberChange}
+                nameError={nameError}
+                numberError={numberError}
+              />
+
               <div className="actions">
                 <button
                   type="button"
@@ -313,9 +388,9 @@ export default function Product({ store, product, error }: Props) {
                   <div className="error">{validationError}</div>
                 )}
               </div>
-              <div className="details">
+              <div className="section details">
                 {product.description && (
-                  <div className="description">
+                  <div className="section description">
                     <h4>Description</h4>
                     <p>{product.description}</p>
                   </div>
@@ -340,8 +415,10 @@ export default function Product({ store, product, error }: Props) {
           color={color}
           size={size}
           image={primaryImage}
+          resetProduct={handleProductReset}
+          customName={name}
+          customNumber={number}
           isSidebarOpen={showSidebar}
-          closeSidebar={handleCloseSidebar}
         />
       </StoreLayout>
       {showLightbox && primaryImage ? (
@@ -483,11 +560,8 @@ const ProductStyles = styled.div`
     color: #111827;
   }
 
-  .sizes,
-  .actions,
-  .description,
-  .details {
-    margin: 2rem 0 0;
+  .section {
+    margin: 2.5rem 0 0;
   }
 
   .colors {
@@ -526,13 +600,15 @@ const ProductStyles = styled.div`
 
         &:hover {
           border-color: #545b6b;
+          box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1),
+            0 1px 2px -1px rgb(0 0 0 / 0.1);
         }
       }
 
       &.checked label,
       &.checked label:hover {
-        background-color: #202329;
-        border-color: #202329;
+        background-color: #282d34;
+        border-color: #282d34;
         color: #fff;
       }
 
@@ -553,7 +629,7 @@ const ProductStyles = styled.div`
           outline-offset: 2px;
         }
 
-        &:focus + label {
+        &:focus-visible + label {
           box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px,
             rgb(99, 102, 241) 0px 0px 0px 4px,
             rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
@@ -563,6 +639,7 @@ const ProductStyles = styled.div`
   }
 
   .add-to-order-button {
+    margin: 2rem 0 0;
     padding: 0.75rem 1.25rem;
     width: 100%;
     height: 2.625rem;
@@ -570,7 +647,7 @@ const ProductStyles = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #202329;
+    background-color: #282d34;
     color: rgba(255, 255, 255, 0.9);
     font-size: 0.875rem;
     font-weight: 600;
@@ -583,7 +660,7 @@ const ProductStyles = styled.div`
     transition: all 150ms ease-in-out;
 
     &:hover {
-      background-color: #181a1e;
+      background-color: #202329;
       color: rgba(255, 255, 255, 1);
     }
 
@@ -629,7 +706,7 @@ const ProductStyles = styled.div`
     margin: 0.5rem 0 0;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #de1d3b;
+    color: #b91c1c;
   }
 
   @media (max-width: 700px) {

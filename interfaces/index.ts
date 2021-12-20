@@ -34,12 +34,15 @@ export interface Product {
 }
 
 export interface CartItem {
+  id: string;
   sku: Sku;
   name: string;
   image?: string;
   price: number;
   quantity?: number;
   itemTotal?: number;
+  customName: string;
+  customNumber: string;
 }
 
 export interface Order {

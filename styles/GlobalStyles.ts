@@ -179,8 +179,8 @@ select:focus {
 }
 
 @media print {
-  body {
-    background-color: #fff;
+  html,body {
+    background-color: transparent;
   }
 
   header, footer {

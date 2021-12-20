@@ -106,7 +106,7 @@ export default function Checkout({ store }: Props) {
                     <div className="value">{formatToMoney(salesTax, true)}</div>
                   </div>
                   <div className="item">
-                    <div className="key">Shipping &amp; Handling</div>
+                    <div className="key">Shipping</div>
                     <div className="value">{formatToMoney(0, true)}</div>
                   </div>
                   <div className="item total">
@@ -154,7 +154,7 @@ const CheckoutStyles = styled.div`
       rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
 
     h3 {
-      margin: 0 0 1.25rem;
+      margin: 0 0 1.75rem;
       font-size: 1.125rem;
       color: #36383e;
       font-weight: 600;
@@ -180,6 +180,10 @@ const CheckoutStyles = styled.div`
 
   .order-summary {
     padding: 3rem 0 0;
+
+    h3 {
+      margin: 0 0 1rem;
+    }
 
     .item {
       padding: 1.125rem 0;

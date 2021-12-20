@@ -35,10 +35,11 @@ export default function CartItem({ item, storeId, skus, sizes }: Props) {
       // should we just remove this item from the cart?
       throw new Error('No sku found!');
     }
-
     setSize(sku.size.label);
-    updateItemSize(item.sku.id, {
+    updateItemSize(item.id, item.sku.id, {
+      // need to update the id `sku + name + number`
       ...item,
+      id: `${sku.id}${item.customName}${item.customNumber}`,
       sku,
       quantity,
     });
@@ -47,11 +48,11 @@ export default function CartItem({ item, storeId, skus, sizes }: Props) {
   const handleQuantityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newQuantity = parseInt(e.target.value);
     setQuantity(newQuantity);
-    updateItemQuantity(item.sku.id, newQuantity);
+    updateItemQuantity(item.id, newQuantity);
   };
 
   return (
-    <CartItemStyles item={item}>
+    <CartItemStyles>
       <div className="item-image">
         <Link
           href={`/store/${storeId}/product?productId=${item.sku.productId}&colorId=${item.sku.color.id}`}
@@ -72,10 +73,21 @@ export default function CartItem({ item, storeId, skus, sizes }: Props) {
             <a>{item.name}</a>
           </Link>
         </h3>
-
-        <p className="secondary">
-          {item.sku.color.label} <span className="color" />
-        </p>
+        <div className="secondary-details">
+          <p className="secondary">
+            Color: <span className="value">{item.sku.color.label}</span>{' '}
+          </p>
+          {item.customName && (
+            <p className="secondary">
+              Name: <span className="value">{item.customName}</span>
+            </p>
+          )}
+          {item.customNumber && (
+            <p className="secondary">
+              Number: <span className="value">{item.customNumber}</span>
+            </p>
+          )}
+        </div>
       </div>
       <div className="total">{formatToMoney(item.itemTotal!)}</div>
       <div className="inputs">
@@ -86,7 +98,6 @@ export default function CartItem({ item, storeId, skus, sizes }: Props) {
             id="size"
             value={size}
             onChange={handleSizeChange}
-            onBlur={handleSizeChange}
           >
             {sizes.map(size => (
               <option key={size.id} value={size.label}>
@@ -102,7 +113,6 @@ export default function CartItem({ item, storeId, skus, sizes }: Props) {
             id="quantity"
             value={quantity}
             onChange={handleQuantityChange}
-            onBlur={handleQuantityChange}
           >
             <option value="1">1</option>
             <option value="2">2</option>
@@ -118,7 +128,7 @@ export default function CartItem({ item, storeId, skus, sizes }: Props) {
         </div>
       </div>
       <div className="remove-btn">
-        <button type="button" onClick={() => removeItem(item.sku.id)}>
+        <button type="button" onClick={() => removeItem(item.id)}>
           Remove from cart
         </button>
       </div>
@@ -127,7 +137,7 @@ export default function CartItem({ item, storeId, skus, sizes }: Props) {
 }
 
 const CartItemStyles = styled.div`
-  padding: 2.25rem 0;
+  padding: 2.5rem 0;
   display: grid;
   grid-template-areas:
     'image details total'
@@ -171,28 +181,30 @@ const CartItemStyles = styled.div`
     font-size: 1rem;
     font-weight: 600;
     color: #36383e;
+    line-height: 1.35;
+  }
+
+  .secondary-details {
+    margin: 0.5rem 0 0;
   }
 
   .secondary {
-    margin: 0.5rem 0 0;
+    margin: 0 0 0.375rem;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
-    font-size: 1rem;
+    font-size: 0.9375rem;
     font-weight: 400;
     color: #6e788c;
-  }
 
-  .color {
-    margin: 0.125rem 0 0 0.5rem;
-    height: 0.9375rem;
-    width: 0.9375rem;
-    background-color: ${(props: { item: CartItemInterface }) =>
-      props.item.sku.color.hex};
-    border-radius: 9999px;
-    border: 1px solid #9ca3af;
+    .value {
+      margin: 0 0 0 0.375rem;
+      color: #111827;
+    }
   }
 
   .inputs {
+    margin: 0.875rem 0 0;
     grid-area: inputs;
     display: grid;
     grid-template-columns: 1fr 0.7fr;

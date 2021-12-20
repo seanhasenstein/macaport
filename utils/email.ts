@@ -427,7 +427,52 @@ function generateReceiptHtml(order: Order) {
                         </table>
                       </td>
                     </tr>
-                    <!-- Shipping Address -->
+
+                    <!-- Pickup message (if shipping method is primary) -->
+                    ${
+                      order.shippingMethod === 'Primary'
+                        ? `
+                    <tr>
+                    <td style="padding: 24px 0 0; font-size: 15px; line-height: 1.5">
+                      <table
+                        class="mobile-full-width"
+                        border="0"
+                        cellpadding="0"
+                        cellspacing="0"
+                        role="presentation"
+                      >
+                        <tr>
+                          <td
+                            class="item-title"
+                            style="color: #1F2937; font-weight: 500"
+                          >
+                            Order Pickup
+                          </td>
+                        </tr>
+                      </table>
+                      <table
+                        class="mobile-full-width"
+                        border="0"
+                        cellpadding="0"
+                        cellspacing="0"
+                        role="presentation"
+                      >
+                        <tr>
+                          <td style="color: #6B7280">
+                            Your order will be shipped to the organizer of this store. Please contact them for pickup information.
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                    `
+                        : ''
+                    }
+
+                    <!-- Shipping Address (if shipping method is direct) -->
+                    ${
+                      order.shippingMethod === 'Direct'
+                        ? `
                     <tr>
                       <td style="padding: 24px 0 0; font-size: 15px; line-height: 1.5">
                         <table
@@ -442,7 +487,7 @@ function generateReceiptHtml(order: Order) {
                               class="item-title"
                               style="color: #1F2937; font-weight: 500"
                             >
-                              Shipping Address:
+                              Shipping Address
                             </td>
                           </tr>
                         </table>
@@ -453,150 +498,61 @@ function generateReceiptHtml(order: Order) {
                           cellspacing="0"
                           role="presentation"
                         >
+                          <tr>
+                            <td style="color: #6B7280">
+                              ${order.shippingAddress.street} ${order.shippingAddress.street2}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="color: #6B7280">
+                              ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zipcode}
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    `
+                        : ''
+                    }
+
+                    <!-- View Order Items Button -->
+                    <tr>
+                    <td style="padding: 24px 0 0; font-size: 15px; line-height: 1.5">
+                      <table
+                        class="mobile-full-width"
+                        border="0"
+                        cellpadding="0"
+                        cellspacing="0"
+                        role="presentation"
+                      >
                         <tr>
-                          <td style="color: #6B7280">
-                            ${
-                              order.shippingMethod === 'Primary'
-                                ? order.shippingAddress.name
-                                : `${order.customer.firstName} ${order.customer.lastName}`
-                            }
+                          <td
+                            class="item-title"
+                            style="color: #1F2937; font-weight: 500"
+                          >
+                            Order Items
                           </td>
                         </tr>
-                          <tr>
-                            <td style="color: #6B7280">
-                              ${order.shippingAddress.street} ${
-    order.shippingAddress.street2
-  }
-                            </td>
-                          </tr>
-                          <tr>
-                            <td style="color: #6B7280">
-                              ${order.shippingAddress.city}, ${
-    order.shippingAddress.state
-  } ${order.shippingAddress.zipcode}
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-  
-                    <!-- Order Items -->
-                    <tr>
-                      <td style="padding: 40px 0 12px">
-                        <table
-                          border="0"
-                          cellpadding="0"
-                          cellspacing="0"
-                          role="presentation"
-                          width="100%"
-                        >
-                          <tr>
-                            <td
-                              style="
-                                font-size: 12px;
-                                font-weight: 500;
-                                color: #6B7280;
-                                text-transform: uppercase;
-                                letter-spacing: 0.5px;
-                                line-height: 1.65;
-                              "
-                            >
-                              Order Summary
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 0 0; font-size: 15px">
-                        <table
-                          border="0"
-                          cellpadding="0"
-                          cellspacing="0"
-                          role="presentation"
-                          width="100%"
-                          style="background-color: #F3F4F6"
-                        >
-                          <tr>
-                            <td style="padding: 0 20px">
-                              <table
-                                border="0"
-                                cellpadding="0"
-                                cellspacing="0"
-                                role="presentation"
-                                width="100%"
-                              >
-                                <!-- Order items -->
-                                ${order.items
-                                  .map(
-                                    (item, index) => `
-                                <tr key="${item.sku.id}">
-                                  <td
-                                    style="${`
-                                      padding: 18px 0;
-                                      color: #1F2937;
-                                      line-height: 1;
-                                      ${
-                                        index !== 0
-                                          ? 'border-top: 1px solid #dadde2;'
-                                          : ''
-                                      }
-                                    `}"
-                                  >
-                                    <table
-                                      align="left"
-                                      border="0"
-                                      cellpadding="0"
-                                      cellspacing="0"
-                                      role="presentation"
-                                      width="100%"
-                                    >
-                                      <tr>
-                                        <td>
-                                          <div
-                                            style="
-                                              padding: 0 0 6px;
-                                              font-weight: 500;
-                                            "
-                                          >
-                                            ${item.name}
-                                          </div>
-                                          <div
-                                            style="
-                                              font-size: 14px;
-                                              color: #595f6b;
-                                            "
-                                          >
-                                            Color: ${
-                                              item.sku.color.label
-                                            } | Size:
-                                            ${item.sku.size.label} | Qty: ${
-                                      item.quantity
-                                    }
-                                          </div>
-                                        </td>
-                                        <td
-                                          style="
-                                            text-align: right;
-                                            vertical-align: middle;
-                                            font-weight: 500;
-                                          "
-                                        >
-                                          ${formatToMoney(item.itemTotal!)}
-                                        </td>
-                                      </tr>
-                                    </table>
-                                  </td>
-                                </tr>
-                                `
-                                  )
-                                  .join('')}
-                              </table>
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
+                      </table>
+                      <table
+                        class="mobile-full-width"
+                        border="0"
+                        cellpadding="0"
+                        cellspacing="0"
+                        role="presentation"
+                      >
+                        <tr>
+                          <td style="color: #6B7280">
+                          For all order details and order items please <a href="https://macaport.com/store/${
+                            order.store.id
+                          }/order-confirmation?orderId=${
+    order.orderId
+  }" style="color: #4338CA; text-decoration: underline">click here</a>.
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
   
                     <!-- Order Totals -->
                     <tr>
@@ -609,7 +565,7 @@ function generateReceiptHtml(order: Order) {
                         "
                       >
                         <table
-                          align="right"
+                          align="left"
                           border="0"
                           cellpadding="0"
                           cellspacing="0"
@@ -675,7 +631,7 @@ function generateReceiptHtml(order: Order) {
                             >
                               <p style="margin: 0">
                                 If you have any questions about your payment or order,
-                                please feel free to contact us at
+                                please contact us at
                                 <a
                                   href="mailto:support@macaport.com?subject=Order Inquiry [Order #${
                                     order.orderId

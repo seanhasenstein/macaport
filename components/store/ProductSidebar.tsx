@@ -3,16 +3,18 @@ import Link from 'next/link';
 import styled from 'styled-components';
 import { formatToMoney } from '../../utils';
 import { Product, Size, Color } from '../../interfaces';
-import LinkButton from './Link';
+import LinkButton from './LinkButton';
 
 type Props = {
   storeId: string;
   item: Product;
   color: Color;
-  size?: Size;
+  size: Size;
   image: string | undefined;
+  resetProduct: () => void;
+  customName: string;
+  customNumber: string;
   isSidebarOpen: boolean;
-  closeSidebar: () => void;
 };
 
 export default function ProductSidebar({
@@ -21,20 +23,26 @@ export default function ProductSidebar({
   color,
   size,
   image,
+  resetProduct,
+  customName,
+  customNumber,
   isSidebarOpen,
-  closeSidebar,
 }: Props) {
   const ref = React.useRef<HTMLDivElement>(null);
   const closeButton = React.useRef<HTMLButtonElement>(null);
+  const itemPrice =
+    size.price + (customName ? 500 : 0) + (customNumber ? 500 : 0);
 
   React.useEffect(() => {
     const handleEscapeKeyup = (e: KeyboardEvent) => {
-      if (e.code === 'Escape') closeSidebar();
+      if (e.code === 'Escape') {
+        resetProduct();
+      }
     };
 
     const handleOutsideClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node))
-        closeSidebar();
+        resetProduct();
     };
 
     if (isSidebarOpen) {
@@ -43,7 +51,7 @@ export default function ProductSidebar({
       document.addEventListener('click', handleOutsideClick);
 
       const timeout = setTimeout(() => {
-        closeSidebar();
+        resetProduct();
       }, 5000);
 
       return () => {
@@ -52,12 +60,7 @@ export default function ProductSidebar({
         clearTimeout(timeout);
       };
     }
-  }, [closeSidebar, isSidebarOpen]);
-
-  if (!size) {
-    // This is impossible
-    return null;
-  }
+  }, [isSidebarOpen, resetProduct]);
 
   return (
     <ProductSidebarStyles>
@@ -83,7 +86,7 @@ export default function ProductSidebar({
               ref={closeButton}
               aria-label="Close panel"
               className="close-button"
-              onClick={() => closeSidebar()}
+              onClick={resetProduct}
             >
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -100,14 +103,27 @@ export default function ProductSidebar({
               <div className="item-img">
                 <img src={image} alt={`${color.label} ${item.name}`} />
               </div>
-              <div className="item-details">
+              <div>
                 <h3 className="item-name">{item.name}</h3>
                 <div className="item-specs">
-                  <div>Color: {color.label}</div>
-                  <span>|</span>
-                  <div className="size">Size: {size.label}</div>
+                  <div>
+                    <span>Color:</span> {color.label}
+                  </div>
+                  <div className="size">
+                    <span>Size:</span> {size.label}
+                  </div>
+                  {customName && (
+                    <div className="custom-name">
+                      <span>Name:</span> {customName}
+                    </div>
+                  )}
+                  {customNumber && (
+                    <div className="custom-number">
+                      <span>Number:</span> {customNumber}
+                    </div>
+                  )}
                 </div>
-                <p className="item-price">{formatToMoney(size.price, true)}</p>
+                <p className="item-price">{formatToMoney(itemPrice, true)}</p>
               </div>
             </div>
             <div className="actions">
@@ -183,8 +199,7 @@ const ProductSidebarStyles = styled.div`
   }
 
   .heading {
-    margin: 0 2rem;
-    padding: 1.5rem 0;
+    padding: 1.5rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -236,10 +251,11 @@ const ProductSidebarStyles = styled.div`
   }
 
   .item {
-    padding: 1.5rem 2rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    position: relative;
+    padding: 1.875rem 2rem;
+    display: grid;
+    grid-template-columns: 5rem 1fr;
+    gap: 1.75rem;
     background-color: #fff;
     border-radius: 0.375rem;
     box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
@@ -262,12 +278,6 @@ const ProductSidebarStyles = styled.div`
     width: 100%;
   }
 
-  .item-details {
-    margin: 1.25rem 0 0.5rem;
-    width: 100%;
-    text-align: center;
-  }
-
   .item-specs,
   .item-price {
     margin: 0.375rem 0 0;
@@ -278,16 +288,24 @@ const ProductSidebarStyles = styled.div`
   .item-specs {
     color: #6f7b8a;
     display: flex;
-    justify-content: center;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 0.375rem;
+    text-align: left;
 
     span {
-      color: #e5e7eb;
+      display: inline-flex;
+      width: 4rem;
     }
   }
 
   .item-price {
+    position: absolute;
+    bottom: 1.25rem;
+    right: 2rem;
     color: #059669;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-align: right;
   }
 
   .actions {
@@ -322,13 +340,16 @@ const ProductSidebarStyles = styled.div`
     &:focus {
       outline: 2px solid transparent;
       outline-offset: 2px;
+    }
+
+    &:focus-visible {
       box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4f46e5 0px 0px 0px 4px,
         rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     }
   }
 
   .store-home-link {
-    margin: 1rem 0 0;
+    margin: 1.25rem 0 0;
     font-size: 0.9375rem;
     font-weight: 500;
     text-align: center;
@@ -354,6 +375,43 @@ const ProductSidebarStyles = styled.div`
   @media (max-width: 500px) {
     .sidebar {
       max-width: calc(100% - 2.5rem);
+    }
+
+    .heading {
+      padding: 1rem;
+    }
+
+    .main {
+      padding: 0 1rem;
+    }
+
+    .item {
+      padding: 1.5rem 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      text-align: center;
+    }
+
+    .item-img {
+      width: 4rem;
+    }
+
+    .item-specs {
+      margin-top: 0.875rem;
+      text-align: center;
+
+      span {
+        width: auto;
+      }
+    }
+
+    .item-price {
+      margin: 1rem 0 0;
+      position: static;
+      text-align: center;
     }
   }
 `;

@@ -80,8 +80,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       (cartAccumulator: CartAccumulator, currentItem: CartItem) => {
         const product = products.find(p => p.id === currentItem.sku.productId);
 
-        // if was in the cart but no longer exists in db store.products
-        // then  don't add the product to the verified items and return
+        // if item was in the cart but no longer exists in db store.products
+        // then don't add the product to the verified items and return
         if (!product)
           return {
             verifiedItems: cartAccumulator.verifiedItems,
@@ -91,10 +91,15 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         const item = product.skus.find(s => s.id === currentItem.sku.id);
 
         if (item) {
+          const itemPrice =
+            item.size.price +
+            (currentItem.customName ? 500 : 0) +
+            (currentItem.customNumber ? 500 : 0);
+
           const verifiedItem = {
             ...currentItem,
-            price: item.size.price,
-            itemTotal: item.size.price * currentItem.quantity!,
+            price: itemPrice,
+            itemTotal: itemPrice * currentItem.quantity!,
           };
 
           const verifiedSubtotal =

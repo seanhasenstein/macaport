@@ -114,7 +114,7 @@ export default function Cart({ store, error }: Props) {
 
                       return (
                         <CartItem
-                          key={item.sku.id}
+                          key={item.id}
                           item={item}
                           storeId={store._id}
                           skus={product!.skus}
@@ -140,8 +140,8 @@ export default function Cart({ store, error }: Props) {
                       </div>
                     </div>
                     <div className="item">
-                      <div className="key">Shipping &amp; Handling</div>
-                      <div className="value">{formatToMoney(0, true)}</div>
+                      <div className="key">Shipping</div>
+                      <div className="value">Calculated next</div>
                     </div>
                     <div className="item total">
                       <div className="key">Order Total</div>
