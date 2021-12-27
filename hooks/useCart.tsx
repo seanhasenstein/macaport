@@ -57,9 +57,7 @@ const CartContext =
 
 export const useCart = () => {
   const context = React.useContext(CartContext);
-
   if (!context) throw new Error('Expected to be wrapped in a CartProvider');
-
   return context;
 };
 
@@ -101,7 +99,6 @@ const generateCartState = (state = initialState, items: CartItem[]) => {
   const totalUniqueItems = calculateUniqueItems(items);
   const cartIsEmpty = totalUniqueItems === 0;
   const cartItems = calculateItemTotals(items);
-  // TODO: was calculateSubtotal(items)
   const cartSubtotal = calculateCartSubtotal(cartItems);
   const salesTax = calculateSalesTax(cartSubtotal);
   const cartTotal = calculateCartTotal(cartSubtotal, salesTax);

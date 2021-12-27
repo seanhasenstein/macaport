@@ -14,9 +14,13 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <Elements stripe={stripePromise}>
-      <CartProvider cartId={`cart_${cartId}`}>
+      {router.pathname.split('/').includes('store') ? (
+        <CartProvider cartId={`cart_${cartId}`}>
+          <Component {...pageProps} />
+        </CartProvider>
+      ) : (
         <Component {...pageProps} />
-      </CartProvider>
+      )}
     </Elements>
   );
 }
