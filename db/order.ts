@@ -17,7 +17,11 @@ export async function getOrderFromStore(
     if (!order) {
       throw new Error(`Order not found.`);
     }
-    return order;
+    return {
+      order,
+      groupRequired: result.requireGroupSelection,
+      groupTerm: result.groupTerm,
+    };
   } catch (error) {
     console.error(error);
     throw new Error(error.message);

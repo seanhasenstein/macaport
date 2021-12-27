@@ -29,7 +29,9 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
     return {
       props: {
-        order: result,
+        order: result.order,
+        groupRequired: result.groupRequired,
+        groupTerm: result.groupTerm,
       },
     };
   } catch (error) {
@@ -43,10 +45,17 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
 type Props = {
   order: Order;
+  groupRequired: boolean;
+  groupTerm: string;
   error?: string;
 };
 
-export default function Temp({ order, error }: Props) {
+export default function Temp({
+  order,
+  groupRequired,
+  groupTerm,
+  error,
+}: Props) {
   return (
     <NoNavLayout title="Order Confirmation">
       <OrderConfirmationStyles>
@@ -122,6 +131,12 @@ export default function Temp({ order, error }: Props) {
                       <span>Store:</span>
                       {order.store.name}
                     </div>
+                    {groupRequired && (
+                      <div className="detail-item">
+                        <span className="capitalize">{groupTerm}:</span>
+                        {order.group}
+                      </div>
+                    )}
                   </div>
                   <div className="section order-info">
                     <h3>Customer Information</h3>
@@ -497,6 +512,10 @@ const OrderConfirmationStyles = styled.div`
         color: #2563eb;
       }
     }
+  }
+
+  .capitalize {
+    text-transform: capitalize;
   }
 
   @media (max-width: 1024px) {

@@ -3,7 +3,6 @@ import { CartItem } from '../interfaces';
 
 export function calculateCartSubtotal(items: CartItem[]) {
   return items.reduce((total, item) => {
-    console.log(item.price);
     return (
       total +
       item.quantity! *

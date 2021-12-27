@@ -25,6 +25,8 @@ type FormProps = {
     email: string;
     phone: string;
   };
+  groupRequired: boolean;
+  group: string;
   shippingAddress: {
     street: string;
     street2: string;
@@ -50,24 +52,6 @@ type ServerResponse = {
   orderId?: string;
   error?: string;
 };
-
-const CheckoutSchema = Yup.object().shape({
-  customer: Yup.object().shape({
-    firstName: Yup.string().required('First name is required'),
-    lastName: Yup.string().required('Last name is required'),
-    email: Yup.string().email('Invalid email').required('Email is required'),
-    phone: Yup.string()
-      .transform(value => {
-        return removeNonDigits(value);
-      })
-      .matches(
-        new RegExp(/^\d{10}$/),
-        'Phone number must be 10 digits (123) 456-7890'
-      )
-      .required('Phone number is required'),
-  }),
-  cardholderName: Yup.string().required("Cardholder's name is required"),
-});
 
 function FieldItem({ name, label }: FieldItemProps) {
   return (
@@ -100,6 +84,9 @@ type Props = {
     state: string;
     zipcode: string;
   };
+  requireGroupSelection: boolean;
+  groupTerm: string;
+  groups: string[];
 };
 
 export default function CheckoutForm({
@@ -107,6 +94,9 @@ export default function CheckoutForm({
   storeName,
   allowDirectShipping,
   primaryShippingAddress,
+  requireGroupSelection,
+  groupTerm,
+  groups,
 }: Props) {
   const hasMounted = useHasMounted();
   const router = useRouter();
@@ -118,6 +108,28 @@ export default function CheckoutForm({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const stripe = useStripe();
   const elements = useElements();
+
+  const CheckoutSchema = Yup.object().shape({
+    customer: Yup.object().shape({
+      firstName: Yup.string().required('First name is required'),
+      lastName: Yup.string().required('Last name is required'),
+      email: Yup.string().email('Invalid email').required('Email is required'),
+      phone: Yup.string()
+        .transform(value => {
+          return removeNonDigits(value);
+        })
+        .matches(
+          new RegExp(/^\d{10}$/),
+          'Phone number must be 10 digits (123) 456-7890'
+        )
+        .required('Phone number is required'),
+    }),
+    group: Yup.string().when('groupRequired', {
+      is: true,
+      then: Yup.string().required(`A ${groupTerm} is required`),
+    }),
+    cardholderName: Yup.string().required("Cardholder's name is required"),
+  });
 
   const handleCardChange = (e: StripeCardElementChangeEvent) => {
     if (e.error) {
@@ -170,6 +182,7 @@ export default function CheckoutForm({
           payment_method_id: result.paymentMethod.id,
           items,
           customer: data.customer,
+          group: data.group,
           shippingMethod: data.shippingMethod,
           shippingAddress:
             data.shippingMethod === 'Direct'
@@ -221,6 +234,8 @@ export default function CheckoutForm({
           state: '',
           zipcode: '',
         },
+        groupRequired: requireGroupSelection,
+        group: '',
         shippingMethod: 'Primary',
         cardholderName: '',
       }}
@@ -240,6 +255,26 @@ export default function CheckoutForm({
               </div>
               <FieldItem name="customer.email" label="Email Address" />
               <FieldItem name="customer.phone" label="Phone Number" />
+              {requireGroupSelection && (
+                <div className="field-row">
+                  <FieldItemStyles>
+                    <label htmlFor="group" className="capitlize">
+                      {groupTerm}
+                    </label>
+                    <Field name="group" as="select">
+                      <option value="default">
+                        Select your {groupTerm.toLowerCase()}
+                      </option>
+                      {groups.map((g, i) => (
+                        <option key={i} value={g}>
+                          {g}
+                        </option>
+                      ))}
+                    </Field>
+                    <ErrorMessage name="group" />
+                  </FieldItemStyles>
+                </div>
+              )}
               <h4>Choose a shipping method:</h4>
               <div className="radio-shipping-group">
                 <div
@@ -448,6 +483,7 @@ const CheckoutFormStyles = styled.div`
     font-size: 1.125rem;
     font-weight: 600;
     text-align: center;
+    text-transform: capitalize;
     z-index: 10;
 
     span {
@@ -547,6 +583,10 @@ const CheckoutFormStyles = styled.div`
         color: #4338ca;
       }
     }
+  }
+
+  .capitlize {
+    text-transform: capitalize;
   }
 `;
 

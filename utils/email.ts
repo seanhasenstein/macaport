@@ -259,14 +259,21 @@ function generateReceiptHtml(order: Order) {
                         <h1
                           style="
                             margin: 0;
+                            padding: 8px 0;
                             font-size: 15px;
                             font-weight: 400;
                             color: #868f9d;
                             text-align: center;
+                            line-height: 1;
                           "
                         >
                           Order #${order.orderId}
                         </h1>
+                        ${
+                          order.group
+                            ? `<p style="margin: 0; padding: 0; font-size: 15px; font-weight: 400; color: #868f9d; text-align: center; line-height: 1;">${order.group}</p>`
+                            : ''
+                        }
                       </td>
                     </tr>
   

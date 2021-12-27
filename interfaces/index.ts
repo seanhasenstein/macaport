@@ -31,6 +31,8 @@ export interface Product {
   sizes: Size[];
   colors: Color[];
   skus: Sku[];
+  includeCustomName: boolean;
+  includeCustomNumber: boolean;
 }
 
 export interface CartItem {
@@ -60,6 +62,7 @@ export interface Order {
     email: string;
     phone: string;
   };
+  group: string;
   orderStatus: 'Unfulfilled';
   shippingMethod: 'Primary' | 'Direct' | 'None';
   shippingAddress: {
@@ -104,6 +107,9 @@ export interface Store {
     email: string;
     phone: string;
   };
+  requireGroupSelection: boolean;
+  groupTerm: string;
+  groups: string[];
   products: Product[];
   orders: Order[];
   createdAt: string;

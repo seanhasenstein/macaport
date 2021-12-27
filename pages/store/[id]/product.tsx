@@ -364,6 +364,8 @@ export default function Product({ store, product, error }: Props) {
 
               <CustomOptions
                 className="section"
+                includeCustomName={product.includeCustomName}
+                includeCustomNumber={product.includeCustomNumber}
                 showName={showName}
                 setShowName={setShowName}
                 showNumber={showNumber}

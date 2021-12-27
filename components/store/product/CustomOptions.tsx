@@ -3,6 +3,8 @@ import styled from 'styled-components';
 
 type Props = {
   className: string;
+  includeCustomName: boolean;
+  includeCustomNumber: boolean;
   showName: boolean;
   setShowName: React.Dispatch<React.SetStateAction<boolean>>;
   showNumber: boolean;
@@ -17,6 +19,8 @@ type Props = {
 
 export default function CustomOptions({
   className,
+  includeCustomName,
+  includeCustomNumber,
   showName,
   setShowName,
   showNumber,
@@ -28,45 +32,51 @@ export default function CustomOptions({
   nameError,
   numberError,
 }: Props) {
+  if (!includeCustomName && !includeCustomNumber) return null;
+
   return (
     <CustomOptionStyles className={className}>
       <h4>Customizable options</h4>
-      <p>Add a name or jersey number to the back of your apparel.</p>
+      <p>Add to the back of your apparel.</p>
       <div className="options">
-        <div className="option">
-          <button
-            type="button"
-            onClick={() => setShowName(!showName)}
-            role="switch"
-            aria-checked={showName}
-            className={`toggle-button ${showName ? 'on' : 'off'}`}
-          >
-            <span aria-hidden="true" className="switch" />
-            <span className="sr-only">
-              Turn {showName ? 'on' : 'off'} custom name option
+        {includeCustomName && (
+          <div className="option">
+            <button
+              type="button"
+              onClick={() => setShowName(!showName)}
+              role="switch"
+              aria-checked={showName}
+              className={`toggle-button ${showName ? 'on' : 'off'}`}
+            >
+              <span aria-hidden="true" className="switch" />
+              <span className="sr-only">
+                Turn {showName ? 'off' : 'on'} custom name option
+              </span>
+            </button>
+            <span className="toggle-description">
+              Add a name <span className="light">(+$5.00)</span>
             </span>
-          </button>
-          <span className="toggle-description">
-            Add a name <span className="light">(+$5.00)</span>
-          </span>
-        </div>
-        <div className="option">
-          <button
-            type="button"
-            onClick={() => setShowNumber(!showNumber)}
-            role="switch"
-            aria-checked={showNumber}
-            className={`toggle-button ${showNumber ? 'on' : 'off'}`}
-          >
-            <span aria-hidden="true" className="switch" />
-            <span className="sr-only">
-              Turn {showNumber ? 'on' : 'off'} jersey number option
+          </div>
+        )}
+        {includeCustomNumber && (
+          <div className="option">
+            <button
+              type="button"
+              onClick={() => setShowNumber(!showNumber)}
+              role="switch"
+              aria-checked={showNumber}
+              className={`toggle-button ${showNumber ? 'on' : 'off'}`}
+            >
+              <span aria-hidden="true" className="switch" />
+              <span className="sr-only">
+                Turn {showNumber ? 'off' : 'on'} jersey number option
+              </span>
+            </button>
+            <span className="toggle-description">
+              Add a jersey number <span className="light">(+$5.00)</span>
             </span>
-          </button>
-          <span className="toggle-description">
-            Add a jersey number <span className="light">(+$5.00)</span>
-          </span>
-        </div>
+          </div>
+        )}
       </div>
       <div className="values">
         {showName && (

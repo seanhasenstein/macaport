@@ -72,6 +72,9 @@ export default function Checkout({ store }: Props) {
             storeName={store.name}
             allowDirectShipping={store.allowDirectShipping}
             primaryShippingAddress={store.primaryShippingLocation}
+            requireGroupSelection={store.requireGroupSelection}
+            groupTerm={store.groupTerm}
+            groups={store.groups}
           />
           {hasMounted && (
             <div>
