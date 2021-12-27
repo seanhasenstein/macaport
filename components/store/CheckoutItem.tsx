@@ -4,7 +4,7 @@ import { formatToMoney } from '../../utils';
 
 export default function CheckoutItem({ item }: { item: CartItem }) {
   return (
-    <CheckoutItemStyles item={item}>
+    <CheckoutItemStyles>
       <div className="image">
         <img src={item.image} alt={`${item.sku.color.label} ${item.name}`} />
       </div>

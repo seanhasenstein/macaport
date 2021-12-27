@@ -7,18 +7,13 @@ import { order } from '../../db';
 const handler = nc<Request, NextApiResponse>()
   .use(database)
   .post(async (req, res) => {
-    try {
-      const result = await order.addOrderToStore(
-        req.db,
-        req.body.store.id,
-        req.body
-      );
+    const result = await order.addOrderToStore(
+      req.db,
+      req.body.store.id,
+      req.body
+    );
 
-      res.json(result);
-    } catch (error) {
-      console.error(error);
-      res.json({ error: error.message });
-    }
+    res.json(result);
   });
 
 export default handler;

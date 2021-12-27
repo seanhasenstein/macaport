@@ -1,46 +1,36 @@
 import { Db, ObjectID } from 'mongodb';
 
 export async function getStoreById(db: Db, id: string) {
-  try {
-    const result = await db
-      .collection('stores')
-      .aggregate([
-        {
-          $match: { _id: new ObjectID(id) },
+  const result = await db
+    .collection('stores')
+    .aggregate([
+      {
+        $match: { _id: new ObjectID(id) },
+      },
+      {
+        $set: {
+          _id: { $toString: '$_id' },
         },
-        {
-          $set: {
-            _id: { $toString: '$_id' },
-          },
-        },
-      ])
-      .toArray();
+      },
+    ])
+    .toArray();
 
-    return result[0];
-  } catch (error) {
-    console.error(error);
-    throw new Error('An error occurred querying for the store.');
-  }
+  return result[0];
 }
 
 export async function getStores(db: Db, filter: Record<string, unknown> = {}) {
-  try {
-    const result = await db
-      .collection('stores')
-      .aggregate([
-        {
-          $match: { ...filter },
+  const result = await db
+    .collection('stores')
+    .aggregate([
+      {
+        $match: { ...filter },
+      },
+      {
+        $set: {
+          _id: { $toString: '$_id' },
         },
-        {
-          $set: {
-            _id: { $toString: '$_id' },
-          },
-        },
-      ])
-      .toArray();
-    return await result;
-  } catch (error) {
-    console.error(error);
-    throw new Error('An error occurred querying for the stores.');
-  }
+      },
+    ])
+    .toArray();
+  return await result;
 }
