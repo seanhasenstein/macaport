@@ -1,13 +1,15 @@
 import React from 'react';
+import { useRouter } from 'next/router';
 import {
   calculateCartSubtotal,
   calculateSalesTax,
   calculateCartTotal,
 } from '../utils';
-import { CartItem } from '../interfaces';
+import { CartItem, Product, Store } from '../interfaces';
 import useLocalStorage from './useLocalStorage';
 
 type InitialState = {
+  id: string;
   items: CartItem[];
   cartIsEmpty: boolean;
   totalItems: number;
@@ -141,11 +143,38 @@ export function CartProvider({
   children: React.ReactNode;
   cartId: string;
 }) {
+  const router = useRouter();
   const [savedCart, saveCart] = useLocalStorage(
-    cartId ? cartId : `cart-storage`,
+    cartId,
     JSON.stringify(initialState)
   );
   const [state, dispatch] = React.useReducer(reducer, JSON.parse(savedCart));
+
+  React.useEffect(() => {
+    async function fetchProducts() {
+      function validateSavedCart(
+        localStorageCart: string,
+        fetchedProducts: Product[]
+      ) {
+        const parsedCart: InitialState = JSON.parse(localStorageCart);
+        return parsedCart.items.filter(item =>
+          fetchedProducts?.some(p => p.skus.some(s => s.id === item.sku.id))
+        );
+      }
+      const response = await fetch(`/api/store?id=${router.query.id}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch the store.');
+      }
+
+      const data: Store = await response.json();
+      dispatch({
+        type: 'SET_ITEMS',
+        payload: validateSavedCart(savedCart, data.products),
+      });
+    }
+    fetchProducts();
+  }, [router.query.id, savedCart]);
 
   React.useEffect(() => {
     saveCart(JSON.stringify(state));
@@ -159,14 +188,10 @@ export function CartProvider({
   };
 
   const addItem = (item: CartItem, quantity = 1) => {
-    // if (!item.id) throw error?
     if (!item.id) throw new Error('You must provide an `id` for items');
     if (quantity <= 0) return;
 
-    const currentItem = state.items.find(
-      // instead of i.sku.id use i.id === item.id
-      (i: CartItem) => i.id === item.id
-    );
+    const currentItem = state.items.find((i: CartItem) => i.id === item.id);
 
     if (!currentItem) {
       const payload = { ...item, quantity };

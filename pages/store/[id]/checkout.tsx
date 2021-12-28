@@ -92,7 +92,7 @@ export default function Checkout({ store }: Props) {
                   )}
                   <div className="items">
                     {items.map(item => (
-                      <CheckoutItem key={item.sku.id} item={item} />
+                      <CheckoutItem key={item.id} item={item} />
                     ))}
                   </div>
                 </div>
