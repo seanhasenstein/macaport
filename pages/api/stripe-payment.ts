@@ -164,13 +164,13 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         total: verifiedTotal,
       },
     });
-  } catch (e) {
-    if (e.type === 'StripeCardError') {
+  } catch (error: any) {
+    if (error.type === 'StripeCardError') {
       // display error on client
-      return res.json({ error: e.message });
+      return res.json({ error: error.message });
     } else {
       // something else happened
-      return res.status(500).json({ error: e.type });
+      return res.status(500).json({ error: error.type });
     }
   }
 };

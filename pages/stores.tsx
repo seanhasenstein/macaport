@@ -29,7 +29,7 @@ export default function Stores({ stores }: Props) {
     <Layout>
       <StoresStyles>
         <div className="wrapper">
-          <h2>Active Stores</h2>
+          <h2>Current Stores</h2>
           {(!stores || stores.length < 1) && (
             <div className="empty">There are currently no active stores.</div>
           )}
@@ -39,37 +39,39 @@ export default function Stores({ stores }: Props) {
                 <span>Store Name</span>
                 <span>Close Date</span>
               </div>
-              {stores.map(s => (
-                <div key={s._id}>
-                  <div className="item">
-                    <span className="store-name">{s.name}</span>
-                    <span className="store-close-date">
-                      {s.closeDate
-                        ? `${format(
-                            new Date(s.closeDate),
-                            'LLL. do, yyyy'
-                          )} at midnight (CT)`
-                        : 'Permanently Open'}
-                    </span>
-                    <Link href={`/store/${s._id}`}>
-                      <a className="store-link">
-                        Visit store
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </a>
-                    </Link>
-                  </div>
-                </div>
-              ))}
+              <div>
+                {stores.map(s => (
+                  <Link key={s._id} href={`/store/${s._id}`}>
+                    <a className="store-link">
+                      <div className="item">
+                        <span className="store-name">{s.name}</span>
+                        <span className="store-close-date">
+                          {s.closeDate
+                            ? `${format(
+                                new Date(s.closeDate),
+                                'LLL. do, yyyy'
+                              )} at midnight (CT)`
+                            : 'Permanently Open'}
+                        </span>
+                        <span className="visit-store">
+                          <span>Visit store</span>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </span>
+                      </div>
+                    </a>
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -108,7 +110,7 @@ const StoresStyles = styled.div`
   }
 
   .grid {
-    margin: 2rem 0;
+    margin: 2.5rem 0;
   }
 
   .header,
@@ -126,6 +128,22 @@ const StoresStyles = styled.div`
     border-bottom: 1px solid #e5e7eb;
   }
 
+  .store-link {
+    display: block;
+
+    &:hover,
+    &:focus {
+      .visit-store {
+        text-decoration: underline;
+      }
+    }
+
+    &:focus {
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+    }
+  }
+
   .item {
     padding: 0.75rem 0;
     display: grid;
@@ -136,7 +154,7 @@ const StoresStyles = styled.div`
     border-bottom: 1px solid #e5e7eb;
   }
 
-  .store-link {
+  .visit-store {
     display: inline-flex;
     justify-content: flex-end;
     align-items: center;
@@ -150,10 +168,6 @@ const StoresStyles = styled.div`
       width: 1rem;
       color: #4f46e5;
     }
-
-    &:hover {
-      border-color: #4f46e5;
-    }
   }
 
   @media (max-width: 700px) {
@@ -161,15 +175,15 @@ const StoresStyles = styled.div`
       display: none;
     }
 
+    .grid {
+      border-top: 1px solid #e5e7eb;
+    }
+
     .item {
       grid-template-columns: 1fr auto;
       grid-template-areas:
         'name link'
         'close link';
-
-      &:first-of-type {
-        border-top: 1px solid #e5e7eb;
-      }
     }
 
     .store-name {
@@ -178,12 +192,24 @@ const StoresStyles = styled.div`
     }
 
     .store-close-date {
-      grid-area: close;
-      font-size: 0.875rem;
+      display: none;
     }
 
-    .store-link {
+    .visit-store {
       grid-area: link;
+    }
+  }
+
+  @media (max-width: 500px) {
+    .visit-store {
+      span {
+        display: none;
+      }
+
+      svg {
+        height: 1.125rem;
+        width: 1.125rem;
+      }
     }
   }
 

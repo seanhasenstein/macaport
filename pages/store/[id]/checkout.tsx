@@ -46,9 +46,9 @@ export const getServerSideProps: GetServerSideProps = async context => {
     }
 
     return { props: { store: storeRes } };
-  } catch (err) {
+  } catch (error) {
     return {
-      props: { error: err.message },
+      props: { error },
     };
   }
 };

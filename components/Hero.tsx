@@ -104,6 +104,7 @@ const HeroStyles = styled.div`
 
     .text-content {
       margin: 1.5rem 0 0;
+      padding: 0;
       text-align: center;
     }
   }

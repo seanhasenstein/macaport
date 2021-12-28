@@ -137,7 +137,7 @@ const ColorsStyles = styled.div`
       align-items: center;
 
       svg {
-        margin-right: 0.3125rem;
+        margin-right: 0.5rem;
         height: 1.0625rem;
         width: 1.0625rem;
         color: #9ca3af;
@@ -165,6 +165,11 @@ const ColorsStyles = styled.div`
 
     p.note {
       align-items: flex-start;
+
+      svg {
+        flex-shrink: 0;
+        margin-top: 3px;
+      }
     }
   }
 `;

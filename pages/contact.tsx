@@ -55,7 +55,7 @@ function FieldItem({
 }
 
 const FieldItemStyles = styled.div`
-  margin: 0.875rem 0 0;
+  margin: 1.25rem 0 0;
   display: flex;
   flex-direction: column;
 
@@ -78,14 +78,6 @@ const FieldItemStyles = styled.div`
     border-radius: 0.3125rem;
     appearance: none;
     background-color: #fff;
-
-    &:focus {
-      outline: 2px solid transparent;
-      outline-offset: 2px;
-      border-color: #3b82f6;
-      box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
-        rgb(59, 130, 246) 0px 0px 0px 1px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
-    }
   }
 
   textarea {
@@ -94,11 +86,10 @@ const FieldItemStyles = styled.div`
   }
 
   .error {
-    margin: 0.25rem 0 0;
-    font-size: 0.875rem;
-    font-size: 0.8125rem;
-    line-height: 1.25rem;
-    color: #dc2626;
+    margin: 0.5rem 0 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #b91c1c;
   }
 
   @media (max-width: 500px) {
@@ -379,12 +370,13 @@ const ContactStyles = styled.div`
 
   .button {
     margin: 1.25rem 0 0;
-    padding: 0.875rem 2.5rem;
+    padding: 0;
     position: relative;
-    min-width: 180px;
+    min-width: 10rem;
     height: 45px;
     display: inline-flex;
     justify-content: center;
+    align-items: center;
     align-self: flex-end;
     background-color: #253753;
     color: rgba(2255, 255, 255, 0.9);

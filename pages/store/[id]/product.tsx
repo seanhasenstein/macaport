@@ -63,9 +63,9 @@ export const getServerSideProps: GetServerSideProps = async context => {
     }
 
     return { props: { store: storeRes, product } };
-  } catch (err) {
+  } catch (error) {
     return {
-      props: { error: err.message },
+      props: { error },
     };
   }
 };
@@ -782,7 +782,7 @@ const ColorStyles = styled.div`
 
     &.checked {
       padding: 0.125rem;
-      border: 2px solid #111827;
+      border: 2px solid #374151;
     }
 
     label {
@@ -814,7 +814,7 @@ const ColorStyles = styled.div`
       box-shadow: none;
     }
 
-    &:focus + .label-wrapper {
+    &:focus-visible + .label-wrapper {
       border-color: rgb(99, 102, 241);
     }
 

@@ -123,8 +123,8 @@ const HeaderStyles = styled.header`
       cursor: pointer;
 
       svg {
-        height: 2rem;
-        width: 2rem;
+        height: 1.75rem;
+        width: 1.75rem;
         color: #1f2937;
       }
     }

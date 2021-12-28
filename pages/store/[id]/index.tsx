@@ -43,9 +43,9 @@ export const getServerSideProps: GetServerSideProps = async context => {
     }
 
     return { props: { store: storeRes } };
-  } catch (err) {
+  } catch (error) {
     return {
-      props: { error: err.message },
+      props: { error },
     };
   }
 };
@@ -146,7 +146,7 @@ export default function Store({ store, error }: Props) {
 }
 
 const StoreStyles = styled.div`
-  padding: 2.5rem 0 4rem;
+  padding: 5rem 0 4rem;
   position: relative;
 
   h2,
@@ -229,7 +229,7 @@ const StoreStyles = styled.div`
   }
 
   .items {
-    margin: 5rem auto 0;
+    margin: 4rem auto 0;
     padding: 0 1.5rem;
     max-width: 72rem;
     width: 100%;
@@ -254,7 +254,7 @@ const StoreStyles = styled.div`
   }
 
   @media (max-width: 500px) {
-    padding: 1.5rem 0 4rem;
+    padding: 3rem 0 4rem;
 
     .close-date {
       padding: 1rem 1.25rem;
