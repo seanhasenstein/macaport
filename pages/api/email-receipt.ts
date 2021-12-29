@@ -20,7 +20,7 @@ const handler = nc<Request, NextApiResponse>().post(async (req, res) => {
 
   const result = await sendEmail({
     to: order.customer.email,
-    from: `Macaport Demo Store <nick@macaport.com>`,
+    from: `Macaport <support@macaport.com>`,
     subject: `Apparel Order [#${req.body.orderId}]`,
     text,
     html,

@@ -78,7 +78,12 @@ export default function Temp({
               <h3>An error has occurred!</h3>
               <p>
                 {error} Please contact us with any questions at{' '}
-                <a href="mailto:support@macaport.com">support@macaport.com</a>.
+                <a
+                  href={`mailto:support@macaport.com?subject=Order Inquiry [Order #${order.orderId}]`}
+                >
+                  support@macaport.com
+                </a>
+                .
               </p>
             </div>
           )}

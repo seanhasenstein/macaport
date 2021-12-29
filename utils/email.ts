@@ -41,14 +41,10 @@ export function generateContactFormEmail(
   return { text, html };
 }
 
-// demo-store code ...
-
 function generateReceiptText(order: Order) {
-  return `Hi ${
-    order.customer.firstName
-  },\n\nThis is confirmation for your Macaport Apparel Order. \n\nOrder #: ${
-    order.orderId
-  } \nDate: ${format(
+  return `Hi ${order.customer.firstName},\n\nThis is confirmation for your ${
+    order.store.name
+  } order on macaport.com. \n\nOrder #: ${order.orderId} \nDate: ${format(
     new Date(order.createdAt!),
     'EEE. LLL dd, yyyy'
   )} \nName: ${order.customer.firstName} ${order.customer.lastName} \nEmail: ${
@@ -57,9 +53,11 @@ function generateReceiptText(order: Order) {
   ${order.items
     .map(
       i =>
-        `\n${i.name} (${i.sku.size.label}) Qty: ${i.quantity} - ${formatToMoney(
-          i.itemTotal!
-        )}`
+        `\n${i.name} (${i.sku.size.label})${
+          i.customName ? ` - ${i.customName}` : ''
+        }${i.customNumber ? ` - ${i.customNumber}` : ''} Qty: ${
+          i.quantity
+        } - ${formatToMoney(i.itemTotal!)}`
     )
     .join('')} \n\nSubtotal: ${formatToMoney(
     order.summary.subtotal,
@@ -78,7 +76,7 @@ function generateReceiptHtml(order: Order) {
   return `<!DOCTYPE html>
   <html lang="en">
     <head>
-      <title>Macaport Demo Apparel Store</title>
+      <title>${order.store.name} | Macaport</title>
       <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -248,7 +246,7 @@ function generateReceiptHtml(order: Order) {
                             text-align: center;
                           "
                         >
-                          Macaport Demo Store Receipt
+                          ${order.store.name}
                         </h1>
                       </td>
                     </tr>
