@@ -211,12 +211,16 @@ export default function Temp({
                             </div>
                             {item.customName && (
                               <div className="order-item-detail">
-                                Name: <span className="value">Hasenstein</span>
+                                Name:{' '}
+                                <span className="value">{item.customName}</span>
                               </div>
                             )}
                             {item.customNumber && (
                               <div className="order-item-detail">
-                                Number: <span className="value">24</span>
+                                Number:{' '}
+                                <span className="value">
+                                  {item.customNumber}
+                                </span>
                               </div>
                             )}
                           </div>
