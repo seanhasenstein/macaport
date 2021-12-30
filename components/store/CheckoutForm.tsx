@@ -76,6 +76,7 @@ type Props = {
   storeId: string;
   storeName: string;
   allowDirectShipping: boolean;
+  hasPrimaryShipping: boolean;
   primaryShippingAddress: {
     name: string;
     street: string;
@@ -93,6 +94,7 @@ export default function CheckoutForm({
   storeId,
   storeName,
   allowDirectShipping,
+  hasPrimaryShipping,
   primaryShippingAddress,
   requireGroupSelection,
   groupTerm,
@@ -100,8 +102,7 @@ export default function CheckoutForm({
 }: Props) {
   const hasMounted = useHasMounted();
   const router = useRouter();
-  const { items, cartSubtotal, salesTax, cartTotal, cartIsEmpty, emptyCart } =
-    useCart();
+  const { items, cartSubtotal, salesTax, cartTotal, cartIsEmpty } = useCart();
   const [stripeError, setStripeError] = React.useState<string>();
   const [serverResponseError, setServerResponseError] =
     React.useState<string>();
@@ -211,9 +212,8 @@ export default function CheckoutForm({
       setIsSubmitting(false);
     } else {
       setServerResponseError(undefined);
-      emptyCart();
       router.push(
-        `/store/${storeId}/order-confirmation?orderId=${serverResponse.orderId!}`
+        `/store/${storeId}/order-confirmation?orderId=${serverResponse.orderId!}&emptyCart=true`
       );
     }
   };
@@ -236,7 +236,11 @@ export default function CheckoutForm({
         },
         groupRequired: requireGroupSelection,
         group: '',
-        shippingMethod: 'Primary',
+        shippingMethod: hasPrimaryShipping
+          ? 'Primary'
+          : allowDirectShipping
+          ? 'Direct'
+          : 'None',
         cardholderName: '',
       }}
       validationSchema={CheckoutSchema}
@@ -275,69 +279,78 @@ export default function CheckoutForm({
                   </FieldItemStyles>
                 </div>
               )}
-              <h4>Choose a shipping method:</h4>
-              <div className="radio-shipping-group">
-                <div
-                  className={`radio-shipping-item ${
-                    values.shippingMethod === 'Primary' ? 'checked' : ''
-                  }`}
-                >
-                  <label htmlFor="primaryShipping">
-                    <Field
-                      type="radio"
-                      name="shippingMethod"
-                      id="primaryShipping"
-                      value="Primary"
-                    />
-                    <div>Pick up at {primaryShippingAddress.name}</div>
-                    <div className="shipping-price">Free</div>
-                  </label>
-                </div>
-                {allowDirectShipping && (
-                  <div
-                    className={`radio-shipping-item ${
-                      values.shippingMethod === 'Direct' ? 'checked' : ''
-                    }`}
-                  >
-                    <label htmlFor="secondaryShipping">
-                      <Field
-                        type="radio"
-                        name="shippingMethod"
-                        id="secondaryShipping"
-                        value="Direct"
+              {(hasPrimaryShipping || allowDirectShipping) && (
+                <>
+                  <h4>Choose a shipping method:</h4>
+                  <div className="radio-shipping-group">
+                    {hasPrimaryShipping && (
+                      <div
+                        className={`radio-shipping-item ${
+                          values.shippingMethod === 'Primary' ? 'checked' : ''
+                        }`}
+                      >
+                        <label htmlFor="primaryShipping">
+                          <Field
+                            type="radio"
+                            name="shippingMethod"
+                            id="primaryShipping"
+                            value="Primary"
+                          />
+                          <div>Pick up at {primaryShippingAddress.name}</div>
+                          <div className="shipping-price">Free</div>
+                        </label>
+                      </div>
+                    )}
+                    {allowDirectShipping && (
+                      <div
+                        className={`radio-shipping-item ${
+                          values.shippingMethod === 'Direct' ? 'checked' : ''
+                        }`}
+                      >
+                        <label htmlFor="secondaryShipping">
+                          <Field
+                            type="radio"
+                            name="shippingMethod"
+                            id="secondaryShipping"
+                            value="Direct"
+                          />
+                          <div>Ship directly to you</div>
+                          <div className="shipping-price">$0.00</div>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                  {values.shippingMethod === 'Direct' && (
+                    <div>
+                      <FieldItem
+                        name="shippingAddress.street"
+                        label="Street Address"
                       />
-                      <div>Ship directly to you</div>
-                      <div className="shipping-price">$0.00</div>
-                    </label>
-                  </div>
-                )}
-              </div>
-              {values.shippingMethod === 'Direct' && (
-                <div>
-                  <FieldItem
-                    name="shippingAddress.street"
-                    label="Street Address"
-                  />
-                  <FieldItem
-                    name="shippingAddress.street2"
-                    label="Address Line 2"
-                  />
-                  <div className="field-row">
-                    <FieldItem name="shippingAddress.city" label="City" />
-                    <FieldItemStyles>
-                      <label htmlFor="shippingAddress.state">State</label>
-                      <Field name="shippingAddress.state" as="select">
-                        <option value="default">Select state</option>
-                        {unitedStates.map((s, i) => (
-                          <option key={i} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                      </Field>
-                    </FieldItemStyles>
-                  </div>
-                  <FieldItem name="shippingAddress.zipcode" label="Zipcode" />
-                </div>
+                      <FieldItem
+                        name="shippingAddress.street2"
+                        label="Address Line 2"
+                      />
+                      <div className="field-row">
+                        <FieldItem name="shippingAddress.city" label="City" />
+                        <FieldItemStyles>
+                          <label htmlFor="shippingAddress.state">State</label>
+                          <Field name="shippingAddress.state" as="select">
+                            <option value="default">Select state</option>
+                            {unitedStates.map((s, i) => (
+                              <option key={i} value={s}>
+                                {s}
+                              </option>
+                            ))}
+                          </Field>
+                        </FieldItemStyles>
+                      </div>
+                      <FieldItem
+                        name="shippingAddress.zipcode"
+                        label="Zipcode"
+                      />
+                    </div>
+                  )}
+                </>
               )}
             </div>
             <div className="section">

@@ -1,10 +1,13 @@
+import React from 'react';
 import { GetServerSideProps } from 'next';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { format } from 'date-fns';
 import { connectToDb, order } from '../../../db';
 import { Order } from '../../../interfaces';
 import { formatPhoneNumber, formatToMoney } from '../../../utils';
+import { useCart } from '../../../hooks/useCart';
 import NoNavLayout from '../../../components/store/NoNavLayout';
 
 export const getServerSideProps: GetServerSideProps = async context => {
@@ -56,6 +59,15 @@ export default function Temp({
   groupTerm,
   error,
 }: Props) {
+  const router = useRouter();
+  const { emptyCart } = useCart();
+
+  React.useEffect(() => {
+    if (router.query.emptyCart) {
+      emptyCart();
+    }
+  }, [emptyCart, router.query.emptyCart]);
+
   return (
     <NoNavLayout title="Order Confirmation">
       <OrderConfirmationStyles>
