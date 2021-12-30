@@ -107,8 +107,10 @@ export default function Store({ store, error }: Props) {
               </svg>
               <span>
                 This store will close on{' '}
-                {format(new Date(store.closeDate), 'EEE. LLL do, yyyy')} at
-                Midnight (CT).
+                {format(
+                  new Date(store.closeDate),
+                  "LLL. do, yyyy 'at' h:mmaaa"
+                )}
               </span>
             </div>
           </div>
@@ -184,6 +186,7 @@ const StoreStyles = styled.div`
     text-align: center;
     font-size: 0.875rem;
     font-weight: 500;
+    line-height: 1;
     color: #6b7280;
     background-color: #fff;
     border-radius: 0.3125rem;
@@ -192,10 +195,10 @@ const StoreStyles = styled.div`
       rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
 
     svg {
-      margin: 0 0.375rem 0 0;
+      margin: 0 0.4375rem 0 0;
       flex-shrink: 0;
-      height: 1.125rem;
-      width: 1.125rem;
+      height: 1rem;
+      width: 1rem;
       color: #f43f5e;
     }
   }
@@ -254,12 +257,14 @@ const StoreStyles = styled.div`
   }
 
   @media (max-width: 500px) {
-    padding: 3rem 0 4rem;
+    padding: 1.75rem 0 4rem;
 
     .close-date {
       padding: 1rem 1.25rem;
-      align-items: flex-start;
-      text-align: left;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1rem 1rem 1.375rem;
+      width: 100%;
       line-height: 1.5;
 
       span {
@@ -268,7 +273,7 @@ const StoreStyles = styled.div`
       }
 
       svg {
-        margin: 0 0.625rem 0 0;
+        margin: 0 0 0 0;
         height: 1.375rem;
         width: 1.375rem;
       }

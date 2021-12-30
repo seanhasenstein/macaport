@@ -47,10 +47,10 @@ export default function Stores({ stores }: Props) {
                         <span className="store-name">{s.name}</span>
                         <span className="store-close-date">
                           {s.closeDate
-                            ? `${format(
+                            ? format(
                                 new Date(s.closeDate),
-                                'LLL. do, yyyy'
-                              )} at midnight (CT)`
+                                "LLL. do, yyyy 'at' h:mmaaa"
+                              )
                             : 'Permanently Open'}
                         </span>
                         <span className="visit-store">
