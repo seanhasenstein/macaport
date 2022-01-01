@@ -505,6 +505,11 @@ function generateReceiptHtml(order: Order) {
                         >
                           <tr>
                             <td style="color: #6B7280">
+                              ${order.customer.firstName} ${order.customer.lastName}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="color: #6B7280">
                               ${order.shippingAddress.street} ${order.shippingAddress.street2}
                             </td>
                           </tr>

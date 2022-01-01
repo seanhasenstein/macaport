@@ -142,10 +142,7 @@ export default function Header() {
             <div className="logo">
               <Link href="/">
                 <a>
-                  <img
-                    src="/images/logo.png"
-                    alt="Macaport logo with mountains"
-                  />
+                  <img src="/images/logo.png" alt="Macaport" />
                 </a>
               </Link>
             </div>

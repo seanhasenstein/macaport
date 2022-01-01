@@ -132,7 +132,11 @@ export default function Store({ store, error }: Props) {
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              This store currently has no products.
+              <p>
+                This store currently has no products available. Contact us with
+                any questions at{' '}
+                <a href="mailto:support@macaport.com">support@macaport.com</a>.
+              </p>
             </div>
           </div>
         ) : (
@@ -211,23 +215,31 @@ const StoreStyles = styled.div`
 
     .wrapper {
       margin: 3rem 0;
-      padding: 1.5rem 0 1.875rem;
+      padding: 1.5rem 0 2rem;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      font-size: 1rem;
-      color: #6e788c;
-      text-align: center;
       border-top: 1px solid #e5e7eb;
       border-bottom: 1px solid #e5e7eb;
+    }
+
+    p {
+      font-size: 1rem;
+      color: #4b5563;
+      text-align: center;
+
+      a {
+        color: #4f46e5;
+        text-decoration: underline;
+      }
     }
 
     svg {
       margin: 0 0 0.5rem;
       height: 1.5rem;
       width: 1.5rem;
-      color: #f87171;
+      color: #f43f5e;
     }
   }
 

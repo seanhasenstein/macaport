@@ -50,6 +50,7 @@ type ErrorMessageProps = {
 type ServerResponse = {
   success?: true;
   orderId?: string;
+  storeClosed?: boolean;
   error?: string;
 };
 
@@ -129,6 +130,15 @@ export default function CheckoutForm({
       is: true,
       then: Yup.string().required(`A ${groupTerm} is required`),
     }),
+    shippingAddress: Yup.object().when('shippingMethod', {
+      is: 'Direct',
+      then: Yup.object({
+        street: Yup.string().required('Street is required'),
+        city: Yup.string().required('City is required'),
+        state: Yup.string().required('State is required'),
+        zipcode: Yup.string().required('Zipcode is required'),
+      }),
+    }),
     cardholderName: Yup.string().required("Cardholder's name is required"),
   });
 
@@ -206,16 +216,22 @@ export default function CheckoutForm({
   };
 
   const handleServerResponse = (serverResponse: ServerResponse) => {
+    if (serverResponse.storeClosed === true) {
+      router.push('/store-closed');
+      return;
+    }
+
     if (serverResponse.error) {
       setServerResponseError(serverResponse.error);
       console.error(serverResponse.error);
       setIsSubmitting(false);
-    } else {
-      setServerResponseError(undefined);
-      router.push(
-        `/store/${storeId}/order-confirmation?orderId=${serverResponse.orderId!}&emptyCart=true`
-      );
+      return;
     }
+
+    setServerResponseError(undefined);
+    router.push(
+      `/store/${storeId}/order-confirmation?orderId=${serverResponse.orderId!}&emptyCart=true`
+    );
   };
 
   return (
@@ -342,6 +358,7 @@ export default function CheckoutForm({
                               </option>
                             ))}
                           </Field>
+                          <ErrorMessage name="shippingAddress.state" />
                         </FieldItemStyles>
                       </div>
                       <FieldItem

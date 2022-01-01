@@ -2,12 +2,13 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 import fetch from 'node-fetch';
 import { connectToDb, store } from '../../db';
-import { CartItem, Order, Product } from '../../interfaces/';
+import { CartItem, Order, Store as StoreInterface } from '../../interfaces/';
 import {
   calculateSalesTax,
   calculateCartTotal,
   createReceiptNumber,
   removeNonDigits,
+  isStoreActive,
 } from '../../utils';
 
 type CartAccumulator = {
@@ -24,6 +25,7 @@ async function generateResponse(
   intent: Stripe.Response<Stripe.PaymentIntent>,
   order: Order
 ) {
+  // if Stripe payment succeeded...
   if (intent.status === 'succeeded') {
     const data = {
       ...order,
@@ -32,6 +34,7 @@ async function generateResponse(
       updatedAt: new Date(),
     };
 
+    // send data to api route to add the order to the db
     const res = await fetch(`${process.env.API_HOST}/api/add-order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -40,6 +43,7 @@ async function generateResponse(
 
     const result = await res.json();
 
+    // send email receipt
     await fetch(`${process.env.API_HOST}/api/email-receipt`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -69,20 +73,22 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       summary,
     } = req.body;
 
-    // go get the products from the db
     const { db } = await connectToDb();
-    const { products }: { products: Product[] } = await store.getStoreById(
-      db,
-      storeId
-    );
+    const { products, openDate, closeDate }: StoreInterface =
+      await store.getStoreById(db, storeId);
 
-    // 1. verify order items and order subtotal
+    // 1. verify that the store is open
+    const isStoreOpen = isStoreActive(openDate, closeDate);
+
+    if (isStoreOpen === false) {
+      return res.json({ storeClosed: true });
+    }
+
+    // 2. verify order items and order subtotal
     const { verifiedItems, verifiedSubtotal } = items.reduce(
       (cartAccumulator: CartAccumulator, currentItem: CartItem) => {
         const product = products.find(p => p.id === currentItem.sku.productId);
 
-        // if item was in the cart but no longer exists in db store.products
-        // then don't add the product to the verified items and return
         if (!product)
           return {
             verifiedItems: cartAccumulator.verifiedItems,
@@ -115,17 +121,17 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       { verifiedItems: [], verifiedSubtotal: 0 }
     );
 
-    // 2. calculate order salesTax and total from verified items and subtotal
+    // 3. calculate order salesTax and total from verified items and subtotal
     const verifiedSalesTax = calculateSalesTax(verifiedSubtotal);
     const verifiedTotal = calculateCartTotal(
       verifiedSubtotal,
       verifiedSalesTax
     );
 
-    // 2.5 create orderId
+    // 4. create orderId
     const orderId = createReceiptNumber();
 
-    // 3. send req to Stripe to handle payment
+    // 5. send req to Stripe to handle payment
     const intent = await stripe.paymentIntents.create({
       amount: verifiedTotal,
       currency: 'usd',
@@ -139,7 +145,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       },
     });
 
-    // 4. handle stripe payment response
+    // 6. handle stripe payment response
     return generateResponse(res, intent, {
       orderId,
       store: {
@@ -166,10 +172,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     });
   } catch (error: any) {
     if (error.type === 'StripeCardError') {
-      // display error on client
       return res.json({ error: error.message });
     } else {
-      // something else happened
       return res.status(500).json({ error: error.type });
     }
   }
