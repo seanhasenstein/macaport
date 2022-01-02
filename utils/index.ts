@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import { FormikErrors, FormikTouched } from 'formik';
 import { CartItem } from '../interfaces';
 
 export function calculateCartSubtotal(items: CartItem[]) {
@@ -87,6 +88,28 @@ export function formatToMoney(input: number, includeDecimal = false) {
   } else {
     return `$${price}`;
   }
+}
+
+export function getTouchedErrors(
+  errorValue: FormikErrors<string | FormikErrors<string>>,
+  touchedValue: FormikTouched<boolean | FormikTouched<boolean>>
+) {
+  const testResult: string[] = [];
+
+  if (typeof errorValue === 'string' && touchedValue === true) {
+    testResult.push(errorValue);
+  }
+
+  if (typeof errorValue === 'object' && typeof touchedValue === 'object') {
+    Object.keys(errorValue).forEach(key => {
+      const result = getTouchedErrors(errorValue[key], touchedValue[key]);
+      if (result) {
+        testResult.push(...result);
+      }
+    });
+  }
+
+  return testResult;
 }
 
 export function getUrlParameter(query: string | string[] | undefined) {

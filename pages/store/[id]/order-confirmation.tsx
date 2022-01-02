@@ -69,7 +69,7 @@ export default function Temp({
   }, [emptyCart, router.query.emptyCart]);
 
   return (
-    <NoNavLayout title="Order Confirmation">
+    <NoNavLayout title={`Order #${order.orderId} | Macaport`}>
       <OrderConfirmationStyles>
         <div className="order-confirmation-wrapper">
           {error && (

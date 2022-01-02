@@ -12,9 +12,11 @@ import {
   Form,
   Field,
   ErrorMessage as FormikErrorMessage,
+  FormikErrors,
+  FormikTouched,
 } from 'formik';
 import * as Yup from 'yup';
-import { unitedStates, removeNonDigits } from '../../utils';
+import { getTouchedErrors, removeNonDigits, unitedStates } from '../../utils';
 import { useCart } from '../../hooks/useCart';
 import useHasMounted from '../../hooks/useHasMounted';
 
@@ -73,6 +75,68 @@ function ErrorMessage({ name }: ErrorMessageProps) {
   );
 }
 
+function TouchedError({ name }: { name: string }) {
+  return (
+    <FormikErrorMessage
+      name={name}
+      render={msg => (
+        <div className="error-item">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+              clipRule="evenodd"
+            />
+          </svg>
+          {msg}
+        </div>
+      )}
+    />
+  );
+}
+
+function TouchedErrors({
+  errors,
+  touched,
+}: {
+  errors: FormikErrors<FormProps>;
+  touched: FormikTouched<FormProps>;
+}) {
+  const [touchedErrors, setTouchedErrors] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    const testing = getTouchedErrors(
+      errors as FormikErrors<string>,
+      touched as FormikTouched<boolean>
+    );
+    setTouchedErrors(testing || []);
+  }, [errors, touched]);
+
+  if (touchedErrors.length > 0) {
+    return (
+      <div className="errors-list">
+        <TouchedError name="customer.firstName" />
+        <TouchedError name="customer.lastName" />
+        <TouchedError name="customer.email" />
+        <TouchedError name="customer.phone" />
+        <TouchedError name="group" />
+        <TouchedError name="shippingAddress.street" />
+        <TouchedError name="shippingAddress.city" />
+        <TouchedError name="shippingAddress.state" />
+        <TouchedError name="shippingAddress.zipcode" />
+        <TouchedError name="cardholderName" />
+      </div>
+    );
+  } else {
+    return null;
+  }
+}
+
 type Props = {
   storeId: string;
   storeName: string;
@@ -103,13 +167,13 @@ export default function CheckoutForm({
 }: Props) {
   const hasMounted = useHasMounted();
   const router = useRouter();
+  const stripe = useStripe();
+  const elements = useElements();
   const { items, cartSubtotal, salesTax, cartTotal, cartIsEmpty } = useCart();
   const [stripeError, setStripeError] = React.useState<string>();
   const [serverResponseError, setServerResponseError] =
     React.useState<string>();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const stripe = useStripe();
-  const elements = useElements();
 
   const CheckoutSchema = Yup.object().shape({
     customer: Yup.object().shape({
@@ -262,7 +326,7 @@ export default function CheckoutForm({
       validationSchema={CheckoutSchema}
       onSubmit={handleSubmit}
     >
-      {({ values }: { values: FormProps }) => (
+      {({ values, errors, touched }) => (
         <CheckoutFormStyles>
           <Form>
             <div className="section">
@@ -282,7 +346,7 @@ export default function CheckoutForm({
                       {groupTerm}
                     </label>
                     <Field name="group" as="select">
-                      <option value="default">
+                      <option value="">
                         Select your {groupTerm.toLowerCase()}
                       </option>
                       {groups.map((g, i) => (
@@ -351,7 +415,7 @@ export default function CheckoutForm({
                         <FieldItemStyles>
                           <label htmlFor="shippingAddress.state">State</label>
                           <Field name="shippingAddress.state" as="select">
-                            <option value="default">Select state</option>
+                            <option value="">Select state</option>
                             {unitedStates.map((s, i) => (
                               <option key={i} value={s}>
                                 {s}
@@ -407,7 +471,6 @@ export default function CheckoutForm({
                   'Place your order'
                 )}
               </button>
-
               {serverResponseError && (
                 <div className="stripe-error">{serverResponseError}</div>
               )}
@@ -420,6 +483,7 @@ export default function CheckoutForm({
                   .
                 </div>
               )}
+              <TouchedErrors errors={errors} touched={touched} />
             </div>
           </Form>
         </CheckoutFormStyles>
@@ -617,6 +681,34 @@ const CheckoutFormStyles = styled.div`
 
   .capitlize {
     text-transform: capitalize;
+  }
+
+  .errors-list {
+    margin: 1rem 0 0;
+    padding: 0.875rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background-color: #fef2f2;
+    border-radius: 0.375rem;
+    border: 1px solid #fee2e2;
+    box-shadow: inset 0 1px 1px #fff, 0 1px 2px 0 rgb(0 0 0 / 0.05);
+
+    .error-item {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #991b1b;
+
+      svg {
+        height: 0.875rem;
+        width: 0.875rem;
+        color: #b91c1c;
+      }
+    }
   }
 `;
 
