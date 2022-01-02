@@ -310,7 +310,7 @@ function generateReceiptHtml(order: Order) {
                             <td style="color: #6B7280">
                               ${format(
                                 new Date(order.createdAt!),
-                                'EEE. LLL dd, yyyy'
+                                "MMM. dd, yyyy 'at' h:mmaa"
                               )}
                             </td>
                           </tr>

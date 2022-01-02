@@ -69,7 +69,9 @@ export default function Temp({
   }, [emptyCart, router.query.emptyCart]);
 
   return (
-    <NoNavLayout title={`Order #${order.orderId} | Macaport`}>
+    <NoNavLayout
+      title={`${order.store.name} Order #${order.orderId} | Macaport`}
+    >
       <OrderConfirmationStyles>
         <div className="order-confirmation-wrapper">
           {error && (
@@ -142,7 +144,10 @@ export default function Temp({
                     </div>
                     <div className="detail-item">
                       <span>Order Date:</span>
-                      {format(new Date(order.createdAt!), 'LLL dd, yyyy')}
+                      {format(
+                        new Date(order.createdAt!),
+                        "MMM. dd, yyyy 'at' h:mmaa"
+                      )}
                     </div>
                     <div className="detail-item">
                       <span>Store:</span>
