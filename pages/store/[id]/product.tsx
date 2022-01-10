@@ -589,6 +589,7 @@ const ProductStyles = styled.div`
       label {
         margin: 0;
         padding: 0.625rem 1rem;
+        height: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
