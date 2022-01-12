@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 import { FormikErrors, FormikTouched } from 'formik';
-import { CartItem } from '../interfaces';
+import { CartItem, ProductSku } from '../interfaces';
 
 export function calculateCartSubtotal(items: CartItem[]) {
   return items.reduce((total, item) => {
@@ -24,6 +24,26 @@ export function calculateCartTotal(
   shipping = 0
 ) {
   return subtotal + salesTax + shipping;
+}
+
+export function isOutOfStock(sku: ProductSku, cartItems: CartItem[]) {
+  if (!sku.active || sku.inventory === 0) {
+    return true;
+  }
+
+  const inventorySubtractingCartItems = cartItems.reduce(
+    (inventory, currentCartItem) => {
+      if (currentCartItem.sku.id === sku.id) {
+        return inventory - currentCartItem.quantity;
+      }
+      return inventory;
+    },
+    sku.inventory
+  );
+
+  if (inventorySubtractingCartItems < 1) {
+    return true;
+  }
 }
 
 const ALPHA_NUM =

@@ -7,13 +7,14 @@ import styled from 'styled-components';
 import { useCart } from '../../../hooks/useCart';
 import {
   Store,
-  Product as ProductInterface,
-  Color as ColorType,
-  Size,
+  StoreProduct,
+  ProductColor,
+  ProductSize,
 } from '../../../interfaces';
 import {
   formatToMoney,
   getUrlParameter,
+  isOutOfStock,
   isStoreActive,
   slugify,
 } from '../../../utils';
@@ -72,17 +73,23 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
 type Props = {
   store: Store;
-  product: ProductInterface;
+  product: StoreProduct;
   active: boolean;
   error: string;
 };
 
+const defaultSize = {
+  id: 9999,
+  label: 'DEFAULT',
+  price: 0,
+};
+
 export default function Product({ store, product, error }: Props) {
   const router = useRouter();
+  const { addItem, items } = useCart();
   const [showSidebar, setShowSidebar] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
   const [color, setColor] = React.useState(() => {
-    // if (error) throw new Error('No color provided.');
     if (router.query.colorId) {
       const colorId = getUrlParameter(router.query.colorId);
       const verifiedColor = product.colors.find(c => c.id === colorId);
@@ -102,14 +109,8 @@ export default function Product({ store, product, error }: Props) {
     return c?.secondaryImages;
   });
   const [clickedImage, setClickedImage] = React.useState('image-0');
-  const [size, setSize] = React.useState<Size>({
-    id: 9999,
-    label: 'DEFAULT',
-    price: 0,
-  });
+  const [size, setSize] = React.useState<ProductSize>(defaultSize);
   const [validationError, setValidationError] = React.useState<string>();
-  const { addItem } = useCart();
-
   const [showName, setShowName] = React.useState(false);
   const [showNumber, setShowNumber] = React.useState(false);
   const [name, setName] = React.useState('');
@@ -144,7 +145,8 @@ export default function Product({ store, product, error }: Props) {
       const c = product.colors.find(c => c.id === color.id);
       return c?.secondaryImages;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    setSize(defaultSize);
   }, [color]);
 
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,7 +162,7 @@ export default function Product({ store, product, error }: Props) {
 
     if (!s) {
       // todo: look at this error and figure out if its the best way to alert user
-      // should I setSize(undefined)?
+      // setSize(undefined)?
       throw new Error('No size was found!');
     }
 
@@ -194,6 +196,7 @@ export default function Product({ store, product, error }: Props) {
     setShowName(false);
     setShowNumber(false);
     setShowSidebar(false);
+    setSize(defaultSize);
   };
 
   const handleAddToOrderClick = () => {
@@ -214,7 +217,7 @@ export default function Product({ store, product, error }: Props) {
       return;
     }
 
-    const sku = product.skus.find(
+    const sku = product.productSkus.find(
       sku => sku.size.label === size.label && sku.color.id === color.id
     );
 
@@ -224,6 +227,7 @@ export default function Product({ store, product, error }: Props) {
           showNumber ? `-${slugify(number)}` : ''
         }`,
         sku: sku,
+        quantity: 1,
         name: product.name,
         image: primaryImage,
         price: sku.size.price,
@@ -341,24 +345,36 @@ export default function Product({ store, product, error }: Props) {
               <div className="section sizes">
                 <h4>Sizes</h4>
                 <div className="grid">
-                  {product.sizes.map(s => (
-                    <div
-                      key={s.id}
-                      className={`size ${
-                        size && size.label === s.label ? 'checked' : ''
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        value={s.label}
-                        checked={size && size.label === s.label}
-                        onChange={handleSizeChange}
-                        name="size"
-                        id={s.label}
-                      />
-                      <label htmlFor={s.label}>{s.label}</label>
-                    </div>
-                  ))}
+                  {product.productSkus.map(sku => {
+                    if (sku.color.id === color.id) {
+                      return (
+                        <div
+                          key={sku.size.id}
+                          className={`size ${
+                            size.label === sku.size.label ? 'checked' : ''
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            value={sku.size.label}
+                            checked={size.label === sku.size.label}
+                            disabled={isOutOfStock(sku, items)}
+                            onChange={handleSizeChange}
+                            name="size"
+                            id={sku.size.label}
+                          />
+                          <label
+                            htmlFor={sku.size.label}
+                            className={
+                              isOutOfStock(sku, items) ? 'out-of-stock' : ''
+                            }
+                          >
+                            {sku.size.label}
+                          </label>
+                        </div>
+                      );
+                    }
+                  })}
                 </div>
               </div>
 
@@ -440,7 +456,7 @@ type ColorProps = {
   id: string;
   label: string;
   hex: string;
-  activeColor: ColorType;
+  activeColor: ProductColor;
   handleColorChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
@@ -587,6 +603,7 @@ const ProductStyles = styled.div`
       position: relative;
 
       label {
+        position: relative;
         margin: 0;
         padding: 0.625rem 1rem;
         height: 100%;
@@ -601,8 +618,13 @@ const ProductStyles = styled.div`
         cursor: pointer;
         text-align: center;
 
-        &:hover {
-          border-color: #545b6b;
+        &.out-of-stock {
+          color: #c7cbd2;
+          cursor: default;
+        }
+
+        &:hover:not(.out-of-stock) {
+          border-color: #9ca3af;
           box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1),
             0 1px 2px -1px rgb(0 0 0 / 0.1);
         }

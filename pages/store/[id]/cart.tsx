@@ -104,7 +104,7 @@ export default function Cart({ store, error }: Props) {
                   ) : (
                     items.map((item: CartItemInterface) => {
                       const product = store.products.find(
-                        p => p.id === item.sku.productId
+                        p => p.id === item.sku.storeProductId
                       );
 
                       if (!product) {
@@ -117,8 +117,8 @@ export default function Cart({ store, error }: Props) {
                           key={item.id}
                           item={item}
                           storeId={store._id}
-                          skus={product!.skus}
-                          sizes={product!.sizes}
+                          skus={product.productSkus}
+                          sizes={product.sizes}
                         />
                       );
                     })

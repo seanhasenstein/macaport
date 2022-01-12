@@ -1,17 +1,17 @@
 import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
-import { Product, Color as ColorType } from '../../interfaces';
+import { StoreProduct, ProductColor } from '../../interfaces';
 import { formatToMoney } from '../../utils';
 
 type Props = {
-  item: Product;
+  item: StoreProduct;
   storeId: string;
 };
 
 type ColorProps = {
-  colorObj: ColorType;
-  setActiveColor: (c: ColorType) => void;
+  colorObj: ProductColor;
+  setActiveColor: (c: ProductColor) => void;
   onMouseEnter?: React.MouseEventHandler<HTMLDivElement>;
 };
 

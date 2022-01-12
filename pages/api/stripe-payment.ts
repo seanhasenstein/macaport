@@ -87,7 +87,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     // 2. verify order items and order subtotal
     const { verifiedItems, verifiedSubtotal } = items.reduce(
       (cartAccumulator: CartAccumulator, currentItem: CartItem) => {
-        const product = products.find(p => p.id === currentItem.sku.productId);
+        const product = products.find(
+          p => p.id === currentItem.sku.storeProductId
+        );
 
         if (!product)
           return {
@@ -95,7 +97,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             verifiedSubtotal: cartAccumulator.verifiedSubtotal,
           };
 
-        const item = product.skus.find(s => s.id === currentItem.sku.id);
+        const item = product.productSkus.find(s => s.id === currentItem.sku.id);
 
         if (item) {
           const itemPrice =

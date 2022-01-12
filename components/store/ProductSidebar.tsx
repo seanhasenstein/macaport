@@ -2,14 +2,14 @@ import React from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { formatToMoney } from '../../utils';
-import { Product, Size, Color } from '../../interfaces';
+import { StoreProduct, ProductSize, ProductColor } from '../../interfaces';
 import LinkButton from './LinkButton';
 
 type Props = {
   storeId: string;
-  item: Product;
-  color: Color;
-  size: Size;
+  item: StoreProduct;
+  color: ProductColor;
+  size: ProductSize;
   image: string | undefined;
   resetProduct: () => void;
   customName: string;

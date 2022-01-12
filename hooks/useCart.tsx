@@ -5,7 +5,7 @@ import {
   calculateSalesTax,
   calculateCartTotal,
 } from '../utils';
-import { CartItem, Product, Store } from '../interfaces';
+import { CartItem, StoreProduct, Store } from '../interfaces';
 import useLocalStorage from './useLocalStorage';
 
 type InitialState = {
@@ -20,7 +20,7 @@ type InitialState = {
 };
 
 interface CartProviderState extends InitialState {
-  addItem: (item: CartItem, quantity?: number) => void;
+  addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
   updateItemSize: (
     prevId: string,
@@ -121,18 +121,17 @@ const generateCartState = (state = initialState, items: CartItem[]) => {
 const calculateUniqueItems = (items: CartItem[]) => items.length;
 
 const calculateTotalItems = (items: CartItem[]) => {
-  return items.reduce((sum, item) => sum + item.quantity!, 0);
+  return items.reduce((sum, item) => sum + item.quantity, 0);
 };
 
 const calculateItemTotals = (items: CartItem[]) => {
   return items.map(item => ({
     ...item,
-    // check for customName and customNumber
     itemTotal:
       (item.price +
         (item.customName ? 500 : 0) +
         (item.customNumber ? 500 : 0)) *
-      item.quantity!,
+      item.quantity,
   }));
 };
 
@@ -154,11 +153,13 @@ export function CartProvider({
     async function fetchProducts() {
       function validateSavedCart(
         localStorageCart: string,
-        fetchedProducts: Product[]
+        fetchedProducts: StoreProduct[]
       ) {
         const parsedCart: InitialState = JSON.parse(localStorageCart);
         return parsedCart.items.filter(item =>
-          fetchedProducts?.some(p => p.skus.some(s => s.id === item.sku.id))
+          fetchedProducts?.some(p =>
+            p.productSkus.some(s => s.id === item.sku.id)
+          )
         );
       }
       const response = await fetch(`/api/store?id=${router.query.id}`);
@@ -187,19 +188,18 @@ export function CartProvider({
     });
   };
 
-  const addItem = (item: CartItem, quantity = 1) => {
+  const addItem = (item: CartItem) => {
     if (!item.id) throw new Error('You must provide an `id` for items');
-    if (quantity <= 0) return;
+    if (item.quantity <= 0) return;
 
     const currentItem = state.items.find((i: CartItem) => i.id === item.id);
 
     if (!currentItem) {
-      const payload = { ...item, quantity };
-      dispatch({ type: 'ADD_ITEM', payload });
+      dispatch({ type: 'ADD_ITEM', payload: item });
       return;
     }
 
-    const payload = { ...item, quantity: currentItem.quantity + quantity };
+    const payload = { ...item, quantity: currentItem.quantity + item.quantity };
     dispatch({ type: 'UPDATE_ITEM', id: item.id, payload });
     return;
   };
@@ -221,19 +221,35 @@ export function CartProvider({
         return;
       }
 
+      let updatedQuantity = existingCartItem.quantity + payload.quantity;
+
+      if (updatedQuantity > payload.sku.inventory) {
+        updatedQuantity = payload.sku.inventory;
+      }
+
       dispatch({
         type: 'UPDATE_ITEM',
         id: `${payload.id}`,
         payload: {
-          quantity: existingCartItem.quantity + payload.quantity,
+          quantity: updatedQuantity,
         },
       });
       removeItem(prevId);
     } else {
+      let updatedQuantity = payload.quantity;
+
+      if (updatedQuantity > payload.sku.inventory) {
+        updatedQuantity = payload.sku.inventory;
+      }
+
       dispatch({
         type: 'UPDATE_ITEM',
         id: prevId,
-        payload: { ...payload, price: payload.sku.size.price },
+        payload: {
+          ...payload,
+          price: payload.sku.size.price,
+          quantity: updatedQuantity,
+        },
       });
     }
   };

@@ -3,19 +3,23 @@ import Link from 'next/link';
 import styled from 'styled-components';
 import { useCart } from '../../hooks/useCart';
 import { formatToMoney } from '../../utils';
-import { CartItem as CartItemInterface, Sku, Size } from '../../interfaces';
+import {
+  CartItem as CartItemInterface,
+  ProductSku,
+  ProductSize,
+} from '../../interfaces';
 
 type Props = {
   item: CartItemInterface;
   storeId: string;
-  skus: Sku[];
-  sizes: Size[];
+  skus: ProductSku[];
+  sizes: ProductSize[];
 };
 
-export default function CartItem({ item, storeId, skus, sizes }: Props) {
+export default function CartItem({ item, storeId, skus }: Props) {
   const [size, setSize] = React.useState(item.sku.size.label);
   const [quantity, setQuantity] = React.useState(item.quantity);
-  const { removeItem, updateItemSize, updateItemQuantity } = useCart();
+  const { items, removeItem, updateItemSize, updateItemQuantity } = useCart();
 
   React.useEffect(() => {
     setSize(item.sku.size.label);
@@ -37,7 +41,6 @@ export default function CartItem({ item, storeId, skus, sizes }: Props) {
     }
     setSize(sku.size.label);
     updateItemSize(item.id, item.sku.id, {
-      // need to update the id `sku + name + number`
       ...item,
       id: `${sku.id}${item.customName}${item.customNumber}`,
       sku,
@@ -51,11 +54,45 @@ export default function CartItem({ item, storeId, skus, sizes }: Props) {
     updateItemQuantity(item.id, newQuantity);
   };
 
+  const isSizeOutOfStock = (items: CartItemInterface[], sku: ProductSku) => {
+    const updatedInventory = items.reduce((inventory, currentItem) => {
+      if (currentItem.sku.id === sku.id) {
+        return inventory - currentItem.quantity;
+      }
+      return inventory;
+    }, sku.inventory);
+
+    if (updatedInventory < 1) {
+      return true;
+    }
+
+    return false;
+  };
+
+  const isQuantityAvailable = (
+    items: CartItemInterface[],
+    sku: ProductSku,
+    optionValue: number
+  ) => {
+    const uniqueItems = items.reduce((uniqueItems, currentCartItem) => {
+      if (currentCartItem.sku.id === sku.id) {
+        return uniqueItems + 1;
+      }
+      return uniqueItems;
+    }, 0);
+
+    if (optionValue > sku.inventory / uniqueItems) {
+      return true;
+    }
+
+    return false;
+  };
+
   return (
     <CartItemStyles>
       <div className="item-image">
         <Link
-          href={`/store/${storeId}/product?productId=${item.sku.productId}&colorId=${item.sku.color.id}`}
+          href={`/store/${storeId}/product?productId=${item.sku.storeProductId}&colorId=${item.sku.color.id}`}
         >
           <a>
             <img
@@ -68,7 +105,7 @@ export default function CartItem({ item, storeId, skus, sizes }: Props) {
       <div className="item-details">
         <h3 className="primary">
           <Link
-            href={`/store/${storeId}/product?productId=${item.sku.productId}&colorId=${item.sku.color.id}`}
+            href={`/store/${storeId}/product?productId=${item.sku.storeProductId}&colorId=${item.sku.color.id}`}
           >
             <a>{item.name}</a>
           </Link>
@@ -99,11 +136,19 @@ export default function CartItem({ item, storeId, skus, sizes }: Props) {
             value={size}
             onChange={handleSizeChange}
           >
-            {sizes.map(size => (
-              <option key={size.id} value={size.label}>
-                {size.label}
-              </option>
-            ))}
+            {skus.map(sku => {
+              if (sku.color.id === item.sku.color.id) {
+                return (
+                  <option
+                    key={sku.size.id}
+                    value={sku.size.label}
+                    disabled={isSizeOutOfStock(items, sku)}
+                  >
+                    {sku.size.label}
+                  </option>
+                );
+              }
+            })}
           </select>
         </div>
         <div className="quantity">
@@ -114,16 +159,18 @@ export default function CartItem({ item, storeId, skus, sizes }: Props) {
             value={quantity}
             onChange={handleQuantityChange}
           >
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
+            {[...Array(11)].map((_v, i) => {
+              if (i === 0) return;
+              return (
+                <option
+                  key={i}
+                  value={`${i}`}
+                  disabled={isQuantityAvailable(items, item.sku, i)}
+                >
+                  {i}
+                </option>
+              );
+            })}
           </select>
         </div>
       </div>

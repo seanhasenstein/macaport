@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { format } from 'date-fns';
 import { GetServerSideProps } from 'next';
 import { connectToDb, store } from '../../../db';
-import { Store as StoreInterface, Product } from '../../../interfaces';
+import { Store as StoreInterface, StoreProduct } from '../../../interfaces';
 import { isStoreActive } from '../../../utils';
 import { MessageStyles } from '../../../styles/Message';
 import StoreLayout from '../../../components/store/StoreLayout';
@@ -141,7 +141,7 @@ export default function Store({ store, error }: Props) {
           </div>
         ) : (
           <div className="items">
-            {store.products.map((p: Product) => (
+            {store.products.map((p: StoreProduct) => (
               <StoreItem key={p.id} item={p} storeId={store._id} />
             ))}
           </div>

@@ -1,13 +1,41 @@
 import { NextApiRequest } from 'next';
 import { Db, MongoClient } from 'mongodb';
 
-export interface Size {
-  id: number;
+export interface InventoryColor {
+  id: string;
   label: string;
-  price: number;
+  hex: string;
 }
 
-export interface Color {
+export interface InventorySize {
+  id: string;
+  label: string;
+}
+
+export interface InventorySku {
+  id: string;
+  inventoryProductId: string;
+  color: InventoryColor;
+  size: InventorySize;
+  inventory: number;
+  active: boolean;
+}
+
+export interface InventoryProduct {
+  _id: string;
+  inventoryProductId: string;
+  name: string;
+  description: string;
+  tag: string;
+  details: string[];
+  sizes: InventorySize[];
+  colors: InventoryColor[];
+  skus: InventorySku[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductColor {
   id: string;
   label: string;
   hex: string;
@@ -15,33 +43,43 @@ export interface Color {
   secondaryImages: string[];
 }
 
-export interface Sku {
-  id: string;
-  productId: string;
-  color: Color;
-  size: Size;
+export interface ProductSize {
+  id: number;
+  label: string;
+  price: number;
 }
 
-export interface Product {
+export interface ProductSku {
   id: string;
+  storeProductId: string;
+  inventorySkuId: string;
+  color: ProductColor;
+  size: ProductSize;
+  inventory: number;
+  active: boolean;
+}
+
+export interface StoreProduct {
+  id: string;
+  inventoryProductId: string;
   name: string;
   description?: string;
-  details?: string[];
   tag: string;
-  sizes: Size[];
-  colors: Color[];
-  skus: Sku[];
+  details?: string[];
+  productSkus: ProductSku[];
+  sizes: ProductSize[];
+  colors: ProductColor[];
   includeCustomName: boolean;
   includeCustomNumber: boolean;
 }
 
 export interface CartItem {
   id: string;
-  sku: Sku;
+  sku: ProductSku;
   name: string;
   image?: string;
   price: number;
-  quantity?: number;
+  quantity: number;
   itemTotal?: number;
   customName: string;
   customNumber: string;
@@ -109,7 +147,7 @@ export interface Store {
   requireGroupSelection: boolean;
   groupTerm: string;
   groups: string[];
-  products: Product[];
+  products: StoreProduct[];
   orders: Order[];
   createdAt: string;
   updatedAt: string;
