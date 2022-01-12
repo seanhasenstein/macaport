@@ -12,7 +12,9 @@ interface Request extends NextApiRequest {
 }
 
 const handler = nc<Request, NextApiResponse>().post(async (req, res) => {
-  const order = req.body.store.orders.find(o => o.orderId === req.body.orderId);
+  const order = req.body.store.orders?.find(
+    o => o.orderId === req.body.orderId
+  );
   if (!order) {
     throw new Error(`No order found with ID ${req.body.orderId}`);
   }

@@ -2,9 +2,12 @@ import { Db, ObjectID } from 'mongodb';
 import { InventoryProduct, Store, StoreProduct } from '../interfaces';
 
 export async function getStoreById(db: Db, id: string) {
-  const store: Store = await db
+  const store: Store | null = await db
     .collection('stores')
-    .findOne({ _id: new ObjectID(id) });
+    .findOne(
+      { _id: new ObjectID(id) },
+      { projection: { contact: 0, orders: 0, notes: 0 } }
+    );
 
   if (!store) {
     throw new Error('No store found.');
@@ -34,7 +37,11 @@ export async function getStoreById(db: Db, id: string) {
     }
   }
 
-  const result = { ...store, _id: `${store._id}`, products: storeProducts };
+  const result = {
+    ...store,
+    _id: `${store._id}`,
+    products: storeProducts,
+  };
 
   return result;
 }
@@ -52,6 +59,7 @@ export async function getStores(db: Db, filter: Record<string, unknown> = {}) {
         },
       },
     ])
+    .project({ orders: 0, contact: 0, notes: 0 })
     .toArray();
   return await result;
 }

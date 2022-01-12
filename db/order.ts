@@ -12,7 +12,7 @@ export async function getOrderFromStore(
   if (!result) {
     throw new Error('Invalid Store ID provided.');
   }
-  const order = result.orders.find(o => o.orderId === orderId);
+  const order = result.orders?.find(o => o.orderId === orderId);
   if (!order) {
     throw new Error(`Order not found.`);
   }

@@ -138,7 +138,7 @@ export interface Store {
     zipcode: string;
   };
   allowDirectShipping: boolean;
-  contact: {
+  contact?: {
     firstName: string;
     lastName: string;
     email: string;
@@ -148,7 +148,12 @@ export interface Store {
   groupTerm: string;
   groups: string[];
   products: StoreProduct[];
-  orders: Order[];
+  orders?: Order[];
+  notes?: {
+    id: string;
+    text: string;
+    createdAt: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
