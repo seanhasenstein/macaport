@@ -115,7 +115,7 @@ const CustomOptionStyles = styled.div`
     color: #4b5563;
   }
   .options {
-    margin: 1.5rem 0 1.75rem;
+    margin: 1.5rem 0 0.75rem;
   }
 
   .option {

@@ -33,19 +33,15 @@ export default function CartItem({ item, storeId, skus }: Props) {
         sku.color.label === item.sku.color.label
     );
 
-    if (!sku) {
-      // todo: look at this and figure out how to alert the user if no sku is found
-      // possible message: 'an error has occured, please refresh and try again'.
-      // should we just remove this item from the cart?
-      throw new Error('No sku found!');
+    if (sku) {
+      setSize(sku.size.label);
+      updateItemSize(item.id, item.sku.id, {
+        ...item,
+        id: `${sku.id}${item.customName}${item.customNumber}`,
+        sku,
+        quantity,
+      });
     }
-    setSize(sku.size.label);
-    updateItemSize(item.id, item.sku.id, {
-      ...item,
-      id: `${sku.id}${item.customName}${item.customNumber}`,
-      sku,
-      quantity,
-    });
   };
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -55,6 +51,7 @@ export default function CartItem({ item, storeId, skus }: Props) {
   };
 
   const isSizeOutOfStock = (items: CartItemInterface[], sku: ProductSku) => {
+    const currentSize = sku.size.label === size;
     const updatedInventory = items.reduce((inventory, currentItem) => {
       if (currentItem.sku.id === sku.id) {
         return inventory - currentItem.quantity;
@@ -62,7 +59,7 @@ export default function CartItem({ item, storeId, skus }: Props) {
       return inventory;
     }, sku.inventory);
 
-    if (updatedInventory < 1) {
+    if (updatedInventory < 1 && !currentSize) {
       return true;
     }
 

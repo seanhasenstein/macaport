@@ -6,8 +6,8 @@ export function calculateCartSubtotal(items: CartItem[]) {
   return items.reduce((total, item) => {
     return (
       total +
-      item.quantity! *
-        (item.price! +
+      item.quantity *
+        (item.price +
           (item.customName ? 500 : 0) +
           (item.customNumber ? 500 : 0))
     );

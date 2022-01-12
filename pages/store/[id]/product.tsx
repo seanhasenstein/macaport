@@ -4,7 +4,6 @@ import { GetServerSideProps } from 'next';
 import { connectToDb, store } from '../../../db';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
-import { useCart } from '../../../hooks/useCart';
 import {
   Store,
   StoreProduct,
@@ -18,6 +17,8 @@ import {
   isStoreActive,
   slugify,
 } from '../../../utils';
+import { useCart } from '../../../hooks/useCart';
+import useHasMounted from '../../../hooks/useHasMounted';
 import StoreLayout from '../../../components/store/StoreLayout';
 import CustomOptions from '../../../components/store/product/CustomOptions';
 import ProductSidebar from '../../../components/store/ProductSidebar';
@@ -87,6 +88,7 @@ const defaultSize = {
 export default function Product({ store, product, error }: Props) {
   const router = useRouter();
   const { addItem, items } = useCart();
+  const hasMounted = useHasMounted();
   const [showSidebar, setShowSidebar] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
   const [color, setColor] = React.useState(() => {
@@ -110,6 +112,7 @@ export default function Product({ store, product, error }: Props) {
   });
   const [clickedImage, setClickedImage] = React.useState('image-0');
   const [size, setSize] = React.useState<ProductSize>(defaultSize);
+  const [lowInventory, setLowInventory] = React.useState(false);
   const [validationError, setValidationError] = React.useState<string>();
   const [showName, setShowName] = React.useState(false);
   const [showNumber, setShowNumber] = React.useState(false);
@@ -147,7 +150,7 @@ export default function Product({ store, product, error }: Props) {
     });
 
     setSize(defaultSize);
-  }, [color]);
+  }, [color.id, error, product.colors, product.id, store._id]);
 
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const updatedColor =
@@ -156,17 +159,20 @@ export default function Product({ store, product, error }: Props) {
   };
 
   const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (validationError && e.target.value !== undefined)
+    if (validationError && e.target.value !== undefined) {
       setValidationError(undefined);
-    const s = product.sizes.find(s => s.label === e.target.value);
-
-    if (!s) {
-      // todo: look at this error and figure out if its the best way to alert user
-      // setSize(undefined)?
-      throw new Error('No size was found!');
     }
 
-    setSize(s);
+    const productSku = product.productSkus.find(
+      ps => ps.size.label === e.target.value
+    );
+
+    if (!productSku) {
+      throw new Error('No size was found.');
+    }
+
+    setLowInventory(productSku.inventory < 5);
+    setSize(productSku.size);
   };
 
   const handleImageClick = (imageIndex: string) => {
@@ -197,6 +203,7 @@ export default function Product({ store, product, error }: Props) {
     setShowNumber(false);
     setShowSidebar(false);
     setSize(defaultSize);
+    setLowInventory(false);
   };
 
   const handleAddToOrderClick = () => {
@@ -343,39 +350,59 @@ export default function Product({ store, product, error }: Props) {
                 </div>
               </div>
               <div className="section sizes">
+                {lowInventory && (
+                  <div className="few-left-instock">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <p>Only a few left. Order soon.</p>
+                  </div>
+                )}
                 <h4>Sizes</h4>
-                <div className="grid">
-                  {product.productSkus.map(sku => {
-                    if (sku.color.id === color.id) {
-                      return (
-                        <div
-                          key={sku.size.id}
-                          className={`size ${
-                            size.label === sku.size.label ? 'checked' : ''
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            value={sku.size.label}
-                            checked={size.label === sku.size.label}
-                            disabled={isOutOfStock(sku, items)}
-                            onChange={handleSizeChange}
-                            name="size"
-                            id={sku.size.label}
-                          />
-                          <label
-                            htmlFor={sku.size.label}
-                            className={
-                              isOutOfStock(sku, items) ? 'out-of-stock' : ''
-                            }
+                {hasMounted && (
+                  <div className="grid">
+                    {product.productSkus.map(sku => {
+                      if (sku.color.id === color.id) {
+                        return (
+                          <div
+                            key={sku.size.id}
+                            className={`size ${
+                              size.label === sku.size.label ? 'checked' : ''
+                            }`}
                           >
-                            {sku.size.label}
-                          </label>
-                        </div>
-                      );
-                    }
-                  })}
-                </div>
+                            <input
+                              type="radio"
+                              value={sku.size.label}
+                              checked={size.label === sku.size.label}
+                              disabled={isOutOfStock(sku, items)}
+                              onChange={handleSizeChange}
+                              name="size"
+                              id={sku.size.label}
+                            />
+                            <label
+                              htmlFor={sku.size.label}
+                              className={
+                                isOutOfStock(sku, items) ? 'out-of-stock' : ''
+                              }
+                            >
+                              {sku.size.label}
+                            </label>
+                          </div>
+                        );
+                      }
+                    })}
+                  </div>
+                )}
               </div>
 
               <CustomOptions
@@ -660,6 +687,27 @@ const ProductStyles = styled.div`
             rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
         }
       }
+    }
+  }
+
+  .few-left-instock {
+    margin: 0 0 1.25rem;
+    display: flex;
+    gap: 0.4375rem;
+
+    svg {
+      flex-shrink: 0;
+      height: 1.25rem;
+      width: 1.25rem;
+      color: #ca8a04;
+    }
+
+    p {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #111827;
+      line-height: 1.25;
     }
   }
 
