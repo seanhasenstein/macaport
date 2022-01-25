@@ -66,7 +66,7 @@ export async function getStoreById(db: Db, id: string) {
     storeProducts = [...storeProducts, storeProductResult];
   }
 
-  const result = {
+  const { orders, contact, notes, ...result } = {
     ...store,
     _id: `${store._id}`,
     products: storeProducts,
