@@ -512,7 +512,9 @@ function generateReceiptHtml(order: Order) {
                           <td style="color: #6B7280">
                           For all order details and order items please <a href="${
                             process.env.API_HOST
-                          }/${order.store.id}/order-confirmation?orderId=${
+                          }/store/${
+    order.store.id
+  }/order-confirmation?orderId=${
     order.orderId
   }" style="color: #4338CA; text-decoration: underline">click here</a>.
                           </td>
@@ -630,7 +632,7 @@ function generateReceiptHtml(order: Order) {
   }" style="color: #4338CA; text-decoration: none">Macaport LLC</a>.
                         </p>
                         <p style="margin: 0 0 20px 0">
-                          <a href="${process.env.API_HOST}/${
+                          <a href="${process.env.API_HOST}/store/${
     order.store.id
   }/order-confirmation?orderId=${
     order.orderId
