@@ -1,5 +1,10 @@
 import { Db, ObjectID } from 'mongodb';
-import { InventoryProduct, Store, StoreProduct } from '../interfaces';
+import {
+  InventoryProduct,
+  ProductColor,
+  Store,
+  StoreProduct,
+} from '../interfaces';
 
 export async function getStoreById(db: Db, id: string) {
   const store: Store | null = await db
@@ -26,15 +31,39 @@ export async function getStoreById(db: Db, id: string) {
       );
       const inventory = inventoryProductSku?.inventory || 0;
       const active = (s.active && inventoryProductSku?.active) || false;
-      return { ...s, inventory, active };
+      return {
+        ...s,
+        inventoryProductId: inventoryProduct.inventoryProductId,
+        inventory,
+        active,
+      };
     });
 
-    const storeProduct = { ...store.products[i], productSkus };
-    const outOfStock = storeProduct.productSkus.every(ps => ps.inventory === 0);
+    const activeProductSkus = productSkus.filter(s => s.active);
 
-    if (!outOfStock) {
-      storeProducts = [...storeProducts, storeProduct];
-    }
+    const storeProduct = {
+      ...store.products[i],
+      productSkus: activeProductSkus,
+    };
+
+    const includedColors = storeProduct.colors.reduce(
+      (accumulator: ProductColor[], currentColor) => {
+        const productHasSkuWithColor = storeProduct.productSkus.some(
+          ps => ps.color.id === currentColor.id
+        );
+
+        if (productHasSkuWithColor) {
+          return [...accumulator, currentColor];
+        }
+
+        return accumulator;
+      },
+      []
+    );
+
+    const storeProductResult = { ...storeProduct, colors: includedColors };
+
+    storeProducts = [...storeProducts, storeProductResult];
   }
 
   const result = {

@@ -16,6 +16,7 @@ import {
   FormikTouched,
 } from 'formik';
 import * as Yup from 'yup';
+import { CartItem } from '../../interfaces';
 import { getTouchedErrors, removeNonDigits, unitedStates } from '../../utils';
 import { useCart } from '../../hooks/useCart';
 import useHasMounted from '../../hooks/useHasMounted';
@@ -53,6 +54,11 @@ type ServerResponse = {
   success?: true;
   orderId?: string;
   storeClosed?: boolean;
+  lowerInventory: boolean;
+  lowerInventoryItems?: CartItem[];
+  outOfStock: boolean;
+  outOfStockItems?: CartItem[];
+  verifiedItems: CartItem[];
   error?: string;
 };
 
@@ -153,6 +159,10 @@ type Props = {
   requireGroupSelection: boolean;
   groupTerm: string;
   groups: string[];
+  setVerifiedItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  setLowerInventoryItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  setOutOfStockItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  setShowInventoryModal: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export default function CheckoutForm({
@@ -164,12 +174,17 @@ export default function CheckoutForm({
   requireGroupSelection,
   groupTerm,
   groups,
+  setVerifiedItems,
+  setLowerInventoryItems,
+  setOutOfStockItems,
+  setShowInventoryModal,
 }: Props) {
   const hasMounted = useHasMounted();
   const router = useRouter();
   const stripe = useStripe();
   const elements = useElements();
-  const { items, cartSubtotal, salesTax, cartTotal, cartIsEmpty } = useCart();
+  const { items, cartSubtotal, salesTax, cartTotal, cartIsEmpty, setItems } =
+    useCart();
   const [stripeError, setStripeError] = React.useState<string>();
   const [serverResponseError, setServerResponseError] =
     React.useState<string>();
@@ -230,9 +245,9 @@ export default function CheckoutForm({
       type: 'card',
       card: cardElement,
       billing_details: {
-        name: data.cardholderName,
-        email: data.customer.email,
-        phone: data.customer.phone,
+        name: data.cardholderName.trim(),
+        email: data.customer.email.trim().toLowerCase(),
+        phone: data.customer.phone.trim(),
       },
     });
 
@@ -282,6 +297,27 @@ export default function CheckoutForm({
   const handleServerResponse = (serverResponse: ServerResponse) => {
     if (serverResponse.storeClosed === true) {
       router.push('/store-closed');
+      return;
+    }
+
+    if (
+      serverResponse.lowerInventory === true ||
+      serverResponse.outOfStock === true
+    ) {
+      if (serverResponse.outOfStockItems) {
+        setOutOfStockItems(serverResponse.outOfStockItems);
+      }
+      if (serverResponse.lowerInventoryItems) {
+        setLowerInventoryItems(serverResponse.lowerInventoryItems);
+      }
+      setVerifiedItems(serverResponse.verifiedItems);
+      setItems([
+        ...serverResponse.verifiedItems,
+        ...(serverResponse.lowerInventoryItems || []),
+      ]);
+      setShowInventoryModal(true);
+      setIsSubmitting(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 

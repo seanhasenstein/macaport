@@ -30,11 +30,16 @@ function Color(props: ColorProps) {
 const ColorStyles = styled.div`
   margin: 0 0 0 0.375rem;
   background-color: ${(props: ColorProps) => props.colorObj.hex};
-  height: 0.875rem;
-  width: 0.875rem;
-  box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-    rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
-  border-radius: 9999px;
+  height: 1rem;
+  width: 1rem;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.2))
+    drop-shadow(0 1px 1px rgb(0 0 0 / 0.06));
+  border-radius: 0.1875rem;
+
+  .img img {
+    width: 100%;
+    height: auto;
+  }
 `;
 
 export default function StoreItem({ item, storeId }: Props) {
@@ -129,8 +134,8 @@ const StoreItemStyles = styled.a`
   }
 
   .colors {
-    display: flex;
     position: absolute;
+    display: flex;
     bottom: 0.875rem;
     right: 1rem;
   }

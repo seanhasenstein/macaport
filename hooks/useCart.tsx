@@ -30,6 +30,7 @@ interface CartProviderState extends InitialState {
   updateItem: (id: string, payload: Record<string, unknown>) => void;
   updateItemQuantity: (id: string, quantity: number) => void;
   emptyCart: () => void;
+  setItems: (items: CartItem[]) => void;
 }
 
 type Actions =
@@ -150,18 +151,53 @@ export function CartProvider({
   const [state, dispatch] = React.useReducer(reducer, JSON.parse(savedCart));
 
   React.useEffect(() => {
+    // check if fetched product is active and has inventory
     async function fetchProducts() {
       function validateSavedCart(
         localStorageCart: string,
         fetchedProducts: StoreProduct[]
       ) {
         const parsedCart: InitialState = JSON.parse(localStorageCart);
-        return parsedCart.items.filter(item =>
-          fetchedProducts?.some(p =>
-            p.productSkus.some(s => s.id === item.sku.id)
-          )
+
+        // update parsedCart inventory with inventory from db
+        return parsedCart.items.reduce(
+          (accumulator: CartItem[], currentCartItem) => {
+            const fetchedProduct = fetchedProducts.find(
+              fp => fp.id === currentCartItem.sku.storeProductId
+            );
+            const fetchedSku = fetchedProduct?.productSkus.find(
+              ps => ps.id === currentCartItem.sku.id
+            );
+
+            if (
+              !fetchedProduct ||
+              !fetchedSku ||
+              fetchedSku.inventory - currentCartItem.quantity < 0
+            )
+              return accumulator;
+
+            let updatedQuantity = currentCartItem.quantity;
+
+            if (currentCartItem.quantity > fetchedSku.inventory) {
+              updatedQuantity = fetchedSku.inventory;
+            }
+
+            return [
+              ...accumulator,
+              {
+                ...currentCartItem,
+                quantity: updatedQuantity,
+                sku: {
+                  ...currentCartItem.sku,
+                  inventory: fetchedSku?.inventory,
+                },
+              },
+            ];
+          },
+          []
         );
       }
+
       const response = await fetch(`/api/store?id=${router.query.id}`);
 
       if (!response.ok) {
@@ -169,11 +205,13 @@ export function CartProvider({
       }
 
       const data: Store = await response.json();
+
       dispatch({
         type: 'SET_ITEMS',
         payload: validateSavedCart(savedCart, data.products),
       });
     }
+
     fetchProducts();
   }, [router.query.id, savedCart]);
 

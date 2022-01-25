@@ -52,6 +52,7 @@ export interface ProductSize {
 export interface ProductSku {
   id: string;
   storeProductId: string;
+  inventoryProductId: string;
   inventorySkuId: string;
   color: ProductColor;
   size: ProductSize;

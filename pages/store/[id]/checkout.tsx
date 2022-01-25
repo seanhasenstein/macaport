@@ -6,11 +6,12 @@ import Link from 'next/link';
 import styled from 'styled-components';
 import { useCart } from '../../../hooks/useCart';
 import useHasMounted from '../../../hooks/useHasMounted';
-import { Store } from '../../../interfaces';
+import { CartItem, Store } from '../../../interfaces';
 import { formatToMoney, isStoreActive } from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
 import CheckoutItem from '../../../components/store/CheckoutItem';
 import CheckoutForm from '../../../components/store/CheckoutForm';
+import OutOfStockModal from '../../../components/store/OutOfStockModal';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -61,6 +62,12 @@ export default function Checkout({ store }: Props) {
   const hasMounted = useHasMounted();
   const router = useRouter();
   const { items, cartSubtotal, salesTax, cartTotal } = useCart();
+  const [verifiedItems, setVerifiedItems] = React.useState<CartItem[]>([]);
+  const [lowerInventoryItems, setLowerInventoryItems] = React.useState<
+    CartItem[]
+  >([]);
+  const [outOfStockItems, setOutOfStockItems] = React.useState<CartItem[]>([]);
+  const [showInventoryModal, setShowInventoryModal] = React.useState(false);
 
   return (
     <StoreLayout title={`Checkout | ${store.name} | Macaport`}>
@@ -76,6 +83,10 @@ export default function Checkout({ store }: Props) {
             requireGroupSelection={store.requireGroupSelection}
             groupTerm={store.groupTerm}
             groups={store.groups}
+            setVerifiedItems={setVerifiedItems}
+            setLowerInventoryItems={setLowerInventoryItems}
+            setOutOfStockItems={setOutOfStockItems}
+            setShowInventoryModal={setShowInventoryModal}
           />
           {hasMounted && (
             <div>
@@ -124,6 +135,13 @@ export default function Checkout({ store }: Props) {
             </div>
           )}
         </div>
+        <OutOfStockModal
+          verifiedItems={verifiedItems}
+          lowerInventoryItems={lowerInventoryItems}
+          outOfStockItems={outOfStockItems}
+          showModal={showInventoryModal}
+          setShowModal={setShowInventoryModal}
+        />
       </CheckoutStyles>
     </StoreLayout>
   );

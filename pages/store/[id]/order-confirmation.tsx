@@ -641,8 +641,6 @@ const OrderConfirmationStyles = styled.div`
     }
   }
 
-  /* TODO */
-
   @media print {
     background-color: transparent;
 
@@ -793,11 +791,7 @@ const ErrorMessageStyles = styled.div`
 
     a {
       color: #4f46e5;
-
-      &:hover,
-      &:focus-visible {
-        text-decoration: underline;
-      }
+      text-decoration: underline;
 
       &:focus {
         outline: 2px solid transparent;

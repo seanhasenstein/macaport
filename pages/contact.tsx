@@ -188,7 +188,7 @@ const SuccessStyles = styled.div`
     display: inline-flex;
     justify-content: center;
     background-color: #22272f;
-    color: rgba(255, 255, 255, 0.9);
+    color: #fff;
     font-size: 1rem;
     font-weight: 500;
     border-radius: 0.25rem;

@@ -112,6 +112,7 @@ export default function Product({ store, product, error }: Props) {
   });
   const [clickedImage, setClickedImage] = React.useState('image-0');
   const [size, setSize] = React.useState<ProductSize>(defaultSize);
+  const [colorOutOfStock, setColorOutOfStock] = React.useState(false);
   const [lowInventory, setLowInventory] = React.useState(false);
   const [validationError, setValidationError] = React.useState<string>();
   const [showName, setShowName] = React.useState(false);
@@ -152,6 +153,28 @@ export default function Product({ store, product, error }: Props) {
     setSize(defaultSize);
   }, [color.id, error, product.colors, product.id, store._id]);
 
+  React.useEffect(() => {
+    if (!showSidebar) {
+      const colorStockCheck = product.productSkus.every(ps => {
+        if (ps.color.id !== color.id) return true;
+        const cartItem = items.find(i => i.sku.id === ps.id);
+        const cartItemInventory = cartItem?.quantity || 0;
+        if (ps.inventory - cartItemInventory <= 0) {
+          return true;
+        }
+        return false;
+      });
+
+      setColorOutOfStock(colorStockCheck);
+    }
+  }, [color.id, items, product.productSkus, showSidebar]);
+
+  React.useEffect(() => {
+    if (size.label === 'DEFAULT') {
+      setLowInventory(false);
+    }
+  }, [size]);
+
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const updatedColor =
       product.colors.find(c => c.id === e.target.value) || product.colors[0];
@@ -164,7 +187,7 @@ export default function Product({ store, product, error }: Props) {
     }
 
     const productSku = product.productSkus.find(
-      ps => ps.size.label === e.target.value
+      ps => ps.size.label === e.target.value && ps.color.id === color.id
     );
 
     if (!productSku) {
@@ -350,6 +373,24 @@ export default function Product({ store, product, error }: Props) {
                 </div>
               </div>
               <div className="section sizes">
+                {colorOutOfStock && (
+                  <div className="color-out-of-stock">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    This color is sold out.
+                  </div>
+                )}
                 {lowInventory && (
                   <div className="few-left-instock">
                     <svg
@@ -690,9 +731,30 @@ const ProductStyles = styled.div`
     }
   }
 
+  .color-out-of-stock {
+    margin: 0 0 1.75rem;
+    display: inline-flex;
+    gap: 0.375rem;
+
+    svg {
+      flex-shrink: 0;
+      height: 1.25rem;
+      width: 1.25rem;
+      color: #b91c1c;
+    }
+
+    p {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #111827;
+      line-height: 1.25;
+    }
+  }
+
   .few-left-instock {
-    margin: 0 0 1.25rem;
-    display: flex;
+    margin: 0 0 1.75rem;
+    display: inline-flex;
     gap: 0.4375rem;
 
     svg {
@@ -721,7 +783,7 @@ const ProductStyles = styled.div`
     justify-content: center;
     align-items: center;
     background-color: #282d34;
-    color: rgba(255, 255, 255, 0.9);
+    color: #fff;
     font-size: 0.875rem;
     font-weight: 600;
     letter-spacing: 0.011em;

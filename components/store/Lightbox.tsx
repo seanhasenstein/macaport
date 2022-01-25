@@ -65,7 +65,7 @@ export default function Lightbox({
         </div>
         {secondaryImages?.map((image, i) => (
           <div key={image} className="img" id={`image-${i + 1}`}>
-            <img src={image} alt={'TODO'} />
+            <img src={image} alt={''} />
           </div>
         ))}
       </div>

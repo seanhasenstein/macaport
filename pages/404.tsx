@@ -60,7 +60,7 @@ const Custom404Styles = styled.div`
       justify-content: center;
       align-items: center;
       background-color: #282d34;
-      color: rgba(255, 255, 255, 0.9);
+      color: #fff;
       font-size: 0.875rem;
       font-weight: 500;
       letter-spacing: 0.011em;

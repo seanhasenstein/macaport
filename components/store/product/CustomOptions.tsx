@@ -36,8 +36,7 @@ export default function CustomOptions({
 
   return (
     <CustomOptionStyles className={className}>
-      <h4>Customizable options</h4>
-      <p>Add to the back of your apparel.</p>
+      <h4>Add to the back of your apparel</h4>
       <div className="options">
         {includeCustomName && (
           <div className="option">
@@ -111,9 +110,6 @@ export default function CustomOptions({
 }
 
 const CustomOptionStyles = styled.div`
-  p {
-    color: #4b5563;
-  }
   .options {
     margin: 1.5rem 0 0.75rem;
   }
