@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { format, utcToZonedTime } from 'date-fns-tz';
-import { createId } from '../../utils';
+import { createReceiptNumber } from '../../utils';
 import { sendEmail } from '../../utils/mailgun';
 import { generateContactFormEmail } from '../../utils/email';
 
@@ -8,7 +8,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const id = createId(false, 8);
+  const id = createReceiptNumber();
   const date = new Date();
   const timeZone = 'America/Chicago';
   const zonedDate = utcToZonedTime(date, timeZone);

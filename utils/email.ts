@@ -1,4 +1,3 @@
-import { format } from 'date-fns';
 import { formatPhoneNumber, formatToMoney } from './index';
 import { Order } from '../interfaces';
 
@@ -16,9 +15,9 @@ interface EmailParams extends Message {
 }
 
 function generateText(input: EmailParams) {
-  return `Contact Form Message [#${input.id}]\n\nDate: ${input.date}\nName: ${
-    input.firstName
-  } ${input.lastName}\nEmail: ${input.email}\nPhone: ${formatPhoneNumber(
+  return `Contact Form Message [#${input.id}]\n\nName: ${input.firstName} ${
+    input.lastName
+  }\nEmail: ${input.email}\nPhone: ${formatPhoneNumber(
     input.phone
   )}\n\nMessage: ${
     input.message
@@ -44,10 +43,9 @@ export function generateContactFormEmail(
 function generateReceiptText(order: Order) {
   return `Hi ${order.customer.firstName},\n\nThis is confirmation for your ${
     order.store.name
-  } order on macaport.com. \n\nOrder #: ${order.orderId} \nDate: ${format(
-    new Date(order.createdAt!),
-    'EEE. LLL dd, yyyy'
-  )} \nName: ${order.customer.firstName} ${order.customer.lastName} \nEmail: ${
+  } order on macaport.com. \n\nOrder #: ${order.orderId} \nName: ${
+    order.customer.firstName
+  } ${order.customer.lastName} \nEmail: ${
     order.customer.email
   } \nPhone: ${formatPhoneNumber(order.customer.phone)} \n\nOrder Summary:
   ${order.items
@@ -276,47 +274,6 @@ function generateReceiptHtml(order: Order) {
                     </tr>
   
                     <!-- Order Details -->
-                    <!-- Order Date -->
-                    <tr>
-                      <td style="font-size: 15px; line-height: 1.5">
-                        <table
-                          class="mobile-full-width"
-                          align="left"
-                          border="0"
-                          cellpadding="0"
-                          cellspacing="0"
-                          role="presentation"
-                          width="70"
-                        >
-                          <tr>
-                            <td
-                              style="color: #1F2937; font-weight: 500"
-                              class="item-title"
-                            >
-                              Date:
-                            </td>
-                          </tr>
-                        </table>
-                        <table
-                          class="mobile-full-width"
-                          align="left"
-                          border="0"
-                          cellpadding="0"
-                          cellspacing="0"
-                          role="presentation"
-                          width="300"
-                        >
-                          <tr>
-                            <td style="color: #6B7280">
-                              ${format(
-                                new Date(order.createdAt!),
-                                "MMM. dd, yyyy 'at' h:mmaa"
-                              )}
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
                     <!-- First and Last Name -->
                     <tr>
                       <td style="font-size: 15px; line-height: 1.5">
@@ -553,9 +510,9 @@ function generateReceiptHtml(order: Order) {
                       >
                         <tr>
                           <td style="color: #6B7280">
-                          For all order details and order items please <a href="https://macaport.com/store/${
-                            order.store.id
-                          }/order-confirmation?orderId=${
+                          For all order details and order items please <a href="${
+                            process.env.API_HOST
+                          }/${order.store.id}/order-confirmation?orderId=${
     order.orderId
   }" style="color: #4338CA; text-decoration: underline">click here</a>.
                           </td>
@@ -668,14 +625,14 @@ function generateReceiptHtml(order: Order) {
                       >
                         <p style="margin: 0 0 20px 0">
                           You're receiving this email because you made a purchase
-                        from the ${
-                          order.store.name
-                        } store by <a href="https://macaport.com/" style="color: #4338CA; text-decoration: none">Macaport LLC</a>.
+                        from the ${order.store.name} store by <a href="${
+    process.env.API_HOST
+  }" style="color: #4338CA; text-decoration: none">Macaport LLC</a>.
                         </p>
                         <p style="margin: 0 0 20px 0">
-                          <a href="https://macaport.com/store/${
-                            order.store.id
-                          }/order-confirmation?orderId=${
+                          <a href="${process.env.API_HOST}/${
+    order.store.id
+  }/order-confirmation?orderId=${
     order.orderId
   }" style="color: #4338CA; text-decoration: none">Click here</a> to view your order in the web browser.
                         </p>

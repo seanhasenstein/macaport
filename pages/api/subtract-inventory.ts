@@ -9,26 +9,26 @@ const handler = nc<Request, NextApiResponse>()
   .post(async (req, res) => {
     const checkoutItems: CartItem[] = req.body;
 
-    checkoutItems.forEach(async item => {
+    for (const checkoutItem of checkoutItems) {
       const inventoryProductSku = await inventoryProduct.getInventoryProductSku(
         req.db,
-        item.sku.inventoryProductId,
-        item.sku.inventorySkuId
+        checkoutItem.sku.inventoryProductId,
+        checkoutItem.sku.inventorySkuId
       );
 
       if (inventoryProductSku) {
         const updatedInventory =
-          inventoryProductSku.inventory - item.quantity >= 0
-            ? inventoryProductSku.inventory - item.quantity
+          inventoryProductSku.inventory - checkoutItem.quantity >= 0
+            ? inventoryProductSku.inventory - checkoutItem.quantity
             : 0;
         await inventoryProduct.updateInventoryProduct(
           req.db,
-          item.sku.inventoryProductId,
+          checkoutItem.sku.inventoryProductId,
           inventoryProductSku.id,
           updatedInventory
         );
       }
-    });
+    }
 
     res.json({ success: true });
   });

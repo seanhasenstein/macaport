@@ -50,7 +50,7 @@ export const GlobalStyles = createGlobalStyle`
   font-feature-settings: "cv02","cv03","cv04","cv09", "cv11";
 }
 
-html, body, button, input, select {
+html, body, button, input, select, textarea {
   font-family: 'Inter',-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
