@@ -60,6 +60,8 @@ export interface ProductSku {
   active: boolean;
 }
 
+type OrderSku = Omit<ProductSku, 'inventory' | 'active'>;
+
 export interface StoreProduct {
   id: string;
   inventoryProductId: string;
@@ -86,6 +88,10 @@ export interface CartItem {
   customNumber: string;
 }
 
+interface OrderItem extends Omit<CartItem, 'sku'> {
+  sku: OrderSku;
+}
+
 export interface Order {
   _id?: string;
   orderId: string;
@@ -94,7 +100,7 @@ export interface Order {
     name: string;
   };
   stripeId?: string;
-  items: CartItem[];
+  items: OrderItem[];
   customer: {
     firstName: string;
     lastName: string;

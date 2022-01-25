@@ -103,7 +103,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       verifiedItems,
       itemsOutOfStock,
       verifiedSubtotal,
-    } = items.reduce(
+    }: CartAccumulator = items.reduce(
       (cartAccumulator: CartAccumulator, currentItem: CartItem) => {
         const product = products.find(
           p => p.id === currentItem.sku.storeProductId
@@ -216,6 +216,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       },
     });
 
+    const orderItems = verifiedItems.map(vi => {
+      const { active, inventory, ...sku } = vi.sku;
+      return { ...vi, sku };
+    });
+
     // 6. handle stripe payment response
     return generateResponse(res, intent, {
       orderId,
@@ -223,7 +228,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         id: storeId,
         name: storeName,
       },
-      items: verifiedItems,
+      items: orderItems,
       customer: {
         firstName: customer.firstName.trim(),
         lastName: customer.lastName.trim(),
