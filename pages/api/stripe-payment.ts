@@ -57,7 +57,7 @@ async function generateResponse(
 
     // send a request to db to subtract verifiedItem.quantity
     // from inventoryProduct.inventory
-    fetch(`${process.env.API_HOST}/api/subtract-inventory`, {
+    await fetch(`${process.env.API_HOST}/api/subtract-inventory`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(order.items),
