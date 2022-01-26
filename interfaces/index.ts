@@ -65,6 +65,7 @@ type OrderSku = Omit<ProductSku, 'inventory' | 'active'>;
 export interface StoreProduct {
   id: string;
   inventoryProductId: string;
+  merchandiseCode: string;
   name: string;
   description?: string;
   tag: string;
@@ -88,8 +89,9 @@ export interface CartItem {
   customNumber: string;
 }
 
-interface OrderItem extends Omit<CartItem, 'sku'> {
+export interface OrderItem extends Omit<CartItem, 'sku'> {
   sku: OrderSku;
+  merchandiseCode: string;
 }
 
 export interface Order {

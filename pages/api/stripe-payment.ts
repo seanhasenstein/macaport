@@ -2,7 +2,12 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 import fetch from 'node-fetch';
 import { connectToDb, store } from '../../db';
-import { CartItem, Order, Store as StoreInterface } from '../../interfaces/';
+import {
+  CartItem,
+  Order,
+  OrderItem,
+  Store as StoreInterface,
+} from '../../interfaces/';
 import {
   calculateSalesTax,
   calculateCartTotal,
@@ -12,7 +17,7 @@ import {
 } from '../../utils';
 
 type CartAccumulator = {
-  verifiedItems: CartItem[];
+  verifiedItems: OrderItem[];
   lowerInventoryItems: CartItem[];
   itemsOutOfStock: CartItem[];
   verifiedSubtotal: number;
@@ -156,8 +161,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
           (currentItem.customName ? 500 : 0) +
           (currentItem.customNumber ? 500 : 0);
 
+        const { active, inventory, ...updatedSku } = currentItem.sku;
+
         const verifiedItem = {
           ...currentItem,
+          sku: updatedSku,
+          merchandiseCode: product.merchandiseCode,
           price: itemPrice,
           itemTotal: itemPrice * currentItem.quantity!,
         };
@@ -216,10 +225,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       },
     });
 
-    const orderItems = verifiedItems.map(vi => {
-      const { active, inventory, ...sku } = vi.sku;
-      return { ...vi, sku };
-    });
+    // ***********************************************
+    // const orderItems = verifiedItems.map(vi => {
+    //   const { active, inventory, ...sku } = vi.sku;
+    //   return { ...vi, sku };
+    // });
 
     // 6. handle stripe payment response
     return generateResponse(res, intent, {
@@ -228,7 +238,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         id: storeId,
         name: storeName,
       },
-      items: orderItems,
+      items: verifiedItems,
       customer: {
         firstName: customer.firstName.trim(),
         lastName: customer.lastName.trim(),
