@@ -199,7 +199,7 @@ export default function Product({ store, product, error }: Props) {
       throw new Error('No size was found.');
     }
 
-    setLowInventory(productSku.inventory < 5);
+    setLowInventory(productSku.inventory < 3);
     setSize(productSku.size);
   };
 
