@@ -61,9 +61,10 @@ export async function getStoreById(db: Db, id: string) {
       []
     );
 
-    const storeProductResult = { ...storeProduct, colors: includedColors };
-
-    storeProducts = [...storeProducts, storeProductResult];
+    if (includedColors.length > 0) {
+      const storeProductResult = { ...storeProduct, colors: includedColors };
+      storeProducts = [...storeProducts, storeProductResult];
+    }
   }
 
   const { orders, contact, notes, ...result } = {
