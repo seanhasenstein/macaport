@@ -61,7 +61,12 @@ export const getServerSideProps: GetServerSideProps = async context => {
     );
 
     if (!product) {
-      throw new Error('Product not found.');
+      return {
+        redirect: {
+          permanent: false,
+          destination: `/store/${storeRes._id}`,
+        },
+      };
     }
 
     return { props: { store: storeRes, product } };
