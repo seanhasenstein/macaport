@@ -110,7 +110,8 @@ export default function ProductSidebar({
                     <span>Color:</span> {color.label}
                   </div>
                   <div className="size">
-                    <span>Size:</span> {size.label}
+                    <span>Size:</span>{' '}
+                    {size.label !== 'DEFAULT' ? size.label : ''}
                   </div>
                   {customName && (
                     <div className="custom-name">
