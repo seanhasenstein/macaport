@@ -127,7 +127,15 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
           };
         }
 
-        if (productSku.inventory < currentItem.quantity) {
+        const verifiedItems = cartAccumulator.verifiedItems.filter(
+          vi => vi.sku.id === currentItem.sku.id
+        );
+        const totalQuantity = verifiedItems.reduce(
+          (total, currentVerifiedItem) => currentVerifiedItem.quantity + total,
+          currentItem.quantity
+        );
+
+        if (productSku.inventory < totalQuantity) {
           if (productSku.inventory === 0) {
             return {
               ...cartAccumulator,
@@ -138,7 +146,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             };
           }
 
-          const updatedQuantity = productSku.inventory;
+          const updatedQuantity = totalQuantity - productSku.inventory;
 
           return {
             ...cartAccumulator,
