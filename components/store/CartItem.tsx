@@ -66,19 +66,22 @@ export default function CartItem({ item, storeId, skus }: Props) {
     return false;
   };
 
-  const isQuantityAvailable = (
+  const isOptionDisabled = (
     items: CartItemInterface[],
-    sku: ProductSku,
+    cartItem: CartItemInterface,
     optionValue: number
   ) => {
-    const uniqueItems = items.reduce((uniqueItems, currentCartItem) => {
-      if (currentCartItem.sku.id === sku.id) {
-        return uniqueItems + 1;
+    const cartQuantity = items.reduce((cartQuantity, currentCartItem) => {
+      if (currentCartItem.sku.id === cartItem.sku.id) {
+        return cartQuantity + currentCartItem.quantity;
       }
-      return uniqueItems;
+      return cartQuantity;
     }, 0);
 
-    if (optionValue > sku.inventory / uniqueItems) {
+    if (
+      optionValue >
+      cartItem.quantity + (cartItem.sku.inventory - cartQuantity)
+    ) {
       return true;
     }
 
@@ -162,7 +165,7 @@ export default function CartItem({ item, storeId, skus }: Props) {
                 <option
                   key={i}
                   value={`${i}`}
-                  disabled={isQuantityAvailable(items, item.sku, i)}
+                  disabled={isOptionDisabled(items, item, i)}
                 >
                   {i}
                 </option>
