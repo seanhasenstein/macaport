@@ -223,7 +223,12 @@ export default function Temp({
                     <h3>Order Items</h3>
                     <div>
                       {order.items.map(item => (
-                        <div key={item.sku.id} className="order-item">
+                        <div
+                          key={`${item.sku.id}${
+                            item.customName ? `-${item.customName}` : ''
+                          }${item.customNumber ? `-${item.customNumber}` : ''}`}
+                          className="order-item"
+                        >
                           <div className="item-img">
                             <img
                               src={item.sku.color.primaryImage}
