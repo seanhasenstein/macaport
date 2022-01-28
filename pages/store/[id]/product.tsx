@@ -199,7 +199,12 @@ export default function Product({ store, product, error }: Props) {
       throw new Error('No size was found.');
     }
 
-    setLowInventory(productSku.inventory < 3);
+    // look for productSku in cartItems and subtract from db inventory
+    const cartItem = items.find(cartItem => cartItem.sku.id === productSku.id);
+    const cartItemQuantity = cartItem?.quantity || 0;
+    const combinedInventory = productSku.inventory - cartItemQuantity;
+
+    setLowInventory(combinedInventory < 3);
     setSize(productSku.size);
   };
 
