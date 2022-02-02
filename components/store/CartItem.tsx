@@ -174,9 +174,22 @@ export default function CartItem({ item, storeId, skus }: Props) {
           </select>
         </div>
       </div>
-      <div className="remove-btn">
+      <div className="remove-button">
         <button type="button" onClick={() => removeItem(item.id)}>
-          Remove from cart
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+            />
+          </svg>
+          <span className="sr-only">Remove from cart</span>
         </button>
       </div>
     </CartItemStyles>
@@ -278,14 +291,17 @@ const CartItemStyles = styled.div`
     color: #36383e;
   }
 
-  .remove-btn {
+  .remove-button {
     grid-area: button;
     display: flex;
     justify-content: flex-end;
     align-items: flex-end;
 
     button {
-      padding: 0;
+      padding: 0.25rem;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
       font-size: 0.875rem;
       font-weight: 400;
       text-decoration: underline;
@@ -295,13 +311,20 @@ const CartItemStyles = styled.div`
       border-radius: 4px;
       cursor: pointer;
 
-      &:hover {
-        color: #374151;
+      &:hover,
+      &:hover svg {
+        color: #6b7280;
+      }
+
+      svg {
+        height: 1.125rem;
+        width: 1.125rem;
+        color: #9ca3af;
       }
     }
   }
 
-  .remove-btn:hover {
+  .remove-button:hover {
     color: #4b5563;
   }
 
@@ -340,7 +363,7 @@ const CartItemStyles = styled.div`
       }
     }
 
-    .remove-btn {
+    .remove-button {
       margin: 1.125rem 0 0;
 
       button {
@@ -351,6 +374,24 @@ const CartItemStyles = styled.div`
         text-decoration: none;
         background-color: #f3f4f6;
         border: 1px solid #e5e7eb;
+
+        .sr-only {
+          position: inherit;
+          clip: inherit;
+          padding: 0;
+          border: none;
+          height: inherit;
+          width: inherit;
+          overflow: inherit;
+        }
+
+        svg {
+          display: none;
+        }
+
+        &:hover {
+          color: #111827;
+        }
       }
     }
   }

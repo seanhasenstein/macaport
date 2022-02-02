@@ -135,12 +135,19 @@ const LayoutStyles = styled.div`
       color: #545c6b;
     }
 
-    a:hover svg {
-      color: #181a1e;
+    a {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+
+      :hover svg {
+        color: #181a1e;
+      }
     }
 
     .logo {
-      width: 12rem;
+      padding: 0.125rem;
+      width: 12.25rem;
     }
 
     @media (max-width: 500px) {

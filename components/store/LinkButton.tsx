@@ -42,7 +42,7 @@ const LinkButtonStyles = styled.a`
   }
 
   &:focus-visible {
-    box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4f46e5 0px 0px 0px 4px,
+    box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #1f30c2 0px 0px 0px 4px,
       rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
   }
 `;

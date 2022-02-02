@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-import Table from './Table';
-import { pricing } from '../data/pricing';
+import Table from '../Table';
+import { pricing } from '../../data/pricing';
 
 type ButtonProps = {
   label: string;

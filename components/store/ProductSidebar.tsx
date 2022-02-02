@@ -129,26 +129,28 @@ export default function ProductSidebar({
             </div>
             <div className="actions">
               <Link href={`/store/${storeId}/cart`}>
-                <a className="white-link-button">View Cart</a>
+                <a className="secondary-button">View Cart</a>
               </Link>
               <LinkButton
                 href={`/store/${storeId}/checkout`}
                 label="Checkout"
               />
             </div>
-            <div className="store-home-link">
+            <div className="continue-shopping-link">
               <Link href={`/store/${storeId}`}>
                 <a>
                   Continue shopping
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
                     <path
-                      fillRule="evenodd"
-                      d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
-                      clipRule="evenodd"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
                     />
                   </svg>
                 </a>
@@ -234,16 +236,17 @@ const ProductSidebarStyles = styled.div`
     background-color: transparent;
     color: #6f7b8a;
     border: none;
+    border-radius: 0.0625rem;
     cursor: pointer;
-  }
 
-  .close-button:hover {
-    color: #000;
-  }
+    svg {
+      height: 1.25rem;
+      width: 1.25rem;
+    }
 
-  .close-button svg {
-    height: 1.25rem;
-    width: 1.25rem;
+    &:hover {
+      color: #000;
+    }
   }
 
   .main {
@@ -316,7 +319,7 @@ const ProductSidebarStyles = styled.div`
     gap: 1rem;
   }
 
-  .white-link-button {
+  .secondary-button {
     padding: 0.75rem 1.25rem;
     height: 2.625rem;
     display: flex;
@@ -344,30 +347,30 @@ const ProductSidebarStyles = styled.div`
     }
 
     &:focus-visible {
-      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4f46e5 0px 0px 0px 4px,
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #1f30c2 0px 0px 0px 4px,
         rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     }
   }
 
-  .store-home-link {
+  .continue-shopping-link {
     margin: 1.25rem 0 0;
     font-size: 0.9375rem;
     font-weight: 500;
     text-align: center;
-    color: #9ca3af;
 
     a {
+      padding: 0.0625rem 0.5rem;
       display: inline-flex;
       align-items: center;
-      color: #4f46e5;
+      color: #1f30c2;
 
       &:hover {
-        border-bottom: 1px solid #4f46e5;
+        text-decoration: underline;
       }
     }
 
     svg {
-      margin: 0 0 0 1px;
+      margin: 0.25rem 0 0 0.3125rem;
       height: 1.125rem;
       width: 1.125rem;
     }

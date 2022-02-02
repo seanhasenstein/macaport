@@ -34,7 +34,7 @@ const ColorStyles = styled.div`
   width: 1rem;
   filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.2))
     drop-shadow(0 1px 1px rgb(0 0 0 / 0.06));
-  border-radius: 0.1875rem;
+  border-radius: 0.125rem;
 
   .img img {
     width: 100%;

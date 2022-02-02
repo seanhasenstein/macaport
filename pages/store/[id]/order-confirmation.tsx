@@ -361,7 +361,7 @@ const OrderConfirmationStyles = styled.div`
     margin: 0 0 1rem;
     font-size: 0.875rem;
     font-weight: 700;
-    color: #3730a3;
+    color: #282eab;
     text-transform: uppercase;
     letter-spacing: 0.075em;
   }
@@ -373,7 +373,7 @@ const OrderConfirmationStyles = styled.div`
     line-height: 1.5;
 
     a {
-      color: #3730a3;
+      color: #303eb1;
       text-decoration: underline;
     }
   }

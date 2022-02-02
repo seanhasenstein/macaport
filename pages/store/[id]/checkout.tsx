@@ -191,11 +191,11 @@ const CheckoutStyles = styled.div`
     a {
       display: inline-flex;
       align-items: center;
-      color: #4f46e5;
+      color: #2837b9;
       text-decoration: underline;
 
       &:hover {
-        color: #4338ca;
+        color: #1629cb;
       }
     }
   }

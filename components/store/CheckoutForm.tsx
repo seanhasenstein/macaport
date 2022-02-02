@@ -476,9 +476,7 @@ export default function CheckoutForm({
               </h3>
               <FieldItem name="cardholderName" label="Cardholder's Name" />
               <label htmlFor="stripeInput">Card Information</label>
-              <div className="stripe-input">
-                <CardElement options={cardStyle} onChange={handleCardChange} />
-              </div>
+              <CardElement options={cardStyle} onChange={handleCardChange} />
               {stripeError && <div className="stripe-error">{stripeError}</div>}
               <button
                 type="submit"
@@ -668,18 +666,18 @@ const CheckoutFormStyles = styled.div`
     }
 
     &:disabled {
-      background-color: #434855;
       cursor: default;
+      pointer-events: none;
     }
 
     svg {
       height: 1.25rem;
       width: 1.25rem;
-      color: rgba(255, 255, 255, 0.5);
+      color: #777b82;
     }
   }
 
-  .stripe-input {
+  .StripeElement {
     margin: 0.375rem 0 0;
     padding: 0.625rem 0.75rem;
     background-color: #fff;
@@ -690,10 +688,17 @@ const CheckoutFormStyles = styled.div`
       rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
   }
 
+  .StripeElement--focus {
+    box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px, #1f30c2 0px 0px 0px 1px,
+      rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+    border: 1px solid #1f30c2;
+  }
+
   .stripe-error {
     margin: 0.375rem 0 0;
     font-size: 0.75rem;
-    color: #de1d3b;
+    font-weight: 500;
+    color: #b91c1c;
   }
 
   .empty-cart {
@@ -706,11 +711,11 @@ const CheckoutFormStyles = styled.div`
     a {
       display: inline-flex;
       align-items: center;
-      color: #4f46e5;
+      color: #303eb1;
       text-decoration: underline;
 
       &:hover {
-        color: #4338ca;
+        color: #1629cb;
       }
     }
   }
@@ -773,8 +778,8 @@ const cardStyle = {
       },
     },
     invalid: {
-      color: '#bc1e1e',
-      iconColor: '#bc1e1e',
+      color: '#ab0202',
+      iconColor: '#b91c1c',
     },
   },
 };

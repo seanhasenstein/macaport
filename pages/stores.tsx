@@ -159,14 +159,14 @@ const StoresStyles = styled.div`
     justify-content: flex-end;
     align-items: center;
     text-align: right;
-    color: #4338ca;
+    color: #1629cb;
     border-bottom: 1px solid transparent;
 
     svg {
       margin: 0 0 0 0.1875rem;
       height: 1rem;
       width: 1rem;
-      color: #4f46e5;
+      color: #4556eb;
     }
   }
 

@@ -187,7 +187,6 @@ export default function Header() {
           <ul className={isOpen ? 'open' : ''}>
             <NavItem text="Home" href="/" />
             <NavItem text="Ink Colors" href="/#colors" />
-            <NavItem text="Pricing" href="/#pricing" />
             <NavItem text="Stores" href="/stores" />
             <NavItem text="Contact Us" href="/contact" />
           </ul>

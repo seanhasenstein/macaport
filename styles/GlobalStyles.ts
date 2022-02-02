@@ -66,7 +66,7 @@ a {
 
 * {
   box-sizing: border-box;
-  outline-color: #4F46E5;
+  outline-color: #1f30c2;
 }
 
 .sr-only {
@@ -101,8 +101,8 @@ input:not([type="checkbox"], [type="radio"]) {
   &:focus {
     outline: 2px solid transparent;
     outline-offset: 2px;
-    box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px, #4F46E5 0px 0px 0px 1px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
-    border: 1px solid #4F46E5;
+    box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px, #1f30c2 0px 0px 0px 1px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+    border: 1px solid #1f30c2;
   }
 }
 
@@ -117,7 +117,7 @@ input[type="checkbox"]:checked, input[type='radio']:checked {
 input[type='checkbox']:focus, input[type='radio']:focus {
   outline: 2px solid transparent;
   outline-offset: 2px;
-  box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, rgb(99, 102, 241) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px;
+  box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #1f30c2 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px;
 }
 
 input[type='checkbox'] {
@@ -167,8 +167,8 @@ select {
 select:focus {
   outline: 2px solid transparent;
   outline-offset: 2px;
-  box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px, #4F46E5 0px 0px 0px 1px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
-  border: 1px solid #4F46E5;
+  box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px, #1f30c2 0px 0px 0px 1px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+  border: 1px solid #1f30c2;
 
 }
 
