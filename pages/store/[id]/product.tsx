@@ -909,14 +909,17 @@ const ColorStyles = styled.div`
   .label-wrapper {
     height: 2.5rem;
     width: 2.5rem;
-    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.15) 0px 1px 3px 0px,
-      rgba(0, 0, 0, 0.1) 0px 1px 2px 0px;
     border-radius: 9999px;
 
     &.checked {
       padding: 0.125rem;
-      border: 2px solid #374151;
+      border: 2px solid
+        ${(color: ColorProps) => {
+          const letters = ['b', 'c', 'd', 'e', 'f'];
+          const firstValue = color.hex.split('')[1].toLowerCase();
+          if (letters.includes(firstValue)) return '#6b7280';
+          return color.hex;
+        }};
     }
 
     label {
@@ -924,7 +927,8 @@ const ColorStyles = styled.div`
       height: 100%;
       width: 100%;
       border-radius: 9999px;
-      background-color: ${(props: ColorProps) => props.hex};
+      background-color: ${(color: ColorProps) => color.hex};
+      border: 1px solid rgba(0, 0, 0, 0.1);
       cursor: pointer;
     }
   }
