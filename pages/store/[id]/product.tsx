@@ -11,6 +11,7 @@ import {
   ProductSize,
 } from '../../../interfaces';
 import {
+  checkHexColor,
   formatToMoney,
   getUrlParameter,
   isOutOfStock,
@@ -915,9 +916,8 @@ const ColorStyles = styled.div`
       padding: 0.125rem;
       border: 2px solid
         ${(color: ColorProps) => {
-          const letters = ['b', 'c', 'd', 'e', 'f'];
-          const firstValue = color.hex.split('')[1].toLowerCase();
-          if (letters.includes(firstValue)) return '#6b7280';
+          const isTooLight = checkHexColor(color.hex);
+          if (isTooLight) return '#6b7280';
           return color.hex;
         }};
     }

@@ -83,6 +83,21 @@ export function createReceiptNumber() {
   return value.join('');
 }
 
+export function checkHexColor(hexValue: string) {
+  // values considered too light
+  const lightValues = ['c', 'd', 'e', 'f'];
+  // remove #
+  const alphaNumeric = hexValue.replace(/\W/g, '');
+  // put 1st, 3rd, and 5th hex values into array
+  const oddValues = alphaNumeric.split('').filter((v, i) => {
+    if (i === 0 || i === 2 || i === 4) return true;
+    return false;
+  });
+  // if 1st, 3rd, and 5th values are all in lightValues
+  // the color is considered too light and cannot be used
+  return oddValues.every(ov => lightValues.some(lv => lv === ov));
+}
+
 export function removeNonDigits(input: string) {
   return input.replace(/\D/g, '');
 }
