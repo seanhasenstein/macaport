@@ -32,14 +32,9 @@ const ColorStyles = styled.div`
   background-color: ${(props: ColorProps) => props.colorObj.hex};
   height: 1rem;
   width: 1rem;
-  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.2))
-    drop-shadow(0 1px 1px rgb(0 0 0 / 0.06));
   border-radius: 0.125rem;
-
-  .img img {
-    width: 100%;
-    height: auto;
-  }
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 `;
 
 export default function StoreItem({ item, storeId }: Props) {
@@ -81,8 +76,14 @@ const StoreItemStyles = styled.a`
   box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px,
     rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
 
-  &:hover .img-wrapper img {
-    transform: scale(1.04);
+  &:hover {
+    border-color: #dadde2;
+    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.075) 0px 2px 3px 0px;
+
+    .img-wrapper img {
+      transform: scale(1.04);
+    }
   }
 
   .img-wrapper {
