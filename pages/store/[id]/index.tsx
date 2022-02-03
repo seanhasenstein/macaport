@@ -90,29 +90,11 @@ export default function Store({ store, error }: Props) {
     <StoreLayout title={`${store.name} | Macaport`}>
       <StoreStyles>
         {store.closeDate && (
-          <div className="row">
-            <div className="close-date">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span>
-                This store will close on{' '}
-                {format(
-                  new Date(store.closeDate),
-                  "LLL. do, yyyy 'at' h:mmaaa"
-                )}
-              </span>
-            </div>
+          <div className="close-date">
+            <span>
+              This store will close on{' '}
+              {format(new Date(store.closeDate), "LLL. do, yyyy 'at' h:mmaaa")}
+            </span>
           </div>
         )}
         <h2>{store.name}</h2>
@@ -121,15 +103,13 @@ export default function Store({ store, error }: Props) {
             <div className="wrapper">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+                viewBox="0 0 20 20"
+                fill="currentColor"
               >
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clipRule="evenodd"
                 />
               </svg>
               <p>
@@ -152,7 +132,7 @@ export default function Store({ store, error }: Props) {
 }
 
 const StoreStyles = styled.div`
-  padding: 5rem 0 4rem;
+  padding: 0 0 5rem;
   position: relative;
 
   h2,
@@ -176,34 +156,25 @@ const StoreStyles = styled.div`
     line-height: 1.5;
   }
 
-  .row {
-    padding: 0 1.5rem;
-    display: flex;
-    justify-content: center;
-  }
-
   .close-date {
     margin: 0 0 2.25rem;
-    padding: 0.375rem 0.625rem;
-    display: inline-flex;
+    padding: 2rem 0 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
     align-items: center;
-    text-align: center;
-    font-size: 0.875rem;
-    font-weight: 500;
-    line-height: 1;
-    color: #6b7280;
-    background-color: #fff;
-    border-radius: 0.3125rem;
-    border: 1px solid #e5e7eb;
-    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
 
-    svg {
-      margin: 0 0.4375rem 0 0;
-      flex-shrink: 0;
-      height: 1rem;
-      width: 1rem;
-      color: #f43f5e;
+    span {
+      padding: 0.5rem 0.9375rem;
+      background-color: #fef2f2;
+      border-radius: 0.125rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #991b1b;
+      text-align: center;
+      line-height: 1;
+      border: 1px solid #fee2e2;
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     }
   }
 
@@ -215,7 +186,7 @@ const StoreStyles = styled.div`
 
     .wrapper {
       margin: 3rem 0;
-      padding: 1.5rem 0 2rem;
+      padding: 1.5rem 1.5rem 2rem;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -239,7 +210,7 @@ const StoreStyles = styled.div`
       margin: 0 0 0.5rem;
       height: 1.5rem;
       width: 1.5rem;
-      color: #f43f5e;
+      color: #ec4763;
     }
   }
 
@@ -269,30 +240,23 @@ const StoreStyles = styled.div`
   }
 
   @media (max-width: 500px) {
-    padding: 1.75rem 0 4rem;
-
-    .close-date {
-      padding: 1rem 1.25rem;
-      flex-direction: column;
-      gap: 0.5rem;
-      padding: 1rem 1rem 1.375rem;
-      width: 100%;
-      line-height: 1.5;
-
-      span {
-        margin: 0 auto;
-        max-width: 22rem;
-      }
-
-      svg {
-        margin: 0 0 0 0;
-        height: 1.375rem;
-        width: 1.375rem;
-      }
-    }
+    padding: 0 0 4rem;
 
     .items {
       margin: 3.25rem 0 0;
+    }
+  }
+
+  @media (max-width: 375px) {
+    padding: 0.5rem 0 0;
+
+    .close-date {
+      padding: 0;
+
+      span {
+        width: calc(100% - 1rem);
+        line-height: 1.35;
+      }
     }
   }
 `;
