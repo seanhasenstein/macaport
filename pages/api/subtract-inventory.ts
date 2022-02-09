@@ -21,7 +21,7 @@ const handler = nc<Request, NextApiResponse>()
           inventoryProductSku.inventory - checkoutItem.quantity >= 0
             ? inventoryProductSku.inventory - checkoutItem.quantity
             : 0;
-        await inventoryProduct.updateInventoryProduct(
+        await inventoryProduct.updateInventoryProductSku(
           req.db,
           checkoutItem.sku.inventoryProductId,
           inventoryProductSku.id,

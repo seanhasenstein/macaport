@@ -262,6 +262,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         shipping: summary.shipping,
         salesTax: verifiedSalesTax,
         total: verifiedTotal,
+        stripeFee: Math.round(verifiedTotal * 0.029 + 30),
+      },
+      refund: {
+        status: 'None',
+        amount: 0,
       },
     });
   } catch (error: any) {

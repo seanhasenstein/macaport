@@ -125,6 +125,11 @@ export interface Order {
     shipping: number;
     salesTax: number;
     total: number;
+    stripeFee: number;
+  };
+  refund: {
+    status: 'None' | 'Partial' | 'Full';
+    amount: number;
   };
   createdAt?: string;
   updatedAt?: string;

@@ -13,7 +13,7 @@ export async function getInventoryProductSku(
   return result.skus.find(s => s.id === inventorySkuId);
 }
 
-export async function updateInventoryProduct(
+export async function updateInventoryProductSku(
   db: Db,
   inventoryProductId: string,
   inventorySkuId: string,

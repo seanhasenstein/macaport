@@ -15,7 +15,7 @@ export function calculateCartSubtotal(items: CartItem[]) {
 }
 
 export function calculateSalesTax(subtotal: number) {
-  return Math.ceil(subtotal * 0.055);
+  return Math.round(subtotal * 0.055);
 }
 
 export function calculateCartTotal(

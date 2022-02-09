@@ -250,10 +250,10 @@ export default function Product({ store, product, error }: Props) {
         setValidationError('A size is required.');
       }
       if (showName && name === '') {
-        setNameError('Name is required if turned on.');
+        setNameError('Name is required if selected.');
       }
       if (showNumber && number === '') {
-        setNumberError('Number is required if turned on.');
+        setNumberError('Number is required if selected.');
       }
       return;
     }
