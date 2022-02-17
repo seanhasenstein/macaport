@@ -89,15 +89,20 @@ export default function Store({ store, error }: Props) {
   return (
     <StoreLayout title={`${store.name} | Macaport`}>
       <StoreStyles>
-        {store.closeDate && (
-          <div className="close-date">
-            <span>
-              This store will close on{' '}
-              {format(new Date(store.closeDate), "LLL. do, yyyy 'at' h:mmaaa")}
-            </span>
-          </div>
-        )}
-        <h2>{store.name}</h2>
+        <div className="store-header">
+          {store.closeDate && (
+            <div className="close-date">
+              <span>
+                This store will close on{' '}
+                {format(
+                  new Date(store.closeDate),
+                  "LLL. do, yyyy 'at' h:mmaaa"
+                )}
+              </span>
+            </div>
+          )}
+          <h2>{store.name}</h2>
+        </div>
         {!store.products || store.products.length < 1 ? (
           <div className="no-products">
             <div className="wrapper">
@@ -156,9 +161,12 @@ const StoreStyles = styled.div`
     line-height: 1.5;
   }
 
+  .store-header {
+    margin: 3.5rem 0 0;
+  }
+
   .close-date {
     margin: 0 0 2.25rem;
-    padding: 2rem 0 0;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -242,6 +250,14 @@ const StoreStyles = styled.div`
   @media (max-width: 500px) {
     padding: 0 0 4rem;
 
+    h2 {
+      margin: 2rem 0 0;
+    }
+
+    .store-header {
+      margin: 1.5rem 0 0;
+    }
+
     .items {
       margin: 3.25rem 0 0;
     }
@@ -249,6 +265,10 @@ const StoreStyles = styled.div`
 
   @media (max-width: 375px) {
     padding: 0.5rem 0 0;
+
+    .store-header {
+      margin: 0;
+    }
 
     .close-date {
       padding: 0;
