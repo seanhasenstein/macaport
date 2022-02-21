@@ -34,7 +34,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       throw new Error('No store id provided.');
     }
 
-    const { db } = await connectToDb();
+    const db = await connectToDb();
     const storeRes: Store = await store.getStoreById(db, id);
 
     if (!storeRes) {

@@ -32,7 +32,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       ? context.query.orderId[0]
       : context.query.orderId;
 
-    const { db } = await connectToDb();
+    const db = await connectToDb();
     const result = await order.getOrderFromStore(db, storeId, orderId);
 
     if (!result) {

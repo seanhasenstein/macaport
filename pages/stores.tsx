@@ -8,7 +8,7 @@ import { Store } from '../interfaces';
 import Layout from '../components/Layout';
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const { db } = await connectToDb();
+  const db = await connectToDb();
   const stores: Store[] = await store.getStores(db);
   const activeStores = stores?.filter(s => {
     const isActive = isStoreActive(s.openDate, s.closeDate);

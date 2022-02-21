@@ -91,7 +91,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       summary,
     } = req.body;
 
-    const { db } = await connectToDb();
+    const db = await connectToDb();
     const { products, openDate, closeDate }: StoreInterface =
       await store.getStoreById(db, storeId);
 
