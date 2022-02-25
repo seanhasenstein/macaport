@@ -204,7 +204,7 @@ const CartItemStyles = styled.div`
     'image inputs button';
   grid-template-columns: 8rem 1fr 10rem;
   gap: 0 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #d1d5db;
 
   &:last-of-type {
     border: none;
@@ -220,7 +220,7 @@ const CartItemStyles = styled.div`
       align-items: center;
       background-color: #fff;
       border-radius: 0.25rem;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #d1d5db;
       box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
         rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     }
@@ -313,13 +313,13 @@ const CartItemStyles = styled.div`
 
       &:hover,
       &:hover svg {
-        color: #6b7280;
+        color: #4b5563;
       }
 
       svg {
         height: 1.125rem;
         width: 1.125rem;
-        color: #9ca3af;
+        color: #6b7280;
       }
     }
   }
@@ -373,7 +373,7 @@ const CartItemStyles = styled.div`
         color: #374151;
         text-decoration: none;
         background-color: #f3f4f6;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #c6cbd2;
 
         .sr-only {
           position: inherit;

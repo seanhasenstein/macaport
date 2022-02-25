@@ -4,7 +4,7 @@ import { Request } from '../interfaces';
 
 export default async function database(
   req: Request,
-  res: NextApiResponse,
+  _res: NextApiResponse,
   next: () => void
 ) {
   const db = await connectToDb();

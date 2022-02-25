@@ -44,7 +44,7 @@ export interface ProductColor {
 }
 
 export interface ProductSize {
-  id: number;
+  id: string;
   label: string;
   price: number;
 }

@@ -49,7 +49,9 @@ export default function CustomOptions({
             >
               <span aria-hidden="true" className="switch" />
               <span className="sr-only">
-                Turn {showName ? 'off' : 'on'} custom name option
+                {showName
+                  ? 'Turn off add a name option'
+                  : 'Select to add a name to the back of your apparel'}
               </span>
             </button>
             <span className="toggle-description">
@@ -68,7 +70,9 @@ export default function CustomOptions({
             >
               <span aria-hidden="true" className="switch" />
               <span className="sr-only">
-                Turn {showNumber ? 'off' : 'on'} jersey number option
+                {showNumber
+                  ? 'Turn off add a number option'
+                  : 'Select to add a number to the back of your apparel'}
               </span>
             </button>
             <span className="toggle-description">

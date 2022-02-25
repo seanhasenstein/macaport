@@ -55,7 +55,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
 type Props = {
   store: Store;
-  error: string;
+  error?: string;
 };
 
 export default function Cart({ store, error }: Props) {

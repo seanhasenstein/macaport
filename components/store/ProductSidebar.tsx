@@ -187,7 +187,7 @@ const ProductSidebarStyles = styled.div`
     top: 0;
     bottom: 0;
     right: 0;
-    background-color: #fcfcfd;
+    background-color: #f3f4f6;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
       0 10px 10px -5px rgba(0, 0, 0, 0.04);
     transform: translateX(100%);
@@ -261,7 +261,7 @@ const ProductSidebarStyles = styled.div`
     grid-template-columns: 5rem 1fr;
     gap: 1.75rem;
     background-color: #fff;
-    border-radius: 0.375rem;
+    border-radius: 0.25rem;
     box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
       rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
   }
@@ -333,12 +333,11 @@ const ProductSidebarStyles = styled.div`
     line-height: 1;
     border: 1px solid #d1d5db;
     border-radius: 0.25rem;
-    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     cursor: pointer;
 
     &:hover:not(:disabled) {
-      background-color: #f9fafb;
+      border-color: #bbc1ca;
     }
 
     &:focus {

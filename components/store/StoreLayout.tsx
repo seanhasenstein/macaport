@@ -152,13 +152,13 @@ const LayoutStyles = styled.div`
 
     @media (max-width: 500px) {
       .logo {
-        width: 9rem;
+        width: 10rem;
       }
     }
   }
 
   footer {
-    margin: 3rem 0 0;
+    margin: 5rem 0 0;
     padding: 0 1.5rem;
 
     .wrapper {

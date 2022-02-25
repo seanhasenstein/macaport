@@ -111,7 +111,7 @@ const ColorsStyles = styled.div`
     padding: 4rem 0;
     max-width: 64rem;
     width: 100%;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid #d1d5db;
   }
 
   h2 {
@@ -135,7 +135,7 @@ const ColorsStyles = styled.div`
       color: #374151;
 
       svg {
-        margin-right: 0.5rem;
+        margin-right: 0.375rem;
         height: 1rem;
         width: 1rem;
         color: #9ca3af;
@@ -182,8 +182,8 @@ const Color = styled.li<ColorProps>`
     display: block;
     background-color: ${props => props.color};
     border-radius: 0.375rem;
-    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px 0px;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   }
 
   p {

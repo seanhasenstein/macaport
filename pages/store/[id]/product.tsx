@@ -81,12 +81,11 @@ export const getServerSideProps: GetServerSideProps = async context => {
 type Props = {
   store: Store;
   product: StoreProduct;
-  active: boolean;
-  error: string;
+  error?: string;
 };
 
 const defaultSize = {
-  id: 9999,
+  id: 'default',
   label: 'DEFAULT',
   price: 0,
 };
@@ -338,20 +337,22 @@ export default function Product({ store, product, error }: Props) {
                   alt={`${color.label} ${product.name}`}
                 />
               </button>
-              <div className="secondary-imgs">
-                {secondaryImages &&
-                  secondaryImages.map((secImg, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleImageClick(`image-${index + 1}`)}
-                    >
-                      <img
-                        src={secImg}
-                        alt={`${color.label} ${product.name} ${index + 2}`}
-                      />
-                    </button>
-                  ))}
-              </div>
+              {secondaryImages && secondaryImages.length > 0 && (
+                <div className="secondary-imgs">
+                  {secondaryImages &&
+                    secondaryImages.map((secImg, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleImageClick(`image-${index + 1}`)}
+                      >
+                        <img
+                          src={secImg}
+                          alt={`${color.label} ${product.name} ${index + 2}`}
+                        />
+                      </button>
+                    ))}
+                </div>
+              )}
             </div>
             <div className="main">
               <div className="large-header">
@@ -579,7 +580,7 @@ const ProductStyles = styled.div`
       width: 100%;
       background-color: #fff;
       text-align: center;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #dcdfe4;
       border-radius: 0.1875rem;
       box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
         rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
@@ -592,16 +593,16 @@ const ProductStyles = styled.div`
     }
 
     .secondary-imgs {
-      margin: 1.5rem 0;
+      margin: 1rem 0;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+      gap: 1rem;
       width: 100%;
 
       button {
-        padding: 2rem;
+        padding: 1.5rem;
         background-color: #fff;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #dcdfe4;
         border-radius: 0.1875rem;
         box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
           rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
@@ -691,9 +692,9 @@ const ProductStyles = styled.div`
         }
 
         &:hover:not(.out-of-stock) {
-          border-color: #9ca3af;
-          box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1),
-            0 1px 2px -1px rgb(0 0 0 / 0.1);
+          border-color: #9199a6;
+          box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.075),
+            0 1px 2px -1px rgb(0 0 0 / 0.075);
         }
       }
 
@@ -811,8 +812,8 @@ const ProductStyles = styled.div`
 
   .description {
     padding: 1.875rem 0;
-    border-top: 1px solid #e5e7eb;
-    border-bottom: 1px solid #e5e7eb;
+    border-top: 1px solid #dcdfe4;
+    border-bottom: 1px solid #dcdfe4;
 
     p {
       margin: 0;
@@ -846,7 +847,13 @@ const ProductStyles = styled.div`
     color: #b91c1c;
   }
 
-  @media (max-width: 700px) {
+  @media (max-width: 1024px) {
+    .wrapper {
+      gap: 0 2rem;
+    }
+  }
+
+  @media (max-width: 767px) {
     padding: 2.5rem 1.5rem;
 
     .wrapper {
@@ -870,10 +877,8 @@ const ProductStyles = styled.div`
 
     .images {
       margin: 0 0 2rem;
-      display: flex;
-      flex-direction: row;
-      align-items: unset;
-      gap: 1rem;
+      align-items: flex-start;
+      gap: 0.75rem;
 
       .primary-img {
         display: flex;
@@ -883,14 +888,12 @@ const ProductStyles = styled.div`
 
       .secondary-imgs {
         margin: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 1rem;
-        width: 7rem;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
 
         button {
-          padding: 0.5rem;
+          padding: 1rem;
           flex: 1;
           display: flex;
           justify-content: center;
@@ -928,7 +931,7 @@ const ColorStyles = styled.div`
       width: 100%;
       border-radius: 9999px;
       background-color: ${(color: ColorProps) => color.hex};
-      border: 1px solid rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(0, 0, 0, 0.2);
       cursor: pointer;
     }
   }
