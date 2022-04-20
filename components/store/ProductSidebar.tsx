@@ -2,7 +2,12 @@ import React from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { formatToMoney } from '../../utils';
-import { StoreProduct, ProductSize, ProductColor } from '../../interfaces';
+import {
+  StoreProduct,
+  ProductSize,
+  ProductColor,
+  PersonalizationAddon,
+} from '../../interfaces';
 import LinkButton from './LinkButton';
 
 type Props = {
@@ -11,9 +16,11 @@ type Props = {
   color: ProductColor;
   size: ProductSize;
   image: string | undefined;
+  personalization: {
+    addonItems: PersonalizationAddon[];
+    total: number;
+  };
   resetProduct: () => void;
-  customName: string;
-  customNumber: string;
   isSidebarOpen: boolean;
 };
 
@@ -23,15 +30,15 @@ export default function ProductSidebar({
   color,
   size,
   image,
+  personalization,
   resetProduct,
-  customName,
-  customNumber,
   isSidebarOpen,
 }: Props) {
   const ref = React.useRef<HTMLDivElement>(null);
   const closeButton = React.useRef<HTMLButtonElement>(null);
   const itemPrice =
-    size.price + (customName ? 500 : 0) + (customNumber ? 500 : 0);
+    size.price +
+    (personalization.addonItems.length > 0 ? personalization.total : 0);
 
   React.useEffect(() => {
     const handleEscapeKeyup = (e: KeyboardEvent) => {
@@ -63,7 +70,7 @@ export default function ProductSidebar({
   }, [isSidebarOpen, resetProduct]);
 
   return (
-    <ProductSidebarStyles>
+    <ProductSidebarStyles hasAddons={personalization.addonItems.length > 0}>
       <div className={isSidebarOpen ? 'fullscreen' : ''}>
         <div className={`sidebar ${isSidebarOpen ? 'show' : 'hide'}`} ref={ref}>
           <div className="heading">
@@ -113,16 +120,26 @@ export default function ProductSidebar({
                     <span>Size:</span>{' '}
                     {size.label !== 'DEFAULT' ? size.label : ''}
                   </div>
-                  {customName && (
-                    <div className="custom-name">
-                      <span>Name:</span> {customName}
+                  {personalization.addonItems.length > 0 ? (
+                    <div className="personalization">
+                      {personalization.addonItems.map((item, index) => (
+                        <div key={item.id} className="addon-item">
+                          <span>{index === 0 ? 'Addons:' : null}</span>
+                          {item.value}
+                          {item.subItems.length > 0 ? (
+                            <>
+                              {item.subItems.map(subItem => (
+                                <div key={subItem.id} className="subitem">
+                                  <span></span>
+                                  {subItem.value}
+                                </div>
+                              ))}
+                            </>
+                          ) : null}
+                        </div>
+                      ))}
                     </div>
-                  )}
-                  {customNumber && (
-                    <div className="custom-number">
-                      <span>Number:</span> {customNumber}
-                    </div>
-                  )}
+                  ) : null}
                 </div>
                 <p className="item-price">{formatToMoney(itemPrice, true)}</p>
               </div>
@@ -163,7 +180,7 @@ export default function ProductSidebar({
   );
 }
 
-const ProductSidebarStyles = styled.div`
+const ProductSidebarStyles = styled.div<{ hasAddons: boolean }>`
   .fullscreen {
     position: fixed;
     top: 0;
@@ -256,7 +273,7 @@ const ProductSidebarStyles = styled.div`
 
   .item {
     position: relative;
-    padding: 1.875rem 2rem;
+    padding: 1.875rem 2rem ${props => (props.hasAddons ? '3.5rem' : '1.875rem')};
     display: grid;
     grid-template-columns: 5rem 1fr;
     gap: 1.75rem;
@@ -300,6 +317,18 @@ const ProductSidebarStyles = styled.div`
       display: inline-flex;
       width: 4rem;
     }
+  }
+
+  .addon-item {
+    margin: 0.375rem 0 0;
+
+    &:first-of-type {
+      margin: 0;
+    }
+  }
+
+  .subitem {
+    margin: 0.375rem 0 0;
   }
 
   .item-price {

@@ -36,7 +36,7 @@ export default function CustomOptions({
 
   return (
     <CustomOptionStyles className={className}>
-      <h4>Add to the back of your apparel</h4>
+      <h4>Add to your apparel</h4>
       <div className="options">
         {includeCustomName && (
           <div className="option">

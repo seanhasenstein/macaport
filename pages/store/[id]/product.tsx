@@ -12,19 +12,20 @@ import {
 } from '../../../interfaces';
 import {
   checkHexColor,
-  formatToMoney,
   getUrlParameter,
+  formatToMoney,
   isOutOfStock,
   isStoreActive,
-  slugify,
+  createId,
 } from '../../../utils';
 import { useCart } from '../../../hooks/useCart';
 import useHasMounted from '../../../hooks/useHasMounted';
+import useProductPersonalization from '../../../hooks/useProductPersonalization';
 import StoreLayout from '../../../components/store/StoreLayout';
-import CustomOptions from '../../../components/store/product/CustomOptions';
 import ProductSidebar from '../../../components/store/ProductSidebar';
 import Lightbox from '../../../components/store/Lightbox';
 import { MessageStyles } from '../../../styles/Message';
+import ProductPersonalization from '../../../components/store/personalization';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -93,6 +94,10 @@ const defaultSize = {
 export default function Product({ store, product, error }: Props) {
   const router = useRouter();
   const { addItem, items } = useCart();
+  const personalization = useProductPersonalization(
+    product.personalization.addons,
+    product.personalization.maxLines
+  );
   const hasMounted = useHasMounted();
   const [showSidebar, setShowSidebar] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
@@ -120,21 +125,6 @@ export default function Product({ store, product, error }: Props) {
   const [colorOutOfStock, setColorOutOfStock] = React.useState(false);
   const [lowInventory, setLowInventory] = React.useState(false);
   const [validationError, setValidationError] = React.useState<string>();
-  const [showName, setShowName] = React.useState(false);
-  const [showNumber, setShowNumber] = React.useState(false);
-  const [name, setName] = React.useState('');
-  const [number, setNumber] = React.useState('');
-  const [nameError, setNameError] = React.useState<string>();
-  const [numberError, setNumberError] = React.useState<string>();
-
-  React.useEffect(() => {
-    if (!showName) {
-      setName('');
-    }
-    if (!showNumber) {
-      setNumber('');
-    }
-  }, [showNumber, showName]);
 
   React.useEffect(() => {
     if (error) return;
@@ -213,66 +203,42 @@ export default function Product({ store, product, error }: Props) {
     setShowLightbox(true);
   };
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (nameError) {
-      setNameError(undefined);
-    }
-    setName(e.target.value);
-  };
-
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const numberCoercion = Number(e.target.value);
-    if (isNaN(numberCoercion) === true) {
-      return;
-    }
-    if (numberError) {
-      setNumberError(undefined);
-    }
-    setNumber(e.target.value.trim());
-  };
-
   const handleProductReset = () => {
-    setShowName(false);
-    setShowNumber(false);
+    personalization.reset();
     setShowSidebar(false);
     setSize(defaultSize);
     setLowInventory(false);
   };
 
   const handleAddToOrderClick = () => {
-    if (
-      size.label === 'DEFAULT' ||
-      (showName && name.trim() === '') ||
-      (showNumber && number.trim() === '')
-    ) {
+    if (size.label === 'DEFAULT') {
       if (size.label === 'DEFAULT') {
         setValidationError('A size is required.');
       }
-      if (showName && name === '') {
-        setNameError('Name is required if selected.');
-      }
-      if (showNumber && number === '') {
-        setNumberError('Number is required if selected.');
-      }
       return;
     }
+
+    // TODO: check for "blank" personalization items and handle validation messages
 
     const sku = product.productSkus.find(
       sku => sku.size.label === size.label && sku.color.id === color.id
     );
 
+    const flattenedPersonalizationItems = Object.values(
+      personalization.addonItems
+    ).flat();
+
+    personalization.setFlattendedItems(flattenedPersonalizationItems);
+
     if (sku)
       addItem({
-        id: `${sku.id}${showName ? `-${slugify(name)}` : ''}${
-          showNumber ? `-${slugify(number)}` : ''
-        }`,
+        id: `${sku.id}-${createId(false, 5)}`,
         sku: sku,
         quantity: 1,
         name: product.name,
         image: primaryImage,
-        price: sku.size.price,
-        customName: name.trim(),
-        customNumber: number.trim(),
+        price: sku.size.price + personalization.total,
+        personalizationAddons: flattenedPersonalizationItems,
       });
 
     setShowSidebar(true);
@@ -319,11 +285,9 @@ export default function Product({ store, product, error }: Props) {
               <h2 className="name">{product.name}</h2>
               <h3 className="price">
                 {formatToMoney(
-                  size.label !== 'DEFAULT'
-                    ? size.price + (showName ? 500 : 0) + (showNumber ? 500 : 0)
-                    : product.sizes[0].price +
-                        (showName ? 500 : 0) +
-                        (showNumber ? 500 : 0)
+                  (size.label === 'DEFAULT'
+                    ? product.sizes[0].price
+                    : size.price) + personalization.total
                 )}
               </h3>
             </div>
@@ -359,13 +323,9 @@ export default function Product({ store, product, error }: Props) {
                 <h2 className="name">{product.name}</h2>
                 <h3 className="price">
                   {formatToMoney(
-                    size.label !== 'DEFAULT'
-                      ? size.price +
-                          (showName ? 500 : 0) +
-                          (showNumber ? 500 : 0)
-                      : product.sizes[0].price +
-                          (showName ? 500 : 0) +
-                          (showNumber ? 500 : 0)
+                    (size.label === 'DEFAULT'
+                      ? product.sizes[0].price
+                      : size.price) + personalization.total
                   )}
                 </h3>
               </div>
@@ -454,20 +414,9 @@ export default function Product({ store, product, error }: Props) {
                 )}
               </div>
 
-              <CustomOptions
-                className="section"
-                includeCustomName={product.includeCustomName}
-                includeCustomNumber={product.includeCustomNumber}
-                showName={showName}
-                setShowName={setShowName}
-                showNumber={showNumber}
-                setShowNumber={setShowNumber}
-                name={name}
-                setName={handleNameChange}
-                number={number}
-                setNumber={handleNumberChange}
-                nameError={nameError}
-                numberError={numberError}
+              <ProductPersonalization
+                {...product.personalization}
+                {...personalization}
               />
 
               <div className="actions">
@@ -482,6 +431,7 @@ export default function Product({ store, product, error }: Props) {
                   <div className="error">{validationError}</div>
                 )}
               </div>
+
               <div className="section details">
                 {product.description && (
                   <div className="section description">
@@ -510,8 +460,10 @@ export default function Product({ store, product, error }: Props) {
           size={size}
           image={primaryImage}
           resetProduct={handleProductReset}
-          customName={name}
-          customNumber={number}
+          personalization={{
+            addonItems: personalization.flattenedItems,
+            total: personalization.total,
+          }}
           isSidebarOpen={showSidebar}
         />
       </StoreLayout>

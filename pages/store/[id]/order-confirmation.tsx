@@ -223,12 +223,7 @@ export default function Temp({
                     <h3>Order Items</h3>
                     <div>
                       {order.items.map(item => (
-                        <div
-                          key={`${item.sku.id}${
-                            item.customName ? `-${item.customName}` : ''
-                          }${item.customNumber ? `-${item.customNumber}` : ''}`}
-                          className="order-item"
-                        >
+                        <div key={item.id} className="order-item">
                           <div className="item-img">
                             <img
                               src={item.sku.color.primaryImage}
@@ -259,22 +254,33 @@ export default function Temp({
                                   {item.sku.size.label}
                                 </span>
                               </div>
-                              {item.customName && (
-                                <div className="order-item-detail">
-                                  Name:{' '}
-                                  <span className="value">
-                                    {item.customName}
-                                  </span>
+                              {item.personalizationAddons.length > 0 ? (
+                                <div className="personalization">
+                                  <div className="addon-label">Addons:</div>
+                                  <div className="addon-items">
+                                    {item.personalizationAddons.map(addon => (
+                                      <div
+                                        key={addon.id}
+                                        className="addon-item"
+                                      >
+                                        {addon.value}
+                                        {addon.subItems.length > 0 ? (
+                                          <>
+                                            {addon.subItems.map(subItem => (
+                                              <div
+                                                key={subItem.id}
+                                                className="subitem"
+                                              >
+                                                {subItem.value}
+                                              </div>
+                                            ))}
+                                          </>
+                                        ) : null}
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
-                              )}
-                              {item.customNumber && (
-                                <div className="order-item-detail">
-                                  Number:{' '}
-                                  <span className="value">
-                                    {item.customNumber}
-                                  </span>
-                                </div>
-                              )}
+                              ) : null}
                             </div>
                           </div>
                         </div>
@@ -489,8 +495,35 @@ const OrderConfirmationStyles = styled.div`
 
     .value {
       margin: 0 0 0 0.25rem;
-      color: #1f2937;
+      color: #111827;
     }
+  }
+
+  .personalization {
+    margin: 0.25rem 0 0;
+    display: flex;
+    font-size: 0.875rem;
+  }
+
+  .addon-item {
+    margin: 0.25rem 0 0;
+
+    &:first-of-type {
+      margin: 0;
+    }
+  }
+
+  .subitem {
+    margin: 0.25rem 0 0;
+  }
+
+  .addon-label {
+    margin: 0 0.5rem 0 0;
+    color: #6b7280;
+  }
+
+  .addon-item {
+    color: #111827;
   }
 
   .order-summary {

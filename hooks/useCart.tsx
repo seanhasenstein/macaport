@@ -129,11 +129,7 @@ const calculateTotalItems = (items: CartItem[]) => {
 const calculateItemTotals = (items: CartItem[]) => {
   return items.map(item => ({
     ...item,
-    itemTotal:
-      (item.price +
-        (item.customName ? 500 : 0) +
-        (item.customNumber ? 500 : 0)) *
-      item.quantity,
+    itemTotal: item.price * item.quantity,
   }));
 };
 

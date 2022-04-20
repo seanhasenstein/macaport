@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { useCart } from '../../hooks/useCart';
-import { formatToMoney } from '../../utils';
+import { createId, formatToMoney } from '../../utils';
 import {
   CartItem as CartItemInterface,
   ProductSku,
@@ -37,7 +37,7 @@ export default function CartItem({ item, storeId, skus }: Props) {
       setSize(sku.size.label);
       updateItemSize(item.id, item.sku.id, {
         ...item,
-        id: `${sku.id}${item.customName}${item.customNumber}`,
+        id: `${sku.id}-${createId(false, 5)}`,
         sku,
         quantity,
       });
@@ -112,18 +112,28 @@ export default function CartItem({ item, storeId, skus }: Props) {
         </h3>
         <div className="secondary-details">
           <p className="secondary">
-            Color: <span className="value">{item.sku.color.label}</span>{' '}
+            <span className="label">Color:</span>
+            {item.sku.color.label}
           </p>
-          {item.customName && (
-            <p className="secondary">
-              Name: <span className="value">{item.customName}</span>
-            </p>
-          )}
-          {item.customNumber && (
-            <p className="secondary">
-              Number: <span className="value">{item.customNumber}</span>
-            </p>
-          )}
+          {item.personalizationAddons.length > 0 ? (
+            <div className="personalization">
+              <div className="addon-label">Addons:</div>
+              <div className="addon-items">
+                {item.personalizationAddons.map(item => (
+                  <div key={item.id} className="addon-item">
+                    {item.value}
+                    {item.subItems.length > 0
+                      ? item.subItems.map(subItem => (
+                          <div key={subItem.id} className="subitem">
+                            {subItem.value}
+                          </div>
+                        ))
+                      : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
       <div className="total">{formatToMoney(item.itemTotal!)}</div>
@@ -255,11 +265,37 @@ const CartItemStyles = styled.div`
     align-items: center;
     font-size: 0.9375rem;
     font-weight: 400;
-    color: #6e788c;
+    color: #111827;
 
-    .value {
-      margin: 0 0 0 0.375rem;
+    .label {
+      width: 4.25rem;
+      color: #6e788c;
+    }
+  }
+
+  .personalization {
+    display: flex;
+
+    .addon-label {
+      width: 4.25rem;
+      font-size: 0.9375rem;
+      font-weight: 400;
+      color: #6e788c;
+    }
+
+    .addon-item {
+      margin: 0.375rem 0 0;
+      font-size: 0.9375rem;
+      font-weight: 400;
       color: #111827;
+
+      &:first-of-type {
+        margin: 0;
+      }
+
+      .subitem {
+        margin: 0.375rem 0 0;
+      }
     }
   }
 
