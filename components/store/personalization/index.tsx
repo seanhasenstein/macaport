@@ -10,6 +10,7 @@ interface Props extends Personalization {
   setLinesAvailable: React.Dispatch<React.SetStateAction<number>>;
   total: number;
   setTotal: React.Dispatch<React.SetStateAction<number>>;
+  addClickedWithBlankField: boolean;
 }
 
 export default function ProductPersonalization(props: Props) {
@@ -20,7 +21,9 @@ export default function ProductPersonalization(props: Props) {
   return (
     <PersonalizationStyles>
       <h4>Customize your apparel</h4>
-      <p>Please be sure to check spelling before submitting your order.</p>
+      <p>
+        Please be sure to check spelling before adding this item to your order.
+      </p>
       <p className="lines-used">
         Lines available: {props.linesAvailable}/{props.maxLines}
       </p>
@@ -34,6 +37,7 @@ export default function ProductPersonalization(props: Props) {
             setLinesAvailable={props.setLinesAvailable}
             setTotal={props.setTotal}
             personalizationItem={personalizationItem}
+            addClickedWithBlankField={props.addClickedWithBlankField}
           />
         ))}
       </div>

@@ -9,6 +9,7 @@ interface Props {
   setAddonItems: React.Dispatch<React.SetStateAction<AddonItems>>;
   setLinesAvailable: React.Dispatch<React.SetStateAction<number>>;
   setTotal: React.Dispatch<React.SetStateAction<number>>;
+  addClickedWithBlankField: boolean;
 }
 
 export default function SubItem(props: Props) {
@@ -81,6 +82,11 @@ export default function SubItem(props: Props) {
             id={props.subItem.id}
             value={props.subItem.value}
             onChange={e => handleValueChange(e.target.value)}
+            className={
+              props.addClickedWithBlankField && props.subItem.value === ''
+                ? 'validation-error'
+                : ''
+            }
           />
         </div>
       )}
@@ -97,6 +103,11 @@ export default function SubItem(props: Props) {
             id={props.subItem.id}
             value={props.subItem.value}
             onChange={e => handleValueChange(e.target.value)}
+            className={
+              props.addClickedWithBlankField && props.subItem.value === ''
+                ? 'validation-error'
+                : ''
+            }
           />
         </div>
       )}
@@ -112,6 +123,11 @@ export default function SubItem(props: Props) {
             id={props.subItem.id}
             value={props.subItem.value}
             onChange={e => handleValueChange(e.target.value)}
+            className={
+              props.addClickedWithBlankField && props.subItem.value === ''
+                ? 'validation-error'
+                : ''
+            }
           >
             <option value="DEFAULT">Select {props.subItem.name}</option>
             {props.subItem.list.map(listItem => (

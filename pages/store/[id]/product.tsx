@@ -124,7 +124,8 @@ export default function Product({ store, product, error }: Props) {
   const [size, setSize] = React.useState<ProductSize>(defaultSize);
   const [colorOutOfStock, setColorOutOfStock] = React.useState(false);
   const [lowInventory, setLowInventory] = React.useState(false);
-  const [validationError, setValidationError] = React.useState<string>();
+  const [sizeValidationError, setSizeValidationError] =
+    React.useState<string>();
 
   React.useEffect(() => {
     if (error) return;
@@ -165,6 +166,7 @@ export default function Product({ store, product, error }: Props) {
   }, [color.id, items, product.productSkus, showSidebar]);
 
   React.useEffect(() => {
+    // don't display low inventory message when there isn't a size selected
     if (size.label === 'DEFAULT') {
       setLowInventory(false);
     }
@@ -177,8 +179,8 @@ export default function Product({ store, product, error }: Props) {
   };
 
   const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (validationError && e.target.value !== undefined) {
-      setValidationError(undefined);
+    if (sizeValidationError && e.target.value !== undefined) {
+      setSizeValidationError(undefined);
     }
 
     const productSku = product.productSkus.find(
@@ -212,23 +214,36 @@ export default function Product({ store, product, error }: Props) {
 
   const handleAddToOrderClick = () => {
     if (size.label === 'DEFAULT') {
-      if (size.label === 'DEFAULT') {
-        setValidationError('A size is required.');
-      }
+      setSizeValidationError('A size is required');
       return;
     }
-
-    // TODO: check for "blank" personalization items and handle validation messages
 
     const sku = product.productSkus.find(
       sku => sku.size.label === size.label && sku.color.id === color.id
     );
 
-    const flattenedPersonalizationItems = Object.values(
+    const flattenedPersonalizationAddonItems = Object.values(
       personalization.addonItems
     ).flat();
 
-    personalization.setFlattendedItems(flattenedPersonalizationItems);
+    // check for empty personalization items
+    const hasEmptyAddonField = flattenedPersonalizationAddonItems.some(
+      baseItem => {
+        if (baseItem.value === '') {
+          return true;
+        }
+
+        return baseItem.subItems.some(subitem => subitem.value === '');
+      }
+    );
+
+    if (hasEmptyAddonField) {
+      personalization.setValidationError('Customization fields require values');
+      personalization.setAddClickedWithBlankField(true);
+      return;
+    }
+
+    personalization.setFlattendedItems(flattenedPersonalizationAddonItems);
 
     if (sku)
       addItem({
@@ -238,7 +253,7 @@ export default function Product({ store, product, error }: Props) {
         name: product.name,
         image: primaryImage,
         price: sku.size.price + personalization.total,
-        personalizationAddons: flattenedPersonalizationItems,
+        personalizationAddons: flattenedPersonalizationAddonItems,
       });
 
     setShowSidebar(true);
@@ -427,8 +442,11 @@ export default function Product({ store, product, error }: Props) {
                 >
                   Add to order
                 </button>
-                {validationError && (
-                  <div className="error">{validationError}</div>
+                {sizeValidationError && (
+                  <div className="error">{sizeValidationError}</div>
+                )}
+                {personalization.validationError && (
+                  <div className="error">{personalization.validationError}</div>
                 )}
               </div>
 

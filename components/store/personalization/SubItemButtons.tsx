@@ -83,7 +83,6 @@ export default function SubItemButtons(props: Props) {
 
   return (
     <SubItemButtonStyles>
-      {/* TODO: Buttons when subItems.filter().length === 0 */}
       {filteredSubItems.length <= 0 &&
       props.linesAvailable >= props.personalizationSubItem.lines ? (
         <button
@@ -100,7 +99,6 @@ export default function SubItemButtons(props: Props) {
         </button>
       ) : null}
 
-      {/* TODO: Buttons when subItems.filter().length > 0 && limit is not hit && lines are available */}
       {filteredSubItems.length > 0 &&
       filteredSubItems.length < props.personalizationSubItem.limit &&
       props.linesAvailable >= props.personalizationSubItem.lines ? (

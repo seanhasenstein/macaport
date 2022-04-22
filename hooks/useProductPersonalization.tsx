@@ -22,6 +22,27 @@ export default function useProductPersonalization(
   >([]);
   const [linesAvailable, setLinesAvailable] = React.useState(Number(maxLines));
   const [total, setTotal] = React.useState(0);
+  const [validationError, setValidationError] = React.useState<string>();
+  const [addClickedWithBlankField, setAddClickedWithBlankField] =
+    React.useState(false);
+
+  React.useEffect(() => {
+    if (addClickedWithBlankField) {
+      const flattenedItems = Object.values(addonItems).flat();
+      const stillHasBlankFields = flattenedItems.some(baseItem => {
+        if (baseItem.value === '') {
+          return true;
+        }
+
+        return baseItem.subItems.some(subItem => subItem.value === '');
+      });
+
+      if (!stillHasBlankFields) {
+        setValidationError(undefined);
+        setAddClickedWithBlankField(false);
+      }
+    }
+  }, [addClickedWithBlankField, addonItems]);
 
   const reset = () => {
     const resetAddonItems = addons.reduce((accumulator, currentAddonItem) => {
@@ -34,6 +55,7 @@ export default function useProductPersonalization(
     setAddonItems(resetAddonItems);
     setLinesAvailable(maxLines);
     setTotal(0);
+    setAddClickedWithBlankField(false);
   };
 
   return {
@@ -45,6 +67,10 @@ export default function useProductPersonalization(
     setLinesAvailable,
     total,
     setTotal,
+    validationError,
+    setValidationError,
+    addClickedWithBlankField,
+    setAddClickedWithBlankField,
     reset,
   };
 }

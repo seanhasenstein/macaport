@@ -12,6 +12,7 @@ interface BaseItemProps {
   linesAvailable: number;
   setLinesAvailable: React.Dispatch<React.SetStateAction<number>>;
   setTotal: React.Dispatch<React.SetStateAction<number>>;
+  addClickedWithBlankField: boolean;
 }
 
 export default function BaseItem(props: BaseItemProps) {
@@ -134,6 +135,11 @@ export default function BaseItem(props: BaseItemProps) {
                     onChange={e =>
                       handleValueChange(baseItem.id, e.target.value)
                     }
+                    className={
+                      props.addClickedWithBlankField && baseItem.value === ''
+                        ? 'validation-error'
+                        : ''
+                    }
                   />
                 </div>
               )}
@@ -158,6 +164,11 @@ export default function BaseItem(props: BaseItemProps) {
                     onChange={e =>
                       handleValueChange(baseItem.id, e.target.value)
                     }
+                    className={
+                      props.addClickedWithBlankField && baseItem.value === ''
+                        ? 'validation-error'
+                        : ''
+                    }
                   />
                 </div>
               )}
@@ -180,6 +191,11 @@ export default function BaseItem(props: BaseItemProps) {
                     value={baseItem.value}
                     onChange={e =>
                       handleValueChange(baseItem.id, e.target.value)
+                    }
+                    className={
+                      props.addClickedWithBlankField && baseItem.value === ''
+                        ? 'validation-error'
+                        : ''
                     }
                   >
                     <option value="DEFAULT">
@@ -204,6 +220,7 @@ export default function BaseItem(props: BaseItemProps) {
                     setAddonItems={props.setAddonItems}
                     setLinesAvailable={props.setLinesAvailable}
                     setTotal={props.setTotal}
+                    addClickedWithBlankField={props.addClickedWithBlankField}
                   />
                 ))}
 
@@ -294,6 +311,11 @@ const BaseItemStyles = styled.div`
         font-size: 0.75rem;
         font-weight: 600;
       }
+    }
+
+    .validation-error {
+      color: #991b1b;
+      border-color: #dc2626;
     }
   }
 
