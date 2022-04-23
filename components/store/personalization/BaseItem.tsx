@@ -106,8 +106,11 @@ export default function BaseItem(props: BaseItemProps) {
           >
             Add{' '}
             <span className="emphasis">{props.personalizationItem.name}</span>{' '}
-            on the {props.personalizationItem.location.toLowerCase()} (+
-            {formatToMoney(props.personalizationItem.price, true)})
+            on the {props.personalizationItem.location.toLowerCase()}{' '}
+            <span className="text-sm">
+              (+
+              {formatToMoney(props.personalizationItem.price, true)})
+            </span>
           </button>
         )}
 
@@ -271,7 +274,7 @@ export default function BaseItem(props: BaseItemProps) {
                 onClick={handleAddItemClick}
                 className="add-field-button"
               >
-                Add another {props.personalizationItem.name.toLowerCase()}{' '}
+                Add {props.personalizationItem.name.toLowerCase()}{' '}
                 <span className="text-sm">
                   (+{formatToMoney(props.personalizationItem.price, true)})
                 </span>
@@ -345,30 +348,6 @@ const BaseItemStyles = styled.div`
     }
   }
 
-  .activate-subfield-button {
-    padding: 0.5rem 1.25rem;
-    background-color: #e5e7eb;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #111827;
-    cursor: pointer;
-    transition: all 150ms linear;
-    width: 100%;
-
-    .text-sm {
-      font-size: 0.75rem;
-    }
-
-    &:hover {
-      color: #000;
-      background-color: #dadde2;
-      border-color: #c6cbd2;
-    }
-  }
-
   .emphasis {
     text-transform: lowercase;
     font-weight: 600;
@@ -398,9 +377,5 @@ const BaseItemStyles = styled.div`
       background-color: #dadde2;
       border-color: #c6cbd2;
     }
-  }
-
-  .add-subfield-button {
-    margin: 1rem 0 0;
   }
 `;

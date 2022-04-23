@@ -47,8 +47,13 @@ const fakeProducts: StoreProduct[] = [
         secondaryImages: [],
       },
     ],
-    includeCustomName: false,
-    includeCustomNumber: false,
+    personalization: {
+      active: false,
+      maxLines: 0,
+      addons: [],
+    },
+    // includeCustomName: false,
+    // includeCustomNumber: false,
   },
 ];
 

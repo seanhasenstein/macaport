@@ -107,7 +107,7 @@ export default function SubItemButtons(props: Props) {
           onClick={handleAddSubItem}
           className="add-subitem-button"
         >
-          Add another{' '}
+          Add{' '}
           <span className="emphasis">{props.personalizationSubItem.name}</span>{' '}
           <span className="text-sm">
             (+

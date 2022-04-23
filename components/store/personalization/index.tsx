@@ -22,7 +22,8 @@ export default function ProductPersonalization(props: Props) {
     <PersonalizationStyles>
       <h4>Customize your apparel</h4>
       <p>
-        Please be sure to check spelling before adding this item to your order.
+        Please be sure to check spelling before adding customized items to your
+        order. Customized items are not eligible for return.
       </p>
       <p className="lines-used">
         Lines available: {props.linesAvailable}/{props.maxLines}

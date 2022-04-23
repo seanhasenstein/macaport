@@ -245,6 +245,23 @@ export default function Product({ store, product, error }: Props) {
 
     personalization.setFlattendedItems(flattenedPersonalizationAddonItems);
 
+    const formattedAddonItems = flattenedPersonalizationAddonItems.map(
+      baseAddonItem => {
+        const { name, type, list, limit, subItems, ...restOfBaseItem } =
+          baseAddonItem;
+
+        const formattedSubItems = subItems.map(subItem => {
+          const { name, type, list, limit, ...restofSubItem } = subItem;
+          return restofSubItem;
+        });
+
+        return {
+          ...restOfBaseItem,
+          subItems: formattedSubItems,
+        };
+      }
+    );
+
     if (sku)
       addItem({
         id: `${sku.id}-${createId(false, 5)}`,
@@ -253,7 +270,7 @@ export default function Product({ store, product, error }: Props) {
         name: product.name,
         image: primaryImage,
         price: sku.size.price + personalization.total,
-        personalizationAddons: flattenedPersonalizationAddonItems,
+        personalizationAddons: formattedAddonItems,
       });
 
     setShowSidebar(true);
@@ -819,6 +836,7 @@ const ProductStyles = styled.div`
 
   @media (max-width: 1024px) {
     .wrapper {
+      grid-template-columns: 1fr 1fr;
       gap: 0 2rem;
     }
   }

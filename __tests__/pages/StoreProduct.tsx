@@ -36,8 +36,11 @@ const fakeProduct: StoreProduct = {
   merchandiseCode: 'merch_code_1',
   name: 'test product name',
   tag: 'product tag',
-  includeCustomName: true,
-  includeCustomNumber: true,
+  personalization: {
+    active: false,
+    maxLines: 0,
+    addons: [],
+  },
   productSkus: [
     {
       id: 'prod_sku_1',

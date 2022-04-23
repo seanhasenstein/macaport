@@ -130,7 +130,7 @@ export default function SubItem(props: Props) {
             }
           >
             <option value="DEFAULT">Select {props.subItem.name}</option>
-            {props.subItem.list.map(listItem => (
+            {props.subItem.list?.map(listItem => (
               <option key={listItem} value={listItem}>
                 {listItem}
               </option>

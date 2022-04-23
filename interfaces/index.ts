@@ -101,12 +101,12 @@ export interface PersonalizationAddon {
   itemId: string;
   addon: string;
   value: string;
-  name: string;
+  name?: string;
   location: string;
   lines: number;
-  limit: number;
-  type: 'string' | 'number' | 'list';
-  list: string[];
+  limit?: number;
+  type?: 'string' | 'number' | 'list';
+  list?: string[];
   price: number;
   subItems: PersonalizationAddon[];
 }
