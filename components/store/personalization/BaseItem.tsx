@@ -343,6 +343,7 @@ const BaseItemStyles = styled.div`
     }
 
     svg {
+      flex-shrink: 0;
       height: 1.125rem;
       width: 1.125rem;
     }

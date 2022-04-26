@@ -639,9 +639,10 @@ const ProductStyles = styled.div`
 
   .colors {
     .grid {
-      max-width: 18rem;
-      width: 100%;
       display: flex;
+      gap: 0.625rem;
+      flex-wrap: wrap;
+      width: 100%;
       list-style-type: none;
     }
   }
@@ -893,10 +894,10 @@ const ProductStyles = styled.div`
 `;
 
 const ColorStyles = styled.div`
-  margin: 0 0.875rem 0 0;
+  /* margin: 0 0.875rem 0 0; */
   position: relative;
-  height: 2.5rem;
-  width: 2.5rem;
+  /* height: 2.5rem; */
+  /* width: 2.5rem; */
 
   .label-wrapper {
     height: 2.5rem;
