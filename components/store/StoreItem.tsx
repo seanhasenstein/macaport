@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
-import { StoreProduct, ProductColor } from '../../interfaces';
+import { StoreProduct } from '../../interfaces';
 import { formatToMoney } from '../../utils';
 
 type Props = {
@@ -9,57 +9,27 @@ type Props = {
   storeId: string;
 };
 
-type ColorProps = {
-  colorObj: ProductColor;
-  setActiveColor: (c: ProductColor) => void;
-  onMouseEnter?: React.MouseEventHandler<HTMLDivElement>;
-};
-
-function Color(props: ColorProps) {
-  return (
-    <ColorStyles
-      {...props}
-      title={props.colorObj.label}
-      onMouseEnter={() => props.setActiveColor(props.colorObj)}
-    >
-      <span className="sr-only">{props.colorObj.label}</span>
-    </ColorStyles>
-  );
-}
-
-const ColorStyles = styled.div`
-  margin: 0 0 0 0.375rem;
-  background-color: ${(props: ColorProps) => props.colorObj.hex};
-  height: 1rem;
-  width: 1rem;
-  border-radius: 0.125rem;
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-`;
-
 export default function StoreItem({ item, storeId }: Props) {
-  const [activeColor, setActiveColor] = React.useState(item.colors[0]);
-
   return (
     <Link
-      href={`/store/${storeId}/product?productId=${item.id}&colorId=${activeColor.id}`}
+      href={`/store/${storeId}/product?productId=${item.id}&colorId=${item.colors[0].id}`}
       passHref
     >
       <StoreItemStyles>
         <div className="img-wrapper">
           <img
-            src={activeColor.primaryImage}
-            alt={`${activeColor.label} ${item.name}`}
+            src={item.colors[0].primaryImage}
+            alt={`${item.colors[0].label} ${item.name}`}
           />
         </div>
         <div className="details">
           <h3 className="primary">{item.name}</h3>
           <h4 className="secondary">{item.tag}</h4>
-          <h4 className="price">{formatToMoney(item.sizes[0].price)}</h4>
-          <div className="colors">
-            {item.colors.map(c => (
-              <Color key={c.id} colorObj={c} setActiveColor={setActiveColor} />
-            ))}
+          <div className="bottom-row">
+            <h4 className="price">{formatToMoney(item.sizes[0].price)}</h4>
+            <h4 className="colors">
+              {item.colors.length} color{item.colors.length > 1 ? 's' : null}
+            </h4>
           </div>
         </div>
       </StoreItemStyles>
@@ -102,7 +72,7 @@ const StoreItemStyles = styled.a`
   }
 
   .details {
-    padding: 0.875rem 0 2.75rem;
+    padding: 0.875rem 0 3.5rem;
   }
 
   .primary,
@@ -121,31 +91,31 @@ const StoreItemStyles = styled.a`
 
   .secondary {
     margin: 0;
-    color: #9e9eac;
+    color: #7f8694;
+  }
+
+  .bottom-row {
+    position: absolute;
+    bottom: 0.875rem;
+    left: 1rem;
+    right: 1rem;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .price,
+  .colors {
+    margin: 0;
+    font-size: 0.875rem;
   }
 
   .price {
-    margin: 0;
-    font-size: 0.875rem;
     font-weight: 600;
     color: #36383e;
-    position: absolute;
-    bottom: 0.75rem;
-    left: 1rem;
   }
 
   .colors {
-    position: absolute;
-    display: flex;
-    bottom: 0.875rem;
-    right: 1rem;
-  }
-
-  @media (max-width: 360px) {
-    .primary,
-    .secondary,
-    .price {
-      font-size: 0.8125rem;
-    }
+    font-weight: 500;
+    color: #7f8694;
   }
 `;
