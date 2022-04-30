@@ -20,7 +20,7 @@ import {
 } from '../../../utils';
 import { useCart } from '../../../hooks/useCart';
 import useHasMounted from '../../../hooks/useHasMounted';
-import useProductPersonalization from '../../../hooks/useProductPersonalization';
+import usePersonalization from '../../../hooks/usePersonalization';
 import StoreLayout from '../../../components/store/StoreLayout';
 import ProductSidebar from '../../../components/store/ProductSidebar';
 import Lightbox from '../../../components/store/Lightbox';
@@ -94,7 +94,7 @@ const defaultSize = {
 export default function Product({ store, product, error }: Props) {
   const router = useRouter();
   const { addItem, items } = useCart();
-  const personalization = useProductPersonalization(
+  const personalization = usePersonalization(
     product.personalization.addons,
     product.personalization.maxLines
   );
@@ -515,36 +515,6 @@ export default function Product({ store, product, error }: Props) {
   );
 }
 
-type ColorProps = {
-  id: string;
-  label: string;
-  hex: string;
-  activeColor: ProductColor;
-  handleColorChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-};
-
-const Color = (props: ColorProps) => (
-  <ColorStyles {...props} title={props.label}>
-    <input
-      type="radio"
-      name="color"
-      id={props.hex}
-      value={props.id}
-      onChange={props.handleColorChange}
-      checked={props.id === props.activeColor.id}
-    />
-    <div
-      className={`label-wrapper ${
-        props.id === props.activeColor.id ? 'checked' : ''
-      }`}
-    >
-      <label htmlFor={props.hex}>
-        <span className="sr-only">{props.label}</span>
-      </label>
-    </div>
-  </ColorStyles>
-);
-
 const ProductStyles = styled.div`
   padding: 2.5rem 1.5rem;
 
@@ -894,10 +864,7 @@ const ProductStyles = styled.div`
 `;
 
 const ColorStyles = styled.div`
-  /* margin: 0 0.875rem 0 0; */
   position: relative;
-  /* height: 2.5rem; */
-  /* width: 2.5rem; */
 
   .label-wrapper {
     height: 2.5rem;
@@ -954,3 +921,33 @@ const ColorStyles = styled.div`
     }
   }
 `;
+
+type ColorProps = {
+  id: string;
+  label: string;
+  hex: string;
+  activeColor: ProductColor;
+  handleColorChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+};
+
+const Color = (props: ColorProps) => (
+  <ColorStyles {...props} title={props.label}>
+    <input
+      type="radio"
+      name="color"
+      id={props.hex}
+      value={props.id}
+      onChange={props.handleColorChange}
+      checked={props.id === props.activeColor.id}
+    />
+    <div
+      className={`label-wrapper ${
+        props.id === props.activeColor.id ? 'checked' : ''
+      }`}
+    >
+      <label htmlFor={props.hex}>
+        <span className="sr-only">{props.label}</span>
+      </label>
+    </div>
+  </ColorStyles>
+);

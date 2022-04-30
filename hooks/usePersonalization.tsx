@@ -5,7 +5,7 @@ import {
   PersonalizationItem,
 } from '../interfaces';
 
-export default function useProductPersonalization(
+export default function usePersonalization(
   addons: PersonalizationItem[],
   maxLines: number
 ) {
