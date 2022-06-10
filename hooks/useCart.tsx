@@ -1,11 +1,11 @@
 import React from 'react';
-import { useRouter } from 'next/router';
+// import { useRouter } from 'next/router';
 import {
   calculateCartSubtotal,
   calculateSalesTax,
   calculateCartTotal,
 } from '../utils';
-import { CartItem, StoreProduct, Store } from '../interfaces';
+import { CartItem } from '../interfaces';
 import useLocalStorage from './useLocalStorage';
 
 type InitialState = {
@@ -55,8 +55,9 @@ const initialState: any = {
   cartTotal: 0,
 };
 
-const CartContext =
-  React.createContext<CartProviderState | undefined>(initialState);
+const CartContext = React.createContext<CartProviderState | undefined>(
+  initialState
+);
 
 export const useCart = () => {
   const context = React.useContext(CartContext);
@@ -128,92 +129,87 @@ const calculateTotalItems = (items: CartItem[]) => {
 const calculateItemTotals = (items: CartItem[]) => {
   return items.map(item => ({
     ...item,
-    itemTotal:
-      (item.price +
-        (item.customName ? 500 : 0) +
-        (item.customNumber ? 500 : 0)) *
-      item.quantity,
+    itemTotal: item.price * item.quantity,
   }));
 };
 
-export function CartProvider({
-  children,
-  cartId,
-}: {
+type CartProviderType = {
   children: React.ReactNode;
   cartId: string;
-}) {
-  const router = useRouter();
+};
+
+export function CartProvider({ children, cartId }: CartProviderType) {
+  // const router = useRouter();
   const [savedCart, saveCart] = useLocalStorage(
     cartId,
     JSON.stringify(initialState)
   );
   const [state, dispatch] = React.useReducer(reducer, JSON.parse(savedCart));
 
-  React.useEffect(() => {
-    // check if fetched product is active and has inventory
-    async function fetchProducts() {
-      function validateSavedCart(
-        localStorageCart: string,
-        fetchedProducts: StoreProduct[]
-      ) {
-        const parsedCart: InitialState = JSON.parse(localStorageCart);
+  // React.useEffect(() => {
+  //   // check if fetched product is active and has inventory
+  //   async function fetchProducts() {
+  //     function validateSavedCart(
+  //       localStorageCart: string,
+  //       fetchedProducts: StoreProduct[]
+  //     ) {
+  //       const parsedCart: InitialState = JSON.parse(localStorageCart);
 
-        // update parsedCart inventory with inventory from db
-        return parsedCart.items.reduce(
-          (accumulator: CartItem[], currentCartItem) => {
-            const fetchedProduct = fetchedProducts.find(
-              fp => fp.id === currentCartItem.sku.storeProductId
-            );
-            const fetchedSku = fetchedProduct?.productSkus.find(
-              ps => ps.id === currentCartItem.sku.id
-            );
+  //       // update parsedCart inventory with inventory from db
+  //       return parsedCart.items.reduce(
+  //         (accumulator: CartItem[], currentCartItem) => {
+  //           const fetchedProduct = fetchedProducts.find(
+  //             fp => fp.id === currentCartItem.sku.storeProductId
+  //           );
+  //           const fetchedSku = fetchedProduct?.productSkus.find(
+  //             ps => ps.id === currentCartItem.sku.id
+  //           );
 
-            if (
-              !fetchedProduct ||
-              !fetchedSku ||
-              fetchedSku.inventory - currentCartItem.quantity < 0
-            )
-              return accumulator;
+  //           if (
+  //             !fetchedProduct ||
+  //             !fetchedSku ||
+  //             fetchedSku.inventory - currentCartItem.quantity < 0
+  //           )
+  //             return accumulator;
 
-            let updatedQuantity = currentCartItem.quantity;
+  //           let updatedQuantity = currentCartItem.quantity;
 
-            if (currentCartItem.quantity > fetchedSku.inventory) {
-              updatedQuantity = fetchedSku.inventory;
-            }
+  //           if (currentCartItem.quantity > fetchedSku.inventory) {
+  //             updatedQuantity = fetchedSku.inventory;
+  //           }
 
-            return [
-              ...accumulator,
-              {
-                ...currentCartItem,
-                quantity: updatedQuantity,
-                sku: {
-                  ...currentCartItem.sku,
-                  inventory: fetchedSku?.inventory,
-                },
-              },
-            ];
-          },
-          []
-        );
-      }
+  //           return [
+  //             ...accumulator,
+  //             {
+  //               ...currentCartItem,
+  //               quantity: updatedQuantity,
+  //               sku: {
+  //                 ...currentCartItem.sku,
+  //                 inventory: fetchedSku?.inventory,
+  //               },
+  //             },
+  //           ];
+  //         },
+  //         []
+  //       );
+  //     }
 
-      const response = await fetch(`/api/store?id=${router.query.id}`);
+  //     const response = await fetch(`/api/store?id=${router.query.id}`);
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch the store.');
-      }
+  //     if (!response.ok) {
+  //       throw new Error('Failed to fetch the store.');
+  //     }
 
-      const data: Store = await response.json();
+  //     const data: Store = await response.json();
 
-      dispatch({
-        type: 'SET_ITEMS',
-        payload: validateSavedCart(savedCart, data.products),
-      });
-    }
+  //     dispatch({
+  //       type: 'SET_ITEMS',
+  //       payload: validateSavedCart(savedCart, data.products),
+  //     });
+  //   }
 
-    fetchProducts();
-  }, [router.query.id, savedCart]);
+  //   fetchProducts();
+  // }, [router.query.id, savedCart]);
 
   React.useEffect(() => {
     saveCart(JSON.stringify(state));

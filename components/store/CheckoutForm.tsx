@@ -616,7 +616,7 @@ const CheckoutFormStyles = styled.div`
 
     span {
       padding: 0 1.25rem;
-      background-color: #f7f9fb;
+      background-color: #f3f4f6;
     }
 
     &::after {
@@ -626,7 +626,7 @@ const CheckoutFormStyles = styled.div`
       left: 0;
       height: 1px;
       width: 100%;
-      background-color: #dddde2;
+      background-color: #d1d5db;
       z-index: -1;
     }
   }

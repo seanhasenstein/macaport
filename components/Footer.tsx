@@ -23,6 +23,6 @@ const FooterStyles = styled.footer`
     width: 100%;
     color: #6b7280;
     font-size: 0.875rem;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid #d1d5db;
   }
 `;

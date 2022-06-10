@@ -49,22 +49,23 @@ const HeroStyles = styled.div`
   h1 {
     margin: 0;
     font-size: 1.75rem;
-    font-weight: 600;
+    font-weight: 700;
     color: #111827;
+    letter-spacing: -0.0125em;
   }
 
   p {
     margin: 1.125rem 0 1.5rem;
     font-size: 1.125rem;
-    color: #6b7280;
+    color: #4b5563;
     line-height: 1.5;
   }
 
   .button {
     padding: 0.75rem 2rem;
     display: inline-flex;
-    background-color: #253753;
-    color: rgba(2255, 255, 255, 0.9);
+    background-color: #1f2e45;
+    color: #fff;
     font-size: 1rem;
     font-weight: 500;
     letter-spacing: 0.025em;
@@ -72,8 +73,7 @@ const HeroStyles = styled.div`
     transition: all 150ms ease-in-out;
 
     &:hover {
-      background-color: #2b4061;
-      color: rgba(255, 255, 255, 1);
+      background-color: #253753;
     }
 
     &:focus {

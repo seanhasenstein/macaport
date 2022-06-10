@@ -6,6 +6,7 @@ import {
   CartItem,
   Order,
   OrderItem,
+  PersonalizationItem,
   Store as StoreInterface,
 } from '../../interfaces/';
 import {
@@ -32,7 +33,7 @@ async function generateResponse(
   intent: Stripe.Response<Stripe.PaymentIntent>,
   order: Order
 ) {
-  // if Stripe payment succeeded...
+  // when stripe payment succeeded
   if (intent.status === 'succeeded') {
     const data = {
       ...order,
@@ -91,7 +92,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       summary,
     } = req.body;
 
-    const { db } = await connectToDb();
+    const db = await connectToDb();
     const { products, openDate, closeDate }: StoreInterface =
       await store.getStoreById(db, storeId);
 
@@ -130,10 +131,44 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         const verifiedItems = cartAccumulator.verifiedItems.filter(
           vi => vi.sku.id === currentItem.sku.id
         );
+
         const totalQuantity = verifiedItems.reduce(
           (total, currentVerifiedItem) => currentVerifiedItem.quantity + total,
           currentItem.quantity
         );
+
+        const verifiedPersonalizationTotal =
+          currentItem.personalizationAddons.reduce(
+            (accumulator, currentAddon) => {
+              const baseItem: PersonalizationItem | undefined =
+                product.personalization.addons.find(
+                  dbAddon => dbAddon.id === currentAddon.itemId
+                );
+
+              if (baseItem) {
+                const subItemsTotal = currentAddon.subItems.reduce(
+                  (subItemsAcc, currSubItem) => {
+                    const subItem: PersonalizationItem | undefined =
+                      baseItem.subItems.find(
+                        subItem => subItem.id === currSubItem.itemId
+                      );
+
+                    if (subItem) {
+                      return subItemsAcc + subItem.price;
+                    }
+
+                    return subItemsAcc;
+                  },
+                  0
+                );
+
+                return accumulator + baseItem.price + subItemsTotal;
+              }
+
+              return accumulator;
+            },
+            0
+          );
 
         if (productSku.inventory < totalQuantity) {
           if (productSku.inventory === 0) {
@@ -156,18 +191,14 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                 ...currentItem,
                 quantity: updatedQuantity,
                 itemTotal:
-                  updatedQuantity * currentItem.price +
-                  (currentItem.customName ? 500 : 0) +
-                  (currentItem.customNumber ? 500 : 0),
+                  updatedQuantity *
+                  (productSku.size.price + verifiedPersonalizationTotal),
               },
             ],
           };
         }
 
-        const itemPrice =
-          productSku.size.price +
-          (currentItem.customName ? 500 : 0) +
-          (currentItem.customNumber ? 500 : 0);
+        const itemPrice = productSku.size.price + verifiedPersonalizationTotal;
 
         const { active, inventory, ...updatedSku } = currentItem.sku;
 

@@ -12,21 +12,30 @@ export default function CheckoutItem({ item }: { item: CartItem }) {
       <div className="total">{formatToMoney(item.itemTotal!)}</div>
       <div className="details">
         <div className="detail">
-          Color: <span className="value">{item.sku.color.label}</span>
+          <span className="label">Color:</span>
+          <span className="value">{item.sku.color.label}</span>
         </div>
         <div className="detail">
-          Size: <span className="value">{item.sku.size.label}</span>
+          <span className="label">Size:</span>
+          <span className="value">{item.sku.size.label}</span>
         </div>
-        {item.customName && (
-          <div className="detail">
-            Name: <span className="value">{item.customName}</span>
+        {item.personalizationAddons.length > 0 ? (
+          <div className="personalization">
+            <div className="addon-label">Addons:</div>
+            <div className="addon-items">
+              {item.personalizationAddons.map(item => (
+                <div key={item.id} className="addon-item">
+                  {item.value}
+                  {item.subItems.map(subItem => (
+                    <div key={subItem.id} className="subitem">
+                      {subItem.value}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
-        )}
-        {item.customNumber && (
-          <div className="detail">
-            Number: <span className="value">{item.customNumber}</span>
-          </div>
-        )}
+        ) : null}
       </div>
       <div className="detail quantity">
         Qty: <span className="value">{item.quantity}</span>
@@ -83,14 +92,40 @@ const CheckoutItemStyles = styled.div`
   }
 
   .detail {
-    margin: 0.25rem 0 0;
+    margin: 0.3125rem 0 0;
+    font-size: 0.875rem;
+    color: #111827;
+
+    .label {
+      margin: 0 0.375rem 0 0;
+      display: inline-block;
+      color: #6b7280;
+    }
+  }
+
+  .personalization {
+    margin: 0.3125rem 0 0;
+    display: flex;
+  }
+
+  .addon-label {
+    margin: 0 0.375rem 0 0;
     font-size: 0.875rem;
     color: #6b7280;
+  }
 
-    .value {
-      margin: 0 0 0 0.25rem;
-      color: #1f2937;
+  .addon-item {
+    margin: 0.25rem 0 0;
+    font-size: 0.875rem;
+    color: #111827;
+
+    &:first-of-type {
+      margin: 0;
     }
+  }
+
+  .subitem {
+    margin: 0.25rem 0 0;
   }
 
   .size {

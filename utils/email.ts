@@ -47,20 +47,12 @@ function generateReceiptText(order: Order) {
     order.customer.firstName
   } ${order.customer.lastName} \nEmail: ${
     order.customer.email
-  } \nPhone: ${formatPhoneNumber(order.customer.phone)} \n\nOrder Summary:
-  ${order.items
-    .map(
-      i =>
-        `\n${i.name} (${i.sku.size.label})${
-          i.customName ? ` - ${i.customName}` : ''
-        }${i.customNumber ? ` - ${i.customNumber}` : ''} Qty: ${
-          i.quantity
-        } - ${formatToMoney(i.itemTotal!)}`
-    )
-    .join('')} \n\nSubtotal: ${formatToMoney(
-    order.summary.subtotal,
-    true
-  )} \nShipping: ${formatToMoney(
+  } \nPhone: ${formatPhoneNumber(order.customer.phone)} \n\nOrder Summary Link:
+  ${`${process.env.API_HOST}/store/${order.store.id}/order-confirmation?orderId=${order.orderId}`}
+    \n\nSubtotal: ${formatToMoney(
+      order.summary.subtotal,
+      true
+    )} \nShipping: ${formatToMoney(
     order.summary.shipping,
     true
   )} \nSales Tax: ${formatToMoney(

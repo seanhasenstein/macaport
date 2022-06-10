@@ -12,19 +12,20 @@ import {
 } from '../../../interfaces';
 import {
   checkHexColor,
-  formatToMoney,
   getUrlParameter,
+  formatToMoney,
   isOutOfStock,
   isStoreActive,
-  slugify,
+  createId,
 } from '../../../utils';
 import { useCart } from '../../../hooks/useCart';
 import useHasMounted from '../../../hooks/useHasMounted';
+import usePersonalization from '../../../hooks/usePersonalization';
 import StoreLayout from '../../../components/store/StoreLayout';
-import CustomOptions from '../../../components/store/product/CustomOptions';
 import ProductSidebar from '../../../components/store/ProductSidebar';
 import Lightbox from '../../../components/store/Lightbox';
 import { MessageStyles } from '../../../styles/Message';
+import ProductPersonalization from '../../../components/store/personalization';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -34,7 +35,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       throw new Error('No store id provided.');
     }
 
-    const { db } = await connectToDb();
+    const db = await connectToDb();
     const storeRes: Store = await store.getStoreById(db, id);
 
     if (!storeRes) {
@@ -81,12 +82,11 @@ export const getServerSideProps: GetServerSideProps = async context => {
 type Props = {
   store: Store;
   product: StoreProduct;
-  active: boolean;
-  error: string;
+  error?: string;
 };
 
 const defaultSize = {
-  id: 9999,
+  id: 'default',
   label: 'DEFAULT',
   price: 0,
 };
@@ -94,6 +94,10 @@ const defaultSize = {
 export default function Product({ store, product, error }: Props) {
   const router = useRouter();
   const { addItem, items } = useCart();
+  const personalization = usePersonalization(
+    product.personalization.addons,
+    product.personalization.maxLines
+  );
   const hasMounted = useHasMounted();
   const [showSidebar, setShowSidebar] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
@@ -120,22 +124,8 @@ export default function Product({ store, product, error }: Props) {
   const [size, setSize] = React.useState<ProductSize>(defaultSize);
   const [colorOutOfStock, setColorOutOfStock] = React.useState(false);
   const [lowInventory, setLowInventory] = React.useState(false);
-  const [validationError, setValidationError] = React.useState<string>();
-  const [showName, setShowName] = React.useState(false);
-  const [showNumber, setShowNumber] = React.useState(false);
-  const [name, setName] = React.useState('');
-  const [number, setNumber] = React.useState('');
-  const [nameError, setNameError] = React.useState<string>();
-  const [numberError, setNumberError] = React.useState<string>();
-
-  React.useEffect(() => {
-    if (!showName) {
-      setName('');
-    }
-    if (!showNumber) {
-      setNumber('');
-    }
-  }, [showNumber, showName]);
+  const [sizeValidationError, setSizeValidationError] =
+    React.useState<string>();
 
   React.useEffect(() => {
     if (error) return;
@@ -176,6 +166,7 @@ export default function Product({ store, product, error }: Props) {
   }, [color.id, items, product.productSkus, showSidebar]);
 
   React.useEffect(() => {
+    // don't display low inventory message when there isn't a size selected
     if (size.label === 'DEFAULT') {
       setLowInventory(false);
     }
@@ -188,8 +179,8 @@ export default function Product({ store, product, error }: Props) {
   };
 
   const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (validationError && e.target.value !== undefined) {
-      setValidationError(undefined);
+    if (sizeValidationError && e.target.value !== undefined) {
+      setSizeValidationError(undefined);
     }
 
     const productSku = product.productSkus.find(
@@ -214,47 +205,16 @@ export default function Product({ store, product, error }: Props) {
     setShowLightbox(true);
   };
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (nameError) {
-      setNameError(undefined);
-    }
-    setName(e.target.value);
-  };
-
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const numberCoercion = Number(e.target.value);
-    if (isNaN(numberCoercion) === true) {
-      return;
-    }
-    if (numberError) {
-      setNumberError(undefined);
-    }
-    setNumber(e.target.value.trim());
-  };
-
   const handleProductReset = () => {
-    setShowName(false);
-    setShowNumber(false);
+    personalization.reset();
     setShowSidebar(false);
     setSize(defaultSize);
     setLowInventory(false);
   };
 
   const handleAddToOrderClick = () => {
-    if (
-      size.label === 'DEFAULT' ||
-      (showName && name.trim() === '') ||
-      (showNumber && number.trim() === '')
-    ) {
-      if (size.label === 'DEFAULT') {
-        setValidationError('A size is required.');
-      }
-      if (showName && name === '') {
-        setNameError('Name is required if selected.');
-      }
-      if (showNumber && number === '') {
-        setNumberError('Number is required if selected.');
-      }
+    if (size.label === 'DEFAULT') {
+      setSizeValidationError('A size is required');
       return;
     }
 
@@ -262,18 +222,55 @@ export default function Product({ store, product, error }: Props) {
       sku => sku.size.label === size.label && sku.color.id === color.id
     );
 
+    const flattenedPersonalizationAddonItems = Object.values(
+      personalization.addonItems
+    ).flat();
+
+    // check for empty personalization items
+    const hasEmptyAddonField = flattenedPersonalizationAddonItems.some(
+      baseItem => {
+        if (baseItem.value === '') {
+          return true;
+        }
+
+        return baseItem.subItems.some(subitem => subitem.value === '');
+      }
+    );
+
+    if (hasEmptyAddonField) {
+      personalization.setValidationError('Customization fields require values');
+      personalization.setAddClickedWithBlankField(true);
+      return;
+    }
+
+    personalization.setFlattendedItems(flattenedPersonalizationAddonItems);
+
+    const formattedAddonItems = flattenedPersonalizationAddonItems.map(
+      baseAddonItem => {
+        const { name, type, list, limit, subItems, ...restOfBaseItem } =
+          baseAddonItem;
+
+        const formattedSubItems = subItems.map(subItem => {
+          const { name, type, list, limit, ...restofSubItem } = subItem;
+          return restofSubItem;
+        });
+
+        return {
+          ...restOfBaseItem,
+          subItems: formattedSubItems,
+        };
+      }
+    );
+
     if (sku)
       addItem({
-        id: `${sku.id}${showName ? `-${slugify(name)}` : ''}${
-          showNumber ? `-${slugify(number)}` : ''
-        }`,
+        id: `${sku.id}-${createId(false, 5)}`,
         sku: sku,
         quantity: 1,
         name: product.name,
         image: primaryImage,
-        price: sku.size.price,
-        customName: name.trim(),
-        customNumber: number.trim(),
+        price: sku.size.price + personalization.total,
+        personalizationAddons: formattedAddonItems,
       });
 
     setShowSidebar(true);
@@ -320,11 +317,9 @@ export default function Product({ store, product, error }: Props) {
               <h2 className="name">{product.name}</h2>
               <h3 className="price">
                 {formatToMoney(
-                  size.label !== 'DEFAULT'
-                    ? size.price + (showName ? 500 : 0) + (showNumber ? 500 : 0)
-                    : product.sizes[0].price +
-                        (showName ? 500 : 0) +
-                        (showNumber ? 500 : 0)
+                  (size.label === 'DEFAULT'
+                    ? product.sizes[0].price
+                    : size.price) + personalization.total
                 )}
               </h3>
             </div>
@@ -338,33 +333,31 @@ export default function Product({ store, product, error }: Props) {
                   alt={`${color.label} ${product.name}`}
                 />
               </button>
-              <div className="secondary-imgs">
-                {secondaryImages &&
-                  secondaryImages.map((secImg, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleImageClick(`image-${index + 1}`)}
-                    >
-                      <img
-                        src={secImg}
-                        alt={`${color.label} ${product.name} ${index + 2}`}
-                      />
-                    </button>
-                  ))}
-              </div>
+              {secondaryImages && secondaryImages.length > 0 && (
+                <div className="secondary-imgs">
+                  {secondaryImages &&
+                    secondaryImages.map((secImg, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleImageClick(`image-${index + 1}`)}
+                      >
+                        <img
+                          src={secImg}
+                          alt={`${color.label} ${product.name} ${index + 2}`}
+                        />
+                      </button>
+                    ))}
+                </div>
+              )}
             </div>
             <div className="main">
               <div className="large-header">
                 <h2 className="name">{product.name}</h2>
                 <h3 className="price">
                   {formatToMoney(
-                    size.label !== 'DEFAULT'
-                      ? size.price +
-                          (showName ? 500 : 0) +
-                          (showNumber ? 500 : 0)
-                      : product.sizes[0].price +
-                          (showName ? 500 : 0) +
-                          (showNumber ? 500 : 0)
+                    (size.label === 'DEFAULT'
+                      ? product.sizes[0].price
+                      : size.price) + personalization.total
                   )}
                 </h3>
               </div>
@@ -453,20 +446,9 @@ export default function Product({ store, product, error }: Props) {
                 )}
               </div>
 
-              <CustomOptions
-                className="section"
-                includeCustomName={product.includeCustomName}
-                includeCustomNumber={product.includeCustomNumber}
-                showName={showName}
-                setShowName={setShowName}
-                showNumber={showNumber}
-                setShowNumber={setShowNumber}
-                name={name}
-                setName={handleNameChange}
-                number={number}
-                setNumber={handleNumberChange}
-                nameError={nameError}
-                numberError={numberError}
+              <ProductPersonalization
+                {...product.personalization}
+                {...personalization}
               />
 
               <div className="actions">
@@ -477,10 +459,14 @@ export default function Product({ store, product, error }: Props) {
                 >
                   Add to order
                 </button>
-                {validationError && (
-                  <div className="error">{validationError}</div>
+                {sizeValidationError && (
+                  <div className="error">{sizeValidationError}</div>
+                )}
+                {personalization.validationError && (
+                  <div className="error">{personalization.validationError}</div>
                 )}
               </div>
+
               <div className="section details">
                 {product.description && (
                   <div className="section description">
@@ -509,8 +495,10 @@ export default function Product({ store, product, error }: Props) {
           size={size}
           image={primaryImage}
           resetProduct={handleProductReset}
-          customName={name}
-          customNumber={number}
+          personalization={{
+            addonItems: personalization.flattenedItems,
+            total: personalization.total,
+          }}
           isSidebarOpen={showSidebar}
         />
       </StoreLayout>
@@ -526,36 +514,6 @@ export default function Product({ store, product, error }: Props) {
     </>
   );
 }
-
-type ColorProps = {
-  id: string;
-  label: string;
-  hex: string;
-  activeColor: ProductColor;
-  handleColorChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-};
-
-const Color = (props: ColorProps) => (
-  <ColorStyles {...props} title={props.label}>
-    <input
-      type="radio"
-      name="color"
-      id={props.hex}
-      value={props.id}
-      onChange={props.handleColorChange}
-      checked={props.id === props.activeColor.id}
-    />
-    <div
-      className={`label-wrapper ${
-        props.id === props.activeColor.id ? 'checked' : ''
-      }`}
-    >
-      <label htmlFor={props.hex}>
-        <span className="sr-only">{props.label}</span>
-      </label>
-    </div>
-  </ColorStyles>
-);
 
 const ProductStyles = styled.div`
   padding: 2.5rem 1.5rem;
@@ -579,7 +537,7 @@ const ProductStyles = styled.div`
       width: 100%;
       background-color: #fff;
       text-align: center;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #dcdfe4;
       border-radius: 0.1875rem;
       box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
         rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
@@ -592,16 +550,16 @@ const ProductStyles = styled.div`
     }
 
     .secondary-imgs {
-      margin: 1.5rem 0;
+      margin: 1rem 0;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+      gap: 1rem;
       width: 100%;
 
       button {
-        padding: 2rem;
+        padding: 1.5rem;
         background-color: #fff;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #dcdfe4;
         border-radius: 0.1875rem;
         box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
           rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
@@ -692,9 +650,9 @@ const ProductStyles = styled.div`
         }
 
         &:hover:not(.out-of-stock) {
-          border-color: #9ca3af;
-          box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1),
-            0 1px 2px -1px rgb(0 0 0 / 0.1);
+          border-color: #9199a6;
+          box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.075),
+            0 1px 2px -1px rgb(0 0 0 / 0.075);
         }
       }
 
@@ -812,8 +770,8 @@ const ProductStyles = styled.div`
 
   .description {
     padding: 1.875rem 0;
-    border-top: 1px solid #e5e7eb;
-    border-bottom: 1px solid #e5e7eb;
+    border-top: 1px solid #dcdfe4;
+    border-bottom: 1px solid #dcdfe4;
 
     p {
       margin: 0;
@@ -847,7 +805,14 @@ const ProductStyles = styled.div`
     color: #b91c1c;
   }
 
-  @media (max-width: 700px) {
+  @media (max-width: 1024px) {
+    .wrapper {
+      grid-template-columns: 1fr 1fr;
+      gap: 0 2rem;
+    }
+  }
+
+  @media (max-width: 767px) {
     padding: 2.5rem 1.5rem;
 
     .wrapper {
@@ -871,10 +836,8 @@ const ProductStyles = styled.div`
 
     .images {
       margin: 0 0 2rem;
-      display: flex;
-      flex-direction: row;
-      align-items: unset;
-      gap: 1rem;
+      align-items: flex-start;
+      gap: 0.75rem;
 
       .primary-img {
         display: flex;
@@ -884,14 +847,12 @@ const ProductStyles = styled.div`
 
       .secondary-imgs {
         margin: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 1rem;
-        width: 7rem;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
 
         button {
-          padding: 0.5rem;
+          padding: 1rem;
           flex: 1;
           display: flex;
           justify-content: center;
@@ -926,7 +887,7 @@ const ColorStyles = styled.div`
       width: 100%;
       border-radius: 9999px;
       background-color: ${(color: ColorProps) => color.hex};
-      border: 1px solid rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(0, 0, 0, 0.2);
       cursor: pointer;
     }
   }
@@ -960,3 +921,33 @@ const ColorStyles = styled.div`
     }
   }
 `;
+
+type ColorProps = {
+  id: string;
+  label: string;
+  hex: string;
+  activeColor: ProductColor;
+  handleColorChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+};
+
+const Color = (props: ColorProps) => (
+  <ColorStyles {...props} title={props.label}>
+    <input
+      type="radio"
+      name="color"
+      id={props.hex}
+      value={props.id}
+      onChange={props.handleColorChange}
+      checked={props.id === props.activeColor.id}
+    />
+    <div
+      className={`label-wrapper ${
+        props.id === props.activeColor.id ? 'checked' : ''
+      }`}
+    >
+      <label htmlFor={props.hex}>
+        <span className="sr-only">{props.label}</span>
+      </label>
+    </div>
+  </ColorStyles>
+);

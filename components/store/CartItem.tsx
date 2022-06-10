@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { useCart } from '../../hooks/useCart';
-import { formatToMoney } from '../../utils';
+import { createId, formatToMoney } from '../../utils';
 import {
   CartItem as CartItemInterface,
   ProductSku,
@@ -37,7 +37,7 @@ export default function CartItem({ item, storeId, skus }: Props) {
       setSize(sku.size.label);
       updateItemSize(item.id, item.sku.id, {
         ...item,
-        id: `${sku.id}${item.customName}${item.customNumber}`,
+        id: `${sku.id}-${createId(false, 5)}`,
         sku,
         quantity,
       });
@@ -112,18 +112,28 @@ export default function CartItem({ item, storeId, skus }: Props) {
         </h3>
         <div className="secondary-details">
           <p className="secondary">
-            Color: <span className="value">{item.sku.color.label}</span>{' '}
+            <span className="label">Color:</span>
+            {item.sku.color.label}
           </p>
-          {item.customName && (
-            <p className="secondary">
-              Name: <span className="value">{item.customName}</span>
-            </p>
-          )}
-          {item.customNumber && (
-            <p className="secondary">
-              Number: <span className="value">{item.customNumber}</span>
-            </p>
-          )}
+          {item.personalizationAddons.length > 0 ? (
+            <div className="personalization">
+              <div className="addon-label">Addons:</div>
+              <div className="addon-items">
+                {item.personalizationAddons.map(item => (
+                  <div key={item.id} className="addon-item">
+                    {item.value}
+                    {item.subItems.length > 0
+                      ? item.subItems.map(subItem => (
+                          <div key={subItem.id} className="subitem">
+                            {subItem.value}
+                          </div>
+                        ))
+                      : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
       <div className="total">{formatToMoney(item.itemTotal!)}</div>
@@ -204,7 +214,7 @@ const CartItemStyles = styled.div`
     'image inputs button';
   grid-template-columns: 8rem 1fr 10rem;
   gap: 0 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #d1d5db;
 
   &:last-of-type {
     border: none;
@@ -220,7 +230,7 @@ const CartItemStyles = styled.div`
       align-items: center;
       background-color: #fff;
       border-radius: 0.25rem;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #d1d5db;
       box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
         rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     }
@@ -255,11 +265,37 @@ const CartItemStyles = styled.div`
     align-items: center;
     font-size: 0.9375rem;
     font-weight: 400;
-    color: #6e788c;
+    color: #111827;
 
-    .value {
-      margin: 0 0 0 0.375rem;
+    .label {
+      width: 4.25rem;
+      color: #6e788c;
+    }
+  }
+
+  .personalization {
+    display: flex;
+
+    .addon-label {
+      width: 4.25rem;
+      font-size: 0.9375rem;
+      font-weight: 400;
+      color: #6e788c;
+    }
+
+    .addon-item {
+      margin: 0.375rem 0 0;
+      font-size: 0.9375rem;
+      font-weight: 400;
       color: #111827;
+
+      &:first-of-type {
+        margin: 0;
+      }
+
+      .subitem {
+        margin: 0.375rem 0 0;
+      }
     }
   }
 
@@ -313,13 +349,13 @@ const CartItemStyles = styled.div`
 
       &:hover,
       &:hover svg {
-        color: #6b7280;
+        color: #4b5563;
       }
 
       svg {
         height: 1.125rem;
         width: 1.125rem;
-        color: #9ca3af;
+        color: #6b7280;
       }
     }
   }
@@ -373,7 +409,7 @@ const CartItemStyles = styled.div`
         color: #374151;
         text-decoration: none;
         background-color: #f3f4f6;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #c6cbd2;
 
         .sr-only {
           position: inherit;

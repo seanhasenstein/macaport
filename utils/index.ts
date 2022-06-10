@@ -2,15 +2,9 @@ import * as crypto from 'crypto';
 import { FormikErrors, FormikTouched } from 'formik';
 import { CartItem, ProductSku } from '../interfaces';
 
-export function calculateCartSubtotal(items: CartItem[]) {
-  return items.reduce((total, item) => {
-    return (
-      total +
-      item.quantity *
-        (item.price +
-          (item.customName ? 500 : 0) +
-          (item.customNumber ? 500 : 0))
-    );
+export function calculateCartSubtotal(cartItems: CartItem[]) {
+  return cartItems.reduce((total, item) => {
+    return total + item.quantity * item.price;
   }, 0);
 }
 

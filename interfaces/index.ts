@@ -44,7 +44,7 @@ export interface ProductColor {
 }
 
 export interface ProductSize {
-  id: number;
+  id: string;
   label: string;
   price: number;
 }
@@ -62,6 +62,26 @@ export interface ProductSku {
 
 type OrderSku = Omit<ProductSku, 'inventory' | 'active'>;
 
+export type AddonItems = Record<string, PersonalizationAddon[]>;
+
+export interface PersonalizationItem {
+  id: string;
+  name: string;
+  location: string;
+  type: 'list' | 'string' | 'number';
+  list: string[];
+  price: number;
+  lines: number;
+  limit: number;
+  subItems: PersonalizationItem[];
+}
+
+export interface Personalization {
+  active: boolean;
+  maxLines: number;
+  addons: PersonalizationItem[];
+}
+
 export interface StoreProduct {
   id: string;
   inventoryProductId: string;
@@ -73,8 +93,22 @@ export interface StoreProduct {
   productSkus: ProductSku[];
   sizes: ProductSize[];
   colors: ProductColor[];
-  includeCustomName: boolean;
-  includeCustomNumber: boolean;
+  personalization: Personalization;
+}
+
+export interface PersonalizationAddon {
+  id: string;
+  itemId: string;
+  addon: string;
+  value: string;
+  name?: string;
+  location: string;
+  lines: number;
+  limit?: number;
+  type?: 'string' | 'number' | 'list';
+  list?: string[];
+  price: number;
+  subItems: PersonalizationAddon[];
 }
 
 export interface CartItem {
@@ -85,8 +119,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   itemTotal?: number;
-  customName: string;
-  customNumber: string;
+  personalizationAddons: PersonalizationAddon[];
 }
 
 export interface OrderItem extends Omit<CartItem, 'sku'> {

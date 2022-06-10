@@ -8,7 +8,7 @@ import { Store } from '../interfaces';
 import Layout from '../components/Layout';
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const { db } = await connectToDb();
+  const db = await connectToDb();
   const stores: Store[] = await store.getStores(db);
   const activeStores = stores?.filter(s => {
     const isActive = isStoreActive(s.openDate, s.closeDate);
@@ -125,7 +125,7 @@ const StoresStyles = styled.div`
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.0375em;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #dcdfe4;
   }
 
   .store-link {
@@ -151,7 +151,7 @@ const StoresStyles = styled.div`
     align-items: center;
     gap: 0.25rem 0.5rem;
     font-size: 0.9375rem;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #dcdfe4;
   }
 
   .visit-store {

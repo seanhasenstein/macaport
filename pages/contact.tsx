@@ -254,8 +254,8 @@ export default function Contact() {
         <div className="wrapper">
           <h2>Contact Us</h2>
           <p>
-            Have a question or inquery for us? Fill out the form below and we
-            will get back to you as soon as we can.
+            Do you have a question or inquery for us? Fill out the form below
+            and we will get back to you as soon as we can.
           </p>
           <Formik
             initialValues={initialValues}

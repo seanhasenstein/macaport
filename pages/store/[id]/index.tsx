@@ -19,7 +19,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       throw new Error('No store id provided.');
     }
 
-    const { db } = await connectToDb();
+    const db = await connectToDb();
     const storeRes = await store.getStoreById(db, id);
 
     if (!storeRes) {
@@ -52,11 +52,10 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
 type Props = {
   store: StoreInterface;
-  active: boolean;
   error?: string;
 };
 
-export default function Store({ store, error }: Props) {
+export default function StoreHome({ store, error }: Props) {
   if (error) {
     return (
       <StoreLayout>
@@ -137,7 +136,6 @@ export default function Store({ store, error }: Props) {
 }
 
 const StoreStyles = styled.div`
-  padding: 0 0 5rem;
   position: relative;
 
   h2,
@@ -167,6 +165,7 @@ const StoreStyles = styled.div`
 
   .close-date {
     margin: 0 0 2.25rem;
+    padding: 0 1.5rem;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -180,7 +179,7 @@ const StoreStyles = styled.div`
       font-weight: 500;
       color: #991b1b;
       text-align: center;
-      line-height: 1;
+      line-height: 1.35;
       border: 1px solid #fee2e2;
       box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     }
@@ -223,7 +222,7 @@ const StoreStyles = styled.div`
   }
 
   .items {
-    margin: 4rem auto 0;
+    margin: 4rem auto 3rem;
     padding: 0 1.5rem;
     max-width: 72rem;
     width: 100%;
@@ -233,50 +232,22 @@ const StoreStyles = styled.div`
     justify-content: center;
   }
 
-  @media (max-width: 1000px) {
+  @media (max-width: 1024px) {
     .items {
       padding: 0 1.5rem;
       grid-template-columns: 1fr 1fr;
     }
   }
 
-  @media (max-width: 600px) {
-    .items {
-      padding: 0 0.75rem;
-      gap: 1.5rem 0.75rem;
-    }
-  }
-
-  @media (max-width: 500px) {
-    padding: 0 0 4rem;
-
-    h2 {
-      margin: 2rem 0 0;
-    }
-
+  @media (max-width: 640px) {
     .store-header {
-      margin: 1.5rem 0 0;
+      margin: 3rem 0 0;
     }
 
     .items {
-      margin: 3.25rem 0 0;
-    }
-  }
-
-  @media (max-width: 375px) {
-    padding: 0.5rem 0 0;
-
-    .store-header {
-      margin: 0;
-    }
-
-    .close-date {
-      padding: 0;
-
-      span {
-        width: calc(100% - 1rem);
-        line-height: 1.35;
-      }
+      margin: 3rem 0 0;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
     }
   }
 `;

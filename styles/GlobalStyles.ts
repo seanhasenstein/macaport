@@ -45,7 +45,7 @@ export const GlobalStyles = createGlobalStyle`
   position: relative;
   font-size: 16px;
   letter-spacing: -0.011em;
-  background-color: #f7f9fb;
+  background-color: #f3f4f6;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "cv02","cv03","cv04","cv09", "cv11";
 }
@@ -89,7 +89,7 @@ label {
 input, select {
   appearance: none;
   background-color: #fff;
-  border: 1px solid #dddde2;
+  border: 1px solid #d1d5db;
   border-radius: 0.375rem;
   font-size: 0.875rem;
   box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
@@ -157,7 +157,7 @@ select {
   background-size: 1.375em 1.375em;
   background-repeat: no-repeat;
   color-adjust: exact;
-  border: 1px solid #dddde2;
+  border: 1px solid #d1d5db;
   border-radius: 0.375rem;
   font-weight: 500;
   color: #36383e;
