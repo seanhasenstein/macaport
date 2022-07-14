@@ -86,7 +86,7 @@ const StoresStyles = styled.div`
   .wrapper {
     margin: 0 auto;
     padding: 4rem 0;
-    max-width: 64rem;
+    max-width: 72rem;
     width: 100%;
   }
 

@@ -34,7 +34,7 @@ const HeroStyles = styled.div`
     margin: 0 auto;
     padding: 4rem 0;
     width: 100%;
-    max-width: 65.5rem;
+    max-width: 72rem;
     display: flex;
     justify-content: space-between;
     align-items: center;

@@ -329,7 +329,7 @@ const OrderConfirmationStyles = styled.div`
 
   .order-confirmation-wrapper {
     margin: 0 auto;
-    max-width: 78rem;
+    max-width: 72rem;
     width: 100%;
     height: 100%;
     display: flex;
@@ -346,7 +346,7 @@ const OrderConfirmationStyles = styled.div`
     display: grid;
     grid-template-columns: 1fr 1fr;
     justify-content: space-between;
-    gap: 6rem;
+    gap: 3rem;
   }
 
   h2 {
@@ -483,7 +483,7 @@ const OrderConfirmationStyles = styled.div`
 
   .order-item-name,
   .order-item-total {
-    font-size: 1rem;
+    font-size: 0.9375rem;
     font-weight: 600;
     color: #111827;
   }

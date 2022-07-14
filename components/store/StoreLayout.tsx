@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { GlobalStyles } from '../../styles/GlobalStyles';
+import Footer from '../Footer';
 
 type Props = {
   children: ReactNode;
@@ -94,13 +95,7 @@ export default function StoreLayout({
         </nav>
       </header>
       <main>{children}</main>
-      <footer>
-        <div className="wrapper">
-          <div className="copyright">
-            &copy; Macaport {new Date().getFullYear()}. All Rights Reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </LayoutStyles>
   );
 }
@@ -122,7 +117,6 @@ const LayoutStyles = styled.div`
     .wrapper {
       margin: 0 auto;
       padding: 0.875rem 0;
-      max-width: 90rem;
       width: 100%;
       display: flex;
       justify-content: space-between;
@@ -159,24 +153,5 @@ const LayoutStyles = styled.div`
 
   footer {
     margin: 5rem 0 0;
-    padding: 0 1.5rem;
-
-    .wrapper {
-      margin: 0 auto;
-      padding: 1.75rem 0;
-      max-width: 90rem;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      border-top: 1px solid #e5e7eb;
-    }
-
-    .copyright {
-      font-size: 0.9375rem;
-      color: #6b7280;
-      text-align: center;
-    }
   }
 `;

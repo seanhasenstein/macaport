@@ -520,11 +520,11 @@ const ProductStyles = styled.div`
 
   .wrapper {
     margin: 0 auto;
-    max-width: 75rem;
+    max-width: 72rem;
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 0.8fr;
-    gap: 0 3rem;
+    gap: 0 3.5rem;
   }
 
   .images {

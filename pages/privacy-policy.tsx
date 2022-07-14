@@ -532,7 +532,7 @@ export default function PrivacyPolicy() {
 const PrivacyPolicyStyles = styled.div`
   margin: 0 auto;
   padding: 6rem 1.5rem;
-  max-width: 64rem;
+  max-width: 72rem;
   width: 100%;
 
   .section {

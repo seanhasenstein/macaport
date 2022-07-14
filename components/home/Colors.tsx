@@ -109,7 +109,7 @@ const ColorsStyles = styled.div`
   .wrapper {
     margin: 0 auto;
     padding: 4rem 0;
-    max-width: 64rem;
+    max-width: 72rem;
     width: 100%;
     border-top: 1px solid #d1d5db;
   }

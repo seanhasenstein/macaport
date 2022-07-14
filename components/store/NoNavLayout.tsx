@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { GlobalStyles } from '../../styles/GlobalStyles';
+import Footer from '../../components/Footer';
 
 type Props = {
   children: ReactNode;
@@ -20,7 +21,7 @@ export default function NoNavLayout({ children, title = 'Macaport' }: Props) {
       </Head>
       <header>
         <nav>
-          <div className="wrapper">
+          <div className="nav-wrapper">
             <Link href="/">
               <a>
                 <img
@@ -34,13 +35,7 @@ export default function NoNavLayout({ children, title = 'Macaport' }: Props) {
         </nav>
       </header>
       <main>{children}</main>
-      <footer>
-        <div className="wrapper">
-          <div className="copyright">
-            &copy; Macaport {new Date().getFullYear()}. All Rights Reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </LayoutStyles>
   );
 }
@@ -59,10 +54,9 @@ const LayoutStyles = styled.div`
       rgb(0 0 0 / 5%) 0px 1px 2px 0px;
   }
 
-  .wrapper {
+  .nav-wrapper {
     margin: 0 auto;
     padding: 0.875rem 0;
-    max-width: 90rem;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -71,29 +65,6 @@ const LayoutStyles = styled.div`
 
   .logo {
     width: 12rem;
-  }
-
-  footer {
-    margin: 0;
-    padding: 0 1.5rem;
-
-    .wrapper {
-      margin: 0 auto;
-      padding: 1.75rem 0;
-      max-width: 90rem;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      border-top: 1px solid #d1d5db;
-    }
-
-    .copyright {
-      font-size: 0.9375rem;
-      color: #6b7280;
-      text-align: center;
-    }
   }
 
   @media (max-width: 500px) {
