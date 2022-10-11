@@ -27,9 +27,13 @@ export default function StoreItem({ item, storeId }: Props) {
           <h4 className="secondary">{item.tag}</h4>
           <div className="bottom-row">
             <h4 className="price">{formatToMoney(item.sizes[0].price)}</h4>
-            <h4 className="colors">
-              {item.colors.length} color{item.colors.length > 1 ? 's' : null}
-            </h4>
+            <div className="colors">
+              {item.colors.map(color => (
+                <Color key={color.id} hex={color.hex} title={color.label}>
+                  <span className="sr-only">{color.label}</span>
+                </Color>
+              ))}
+            </div>
           </div>
         </div>
       </StoreItemStyles>
@@ -52,7 +56,7 @@ const StoreItemStyles = styled.a`
       rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.075) 0px 2px 3px 0px;
 
     .img-wrapper img {
-      transform: scale(1.04);
+      transform: scale(1.1);
     }
   }
 
@@ -66,8 +70,9 @@ const StoreItemStyles = styled.a`
     img {
       max-width: 11rem;
       width: 100%;
-      height: 100%;
-      transition: transform 150ms ease-in-out;
+      height: 14rem;
+      object-fit: contain;
+      transition: transform 250ms ease-in-out;
     }
   }
 
@@ -103,19 +108,23 @@ const StoreItemStyles = styled.a`
     justify-content: space-between;
   }
 
-  .price,
-  .colors {
+  .price {
     margin: 0;
     font-size: 0.875rem;
-  }
-
-  .price {
     font-weight: 600;
     color: #36383e;
   }
 
   .colors {
-    font-weight: 500;
-    color: #7f8694;
+    display: flex;
+    gap: 0.375rem;
   }
+`;
+
+const Color = styled.div<{ hex: string }>`
+  height: 1.125rem;
+  width: 1.125rem;
+  background-color: ${props => props.hex};
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 9999px;
 `;
