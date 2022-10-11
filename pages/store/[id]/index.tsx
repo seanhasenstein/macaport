@@ -152,7 +152,7 @@ const StoreStyles = styled.div`
     justify-content: center;
 
     span {
-      padding: 0.5rem 2rem;
+      padding: 0.5rem 1.25rem;
       font-size: 0.9375rem;
       font-weight: 500;
       color: #7f1d1d;

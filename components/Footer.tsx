@@ -24,12 +24,12 @@ const FooterStyles = styled.footer`
     display: flex;
     justify-content: center;
     align-items: center;
-    border-top: 1px solid #c6cbd2;
+    border-top: 1px solid #d1d5db;
   }
 
   p {
     margin: 0;
-    color: #595f6b;
+    color: #6b7280;
     font-size: 0.875rem;
   }
 `;
