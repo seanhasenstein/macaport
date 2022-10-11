@@ -95,12 +95,14 @@ export default function StoreHome({ store, error }: Props) {
                 This store will close on{' '}
                 {format(
                   new Date(store.closeDate),
-                  "LLL. do, yyyy 'at' h:mmaaa"
+                  "eee. LLL. do, yyyy 'at' h:mmaaa"
                 )}
               </span>
             </div>
           )}
-          <h2>{store.name}</h2>
+          <h2 className="store-name">
+            <span>{store.name}</span>
+          </h2>
         </div>
         {!store.products || store.products.length < 1 ? (
           <div className="no-products">
@@ -137,17 +139,38 @@ export default function StoreHome({ store, error }: Props) {
 
 const StoreStyles = styled.div`
   position: relative;
+  margin: 4rem 0 0;
 
-  h2,
+  .store-name,
   p {
     text-align: center;
   }
 
-  h2 {
-    margin: 0 auto;
+  .close-date {
+    padding: 0 1.5rem;
+    display: flex;
+    justify-content: center;
+
+    span {
+      padding: 0.5rem 2rem;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: #7f1d1d;
+      text-align: center;
+      line-height: 1.5;
+      background-color: #fee2e2;
+      border-radius: 0.1875rem;
+      border: 1px solid #fecaca;
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    }
+  }
+
+  .store-name {
+    margin: 3.25rem auto 0;
     padding: 0 1.5rem;
     font-size: 1.625rem;
     color: #111827;
+    line-height: 1.35;
   }
 
   p {
@@ -157,32 +180,6 @@ const StoreStyles = styled.div`
     width: 100%;
     color: #6e788c;
     line-height: 1.5;
-  }
-
-  .store-header {
-    margin: 3.5rem 0 0;
-  }
-
-  .close-date {
-    margin: 0 0 2.25rem;
-    padding: 0 1.5rem;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    span {
-      padding: 0.5rem 0.9375rem;
-      background-color: #fef2f2;
-      border-radius: 0.125rem;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: #991b1b;
-      text-align: center;
-      line-height: 1.35;
-      border: 1px solid #fee2e2;
-      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    }
   }
 
   .no-products {
@@ -240,12 +237,10 @@ const StoreStyles = styled.div`
   }
 
   @media (max-width: 640px) {
-    .store-header {
-      margin: 3rem 0 0;
-    }
+    margin: 3rem 0 0;
 
     .items {
-      margin: 3rem 0 0;
+      margin: 3.75rem 0 0;
       grid-template-columns: 1fr;
       gap: 1.5rem;
     }
