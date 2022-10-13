@@ -205,6 +205,15 @@ export interface Store {
   updatedAt: string;
 }
 
+export interface ContactFormValues {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  message: string;
+  honeypot: string;
+}
+
 export interface Request extends NextApiRequest {
   db: Db;
   dbClient: MongoClient;

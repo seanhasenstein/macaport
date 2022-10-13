@@ -3,29 +3,42 @@ import { format, utcToZonedTime } from 'date-fns-tz';
 import { createReceiptNumber } from '../../utils';
 import { sendEmail } from '../../utils/mailgun';
 import { generateContactFormEmail } from '../../utils/email';
+import { ContactFormValues } from 'interfaces';
+
+interface ExtendedRequest extends NextApiRequest {
+  body: ContactFormValues;
+}
 
 export default async function handler(
-  req: NextApiRequest,
+  req: ExtendedRequest,
   res: NextApiResponse
 ) {
-  const id = createReceiptNumber();
-  const date = new Date();
-  const timeZone = 'America/Chicago';
-  const zonedDate = utcToZonedTime(date, timeZone);
-  const timestamp = format(zonedDate, "MM/dd/yyyy 'at' h:mmaaa '(CT)'");
+  if (!process.env.CONTACT_FORM_TO) {
+    throw new Error('CONTACT_FORM_TO env. var is required');
+  }
 
-  const { text, html } = generateContactFormEmail(req.body, id, timestamp);
+  if (!process.env.CONTACT_FORM_FROM) {
+    throw new Error('CONTACT_FORM_FROM env. var is required');
+  }
 
-  const result = await sendEmail({
-    to: `<${process.env.CONTACT_FORM_TO}>`,
-    from: `Macaport Contact Form <${process.env.CONTACT_FORM_FROM}>`,
-    subject: `Contact Form Message [#${id}]`,
-    replyTo: req.body.email,
-    text,
-    html,
-  });
+  try {
+    const id = createReceiptNumber();
+    const zonedDate = utcToZonedTime(new Date(), 'America/Chicago');
+    const timestamp = format(zonedDate, "MM/dd/yyyy 'at' h:mmaaa '(CT)'");
 
-  console.log(result);
+    const { text, html } = generateContactFormEmail(req.body, id, timestamp);
 
-  res.status(200).json({ success: true });
+    const result = await sendEmail({
+      to: process.env.CONTACT_FORM_TO,
+      from: `Macaport Contact Form <${process.env.CONTACT_FORM_FROM}>`,
+      subject: `Contact Form Message [#${id}]`,
+      replyTo: req.body.email,
+      text,
+      html,
+    });
+
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
 }
