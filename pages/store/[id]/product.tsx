@@ -1,25 +1,22 @@
 import React from 'react';
 import { GetServerSideProps } from 'next';
-import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { connectToDb, store as storeModel } from 'db';
-import { getStoreStatus } from 'utils/store';
-import {
-  Store,
-  StoreProduct,
-  ProductColor,
-  ProductSize,
-} from '../../../interfaces';
+import { defaultSize, getStoreStatus } from 'utils/store';
+import { Store, StoreProduct, ProductColor } from '../../../interfaces';
 import {
   checkHexColor,
   getUrlParameter,
   formatToMoney,
   isOutOfStock,
-  createId,
 } from '../../../utils';
 import { useCart } from '../../../hooks/useCart';
 import useHasMounted from '../../../hooks/useHasMounted';
-import usePersonalization from '../../../hooks/usePersonalization';
+import useProductColor from 'hooks/useStoreProductColor';
+import useProductImages from 'hooks/useStoreProductImages';
+import useProductSize from 'hooks/useStoreProductSize';
+import useProductPersonalization from '../../../hooks/useStoreProductPersonalization';
+import useAddProductToOrder from 'hooks/useStoreProductAddToOrder';
 import StoreLayout from '../../../components/store/StoreLayout';
 import ProductSidebar from '../../../components/store/ProductSidebar';
 import Lightbox from '../../../components/store/Lightbox';
@@ -82,205 +79,58 @@ type Props = {
   error?: string;
 };
 
-const defaultSize = {
-  id: 'default',
-  label: 'DEFAULT',
-  price: 0,
-};
-
 export default function Product(props: Props) {
-  const router = useRouter();
   const hasMounted = useHasMounted();
+  const [showSidebar, setShowSidebar] = React.useState(false);
+  const [showLightbox, setShowLightbox] = React.useState(false);
+
   const { addItem, items } = useCart();
-  const personalization = usePersonalization(
+
+  const personalization = useProductPersonalization(
     props.product.personalization.addons,
     props.product.personalization.maxLines
   );
-  const [showSidebar, setShowSidebar] = React.useState(false);
-  const [showLightbox, setShowLightbox] = React.useState(false);
-  const [color, setColor] = React.useState(() => {
-    if (router.query.colorId) {
-      const colorId = getUrlParameter(router.query.colorId);
-      const verifiedColor = props.product.colors.find(c => c.id === colorId);
-      return verifiedColor || props.product.colors[0];
-    } else {
-      return props.product.colors[0];
-    }
+
+  const productColor = useProductColor({
+    productColors: props.product.colors,
+    productSkus: props.product.productSkus,
+    cartItems: items,
+    showSidebar,
   });
-  const [primaryImage, setPrimaryImage] = React.useState(() => {
-    if (props.error) return 'error';
-    const c = props.product.colors.find(c => c.id === color.id);
-    return c?.primaryImage;
+
+  const productSize = useProductSize({
+    cartItems: items,
+    productSkus: props.product.productSkus,
+    selectedColor: productColor.color,
   });
-  const [secondaryImages, setSecondaryImages] = React.useState(() => {
-    if (props.error) return ['error'];
-    const c = props.product.colors.find(c => c.id === color.id);
-    return c?.secondaryImages;
+
+  const productImages = useProductImages({
+    error: props.error,
+    productColors: props.product.colors,
+    selectedColor: productColor.color,
+    storeId: props.store._id,
+    productId: props.product.id,
+    setSize: productSize.setSize,
+    setShowLightbox,
   });
-  const [clickedImage, setClickedImage] = React.useState('image-0');
-  const [size, setSize] = React.useState<ProductSize>(defaultSize);
-  const [colorOutOfStock, setColorOutOfStock] = React.useState(false);
-  const [lowInventory, setLowInventory] = React.useState(false);
-  const [sizeValidationError, setSizeValidationError] =
-    React.useState<string>();
 
-  React.useEffect(() => {
-    if (props.error) return;
-
-    router.push(
-      `/store/${props.store._id}/product?productId=${props.product.id}&colorId=${color.id}`,
-      undefined,
-      { shallow: true }
-    );
-
-    setPrimaryImage(() => {
-      const c = props.product.colors.find(c => c.id === color.id);
-      return c?.primaryImage;
-    });
-
-    setSecondaryImages(() => {
-      const c = props.product.colors.find(c => c.id === color.id);
-      return c?.secondaryImages;
-    });
-
-    setSize(defaultSize);
-  }, [
-    color.id,
-    props.error,
-    props.product.colors,
-    props.product.id,
-    props.store._id,
-  ]);
-
-  React.useEffect(() => {
-    if (!showSidebar) {
-      const colorStockCheck = props.product.productSkus.every(ps => {
-        if (ps.color.id !== color.id) return true;
-        const cartItem = items.find(i => i.sku.id === ps.id);
-        const cartItemInventory = cartItem?.quantity || 0;
-        if (ps.inventory - cartItemInventory <= 0) {
-          return true;
-        }
-        return false;
-      });
-
-      setColorOutOfStock(colorStockCheck);
-    }
-  }, [color.id, items, props.product.productSkus, showSidebar]);
-
-  // don't display low inventory message when there isn't a size selected
-  React.useEffect(() => {
-    if (size.label === 'DEFAULT') {
-      setLowInventory(false);
-    }
-  }, [size]);
-
-  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const updatedColor =
-      props.product.colors.find(c => c.id === e.target.value) ||
-      props.product.colors[0];
-    setColor(updatedColor);
-  };
-
-  const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (sizeValidationError && e.target.value !== undefined) {
-      setSizeValidationError(undefined);
-    }
-
-    const productSku = props.product.productSkus.find(
-      ps => ps.size.label === e.target.value && ps.color.id === color.id
-    );
-
-    if (!productSku) {
-      // TODO: do we really want to throw an error here?
-      // what else could we do?
-      throw new Error('No size was found.');
-    }
-
-    // look for productSku in cartItems and subtract from db inventory
-    const cartItem = items.find(cartItem => cartItem.sku.id === productSku.id);
-    const cartItemQuantity = cartItem?.quantity || 0;
-    const combinedInventory = productSku.inventory - cartItemQuantity;
-
-    setLowInventory(combinedInventory < 3);
-    setSize(productSku.size);
-  };
-
-  const handleImageClick = (imageIndex: string) => {
-    setClickedImage(imageIndex);
-    setShowLightbox(true);
-  };
+  const handleAddToOrderClick = useAddProductToOrder({
+    addItem,
+    productName: props.product.name,
+    primaryImage: productImages.primaryImage,
+    size: productSize.size,
+    color: productColor.color,
+    productSkus: props.product.productSkus,
+    personalization,
+    setShowSidebar,
+    setSizeValidationError: productSize.setSizeValidationError,
+  });
 
   const handleProductReset = () => {
     personalization.reset();
     setShowSidebar(false);
-    setSize(defaultSize);
-    setLowInventory(false);
-  };
-
-  const handleAddToOrderClick = () => {
-    if (size.label === 'DEFAULT') {
-      setSizeValidationError('A size is required');
-      return;
-    }
-
-    const sku = props.product.productSkus.find(
-      sku => sku.size.label === size.label && sku.color.id === color.id
-    );
-
-    // TODO: what does this do exactly?
-    const flattenedPersonalizationAddonItems = Object.values(
-      personalization.addonItems
-    ).flat();
-
-    // check for empty personalization items
-    const hasEmptyAddonField = flattenedPersonalizationAddonItems.some(
-      baseItem => {
-        if (baseItem.value === '') {
-          return true;
-        }
-
-        return baseItem.subItems.some(subitem => subitem.value === '');
-      }
-    );
-
-    if (hasEmptyAddonField) {
-      personalization.setValidationError('Customization fields require values');
-      personalization.setAddClickedWithBlankField(true);
-      return;
-    }
-
-    personalization.setFlattendedItems(flattenedPersonalizationAddonItems);
-
-    const formattedAddonItems = flattenedPersonalizationAddonItems.map(
-      baseAddonItem => {
-        const { name, type, list, limit, subItems, ...restOfBaseItem } =
-          baseAddonItem;
-
-        const formattedSubItems = subItems.map(subItem => {
-          const { name, type, list, limit, ...restofSubItem } = subItem;
-          return restofSubItem;
-        });
-
-        return {
-          ...restOfBaseItem,
-          subItems: formattedSubItems,
-        };
-      }
-    );
-
-    if (sku)
-      addItem({
-        id: `${sku.id}-${createId(false, 5)}`,
-        sku: sku,
-        quantity: 1,
-        name: props.product.name,
-        image: primaryImage,
-        price: sku.size.price + personalization.total,
-        personalizationAddons: formattedAddonItems,
-      });
-
-    setShowSidebar(true);
+    productSize.setSize(defaultSize);
+    productSize.setLowInventory(false);
   };
 
   if (props.error) {
@@ -294,56 +144,63 @@ export default function Product(props: Props) {
       >
         <ProductStyles>
           <div className="wrapper">
+            {/* move to it's own component */}
             <div className="mobile-header">
               <h2 className="name">{props.product.name}</h2>
               <h3 className="price">
                 {formatToMoney(
-                  (size.label === 'DEFAULT'
+                  (productSize.size.label === 'DEFAULT'
                     ? props.product.sizes[0].price
-                    : size.price) + personalization.total
+                    : productSize.size.price) + personalization.total
                 )}
               </h3>
             </div>
+            {/* TODO: move to it's own component */}
             <div className="images">
               <button
                 className="primary-img"
-                onClick={() => handleImageClick('image-0')}
+                onClick={() => productImages.handleImageClick('image-0')}
               >
                 <img
-                  src={primaryImage}
-                  alt={`${color.label} ${props.product.name}`}
+                  src={productImages.primaryImage}
+                  alt={`${productColor.color.label} ${props.product.name}`}
                 />
               </button>
-              {secondaryImages && secondaryImages.length > 0 && (
-                <div className="secondary-imgs">
-                  {secondaryImages &&
-                    secondaryImages.map((secImg, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleImageClick(`image-${index + 1}`)}
-                      >
-                        <img
-                          src={secImg}
-                          alt={`${color.label} ${props.product.name} ${
-                            index + 2
-                          }`}
-                        />
-                      </button>
-                    ))}
-                </div>
-              )}
+              {productImages.secondaryImages &&
+                productImages.secondaryImages.length > 0 && (
+                  <div className="secondary-imgs">
+                    {productImages.secondaryImages &&
+                      productImages.secondaryImages.map((secImg, index) => (
+                        <button
+                          key={index}
+                          onClick={() =>
+                            productImages.handleImageClick(`image-${index + 1}`)
+                          }
+                        >
+                          <img
+                            src={secImg}
+                            alt={`${productColor.color.label} ${
+                              props.product.name
+                            } ${index + 2}`}
+                          />
+                        </button>
+                      ))}
+                  </div>
+                )}
             </div>
             <div className="main">
+              {/* TODO: move to it's own component */}
               <div className="large-header">
                 <h2 className="name">{props.product.name}</h2>
                 <h3 className="price">
                   {formatToMoney(
-                    (size.label === 'DEFAULT'
+                    (productSize.size.label === 'DEFAULT'
                       ? props.product.sizes[0].price
-                      : size.price) + personalization.total
+                      : productSize.size.price) + personalization.total
                   )}
                 </h3>
               </div>
+              {/* TODO: move to it's own compnent */}
               <div className="colors">
                 <h4>Colors</h4>
                 <div className="grid">
@@ -353,15 +210,15 @@ export default function Product(props: Props) {
                       id={c.id}
                       hex={c.hex}
                       label={c.label}
-                      activeColor={color}
-                      handleColorChange={handleColorChange}
+                      activeColor={productColor.color}
+                      handleColorChange={productColor.handleColorChange}
                     />
                   ))}
                 </div>
               </div>
               <div className="section sizes">
                 {/* TODO: Move this to it's own component */}
-                {colorOutOfStock && (
+                {productColor.colorOutOfStock && (
                   <div className="color-out-of-stock">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -378,7 +235,7 @@ export default function Product(props: Props) {
                   </div>
                 )}
                 {/* TODO: Move this to it's own component */}
-                {lowInventory && (
+                {productSize.lowInventory && (
                   <div className="few-left-instock">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -398,20 +255,24 @@ export default function Product(props: Props) {
                 {hasMounted && (
                   <div className="grid">
                     {props.product.productSkus.map(sku => {
-                      if (sku.color.id === color.id) {
+                      if (sku.color.id === productColor.color.id) {
                         return (
                           <div
                             key={sku.size.id}
                             className={`size ${
-                              size.label === sku.size.label ? 'checked' : ''
+                              productSize.size.label === sku.size.label
+                                ? 'checked'
+                                : ''
                             }`}
                           >
                             <input
                               type="radio"
                               value={sku.size.label}
-                              checked={size.label === sku.size.label}
+                              checked={
+                                productSize.size.label === sku.size.label
+                              }
                               disabled={isOutOfStock(sku, items)}
-                              onChange={handleSizeChange}
+                              onChange={productSize.handleSizeChange}
                               name="size"
                               id={sku.size.label}
                             />
@@ -444,8 +305,8 @@ export default function Product(props: Props) {
                 >
                   Add to order
                 </button>
-                {sizeValidationError && (
-                  <div className="error">{sizeValidationError}</div>
+                {productSize.sizeValidationError && (
+                  <div className="error">{productSize.sizeValidationError}</div>
                 )}
                 {personalization.validationError && (
                   <div className="error">{personalization.validationError}</div>
@@ -477,9 +338,9 @@ export default function Product(props: Props) {
         <ProductSidebar
           storeId={props.store._id}
           item={props.product}
-          color={color}
-          size={size}
-          image={primaryImage}
+          color={productColor.color}
+          size={productSize.size}
+          image={productImages.primaryImage}
           resetProduct={handleProductReset}
           personalization={{
             addonItems: personalization.flattenedItems,
@@ -489,13 +350,13 @@ export default function Product(props: Props) {
         />
       </StoreLayout>
       {/* TODO: add headlesss ui to the lightbox */}
-      {showLightbox && primaryImage ? (
+      {showLightbox && productImages.primaryImage ? (
         <Lightbox
           setShowLightbox={setShowLightbox}
-          primaryImage={primaryImage}
-          primaryAlt={`${color.label} ${props.product.name}`}
-          secondaryImages={secondaryImages}
-          clickedImage={clickedImage}
+          primaryImage={productImages.primaryImage}
+          primaryAlt={`${productColor.color.label} ${props.product.name}`}
+          secondaryImages={productImages.secondaryImages}
+          clickedImage={productImages.clickedImage}
         />
       ) : null}
     </>
