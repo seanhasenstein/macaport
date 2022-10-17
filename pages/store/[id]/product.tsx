@@ -1,9 +1,9 @@
 import React from 'react';
-import Link from 'next/link';
 import { GetServerSideProps } from 'next';
-import { connectToDb, store } from '../../../db';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
+import { connectToDb, store as storeModel } from 'db';
+import { getStoreStatus } from 'utils/store';
 import {
   Store,
   StoreProduct,
@@ -15,7 +15,6 @@ import {
   getUrlParameter,
   formatToMoney,
   isOutOfStock,
-  isStoreActive,
   createId,
 } from '../../../utils';
 import { useCart } from '../../../hooks/useCart';
@@ -24,21 +23,21 @@ import usePersonalization from '../../../hooks/usePersonalization';
 import StoreLayout from '../../../components/store/StoreLayout';
 import ProductSidebar from '../../../components/store/ProductSidebar';
 import Lightbox from '../../../components/store/Lightbox';
-import { MessageStyles } from '../../../styles/Message';
 import ProductPersonalization from '../../../components/store/personalization';
+import ProductPageError from 'components/store/errors/ProductPageError';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
     const id = getUrlParameter(context.query.id);
 
     if (!id) {
-      throw new Error('No store id provided.');
+      throw new Error("A store id is required but wasn't provided");
     }
 
     const db = await connectToDb();
-    const storeRes: Store = await store.getStoreById(db, id);
+    const store = await storeModel.getStoreById(db, id);
 
-    if (!storeRes) {
+    if (!store) {
       return {
         redirect: {
           permanent: false,
@@ -47,9 +46,9 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    const storeIsActive = isStoreActive(storeRes.openDate, storeRes.closeDate);
+    const isStoreActive = getStoreStatus(store.openDate, store.closeDate);
 
-    if (!storeIsActive) {
+    if (isStoreActive === false) {
       return {
         redirect: {
           permanent: false,
@@ -58,20 +57,18 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    const product = storeRes.products.find(
-      p => p.id === context.query.productId
-    );
+    const product = store.products.find(p => p.id === context.query.productId);
 
     if (!product) {
       return {
         redirect: {
           permanent: false,
-          destination: `/store/${storeRes._id}`,
+          destination: `/store/${store._id}`,
         },
       };
     }
 
-    return { props: { store: storeRes, product } };
+    return { props: { store, product } };
   } catch (error) {
     return {
       props: { error },
@@ -91,33 +88,33 @@ const defaultSize = {
   price: 0,
 };
 
-export default function Product({ store, product, error }: Props) {
+export default function Product(props: Props) {
   const router = useRouter();
+  const hasMounted = useHasMounted();
   const { addItem, items } = useCart();
   const personalization = usePersonalization(
-    product.personalization.addons,
-    product.personalization.maxLines
+    props.product.personalization.addons,
+    props.product.personalization.maxLines
   );
-  const hasMounted = useHasMounted();
   const [showSidebar, setShowSidebar] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
   const [color, setColor] = React.useState(() => {
     if (router.query.colorId) {
       const colorId = getUrlParameter(router.query.colorId);
-      const verifiedColor = product.colors.find(c => c.id === colorId);
-      return verifiedColor || product.colors[0];
+      const verifiedColor = props.product.colors.find(c => c.id === colorId);
+      return verifiedColor || props.product.colors[0];
     } else {
-      return product.colors[0];
+      return props.product.colors[0];
     }
   });
   const [primaryImage, setPrimaryImage] = React.useState(() => {
-    if (error) return 'error';
-    const c = product.colors.find(c => c.id === color.id);
+    if (props.error) return 'error';
+    const c = props.product.colors.find(c => c.id === color.id);
     return c?.primaryImage;
   });
   const [secondaryImages, setSecondaryImages] = React.useState(() => {
-    if (error) return ['error'];
-    const c = product.colors.find(c => c.id === color.id);
+    if (props.error) return ['error'];
+    const c = props.product.colors.find(c => c.id === color.id);
     return c?.secondaryImages;
   });
   const [clickedImage, setClickedImage] = React.useState('image-0');
@@ -128,30 +125,36 @@ export default function Product({ store, product, error }: Props) {
     React.useState<string>();
 
   React.useEffect(() => {
-    if (error) return;
+    if (props.error) return;
 
     router.push(
-      `/store/${store._id}/product?productId=${product.id}&colorId=${color.id}`,
+      `/store/${props.store._id}/product?productId=${props.product.id}&colorId=${color.id}`,
       undefined,
       { shallow: true }
     );
 
     setPrimaryImage(() => {
-      const c = product.colors.find(c => c.id === color.id);
+      const c = props.product.colors.find(c => c.id === color.id);
       return c?.primaryImage;
     });
 
     setSecondaryImages(() => {
-      const c = product.colors.find(c => c.id === color.id);
+      const c = props.product.colors.find(c => c.id === color.id);
       return c?.secondaryImages;
     });
 
     setSize(defaultSize);
-  }, [color.id, error, product.colors, product.id, store._id]);
+  }, [
+    color.id,
+    props.error,
+    props.product.colors,
+    props.product.id,
+    props.store._id,
+  ]);
 
   React.useEffect(() => {
     if (!showSidebar) {
-      const colorStockCheck = product.productSkus.every(ps => {
+      const colorStockCheck = props.product.productSkus.every(ps => {
         if (ps.color.id !== color.id) return true;
         const cartItem = items.find(i => i.sku.id === ps.id);
         const cartItemInventory = cartItem?.quantity || 0;
@@ -163,10 +166,10 @@ export default function Product({ store, product, error }: Props) {
 
       setColorOutOfStock(colorStockCheck);
     }
-  }, [color.id, items, product.productSkus, showSidebar]);
+  }, [color.id, items, props.product.productSkus, showSidebar]);
 
+  // don't display low inventory message when there isn't a size selected
   React.useEffect(() => {
-    // don't display low inventory message when there isn't a size selected
     if (size.label === 'DEFAULT') {
       setLowInventory(false);
     }
@@ -174,7 +177,8 @@ export default function Product({ store, product, error }: Props) {
 
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const updatedColor =
-      product.colors.find(c => c.id === e.target.value) || product.colors[0];
+      props.product.colors.find(c => c.id === e.target.value) ||
+      props.product.colors[0];
     setColor(updatedColor);
   };
 
@@ -183,11 +187,13 @@ export default function Product({ store, product, error }: Props) {
       setSizeValidationError(undefined);
     }
 
-    const productSku = product.productSkus.find(
+    const productSku = props.product.productSkus.find(
       ps => ps.size.label === e.target.value && ps.color.id === color.id
     );
 
     if (!productSku) {
+      // TODO: do we really want to throw an error here?
+      // what else could we do?
       throw new Error('No size was found.');
     }
 
@@ -218,10 +224,11 @@ export default function Product({ store, product, error }: Props) {
       return;
     }
 
-    const sku = product.productSkus.find(
+    const sku = props.product.productSkus.find(
       sku => sku.size.label === size.label && sku.color.id === color.id
     );
 
+    // TODO: what does this do exactly?
     const flattenedPersonalizationAddonItems = Object.values(
       personalization.addonItems
     ).flat();
@@ -267,7 +274,7 @@ export default function Product({ store, product, error }: Props) {
         id: `${sku.id}-${createId(false, 5)}`,
         sku: sku,
         quantity: 1,
-        name: product.name,
+        name: props.product.name,
         image: primaryImage,
         price: sku.size.price + personalization.total,
         personalizationAddons: formattedAddonItems,
@@ -276,49 +283,23 @@ export default function Product({ store, product, error }: Props) {
     setShowSidebar(true);
   };
 
-  if (error) {
-    return (
-      <StoreLayout>
-        <MessageStyles>
-          <div className="wrapper">
-            <div className="content">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="icon"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <h3>Error</h3>
-              <p>{error}</p>
-              <Link href={`/store/${store._id}`}>
-                <a className="button">Back to store home</a>
-              </Link>
-            </div>
-          </div>
-        </MessageStyles>
-      </StoreLayout>
-    );
+  if (props.error) {
+    return <ProductPageError error={props.error} storeId={props.store._id} />;
   }
 
   return (
     <>
-      <StoreLayout title={`${product.name} | ${store.name} | Macaport`}>
+      <StoreLayout
+        title={`${props.product.name} | ${props.store.name} | Macaport`}
+      >
         <ProductStyles>
           <div className="wrapper">
             <div className="mobile-header">
-              <h2 className="name">{product.name}</h2>
+              <h2 className="name">{props.product.name}</h2>
               <h3 className="price">
                 {formatToMoney(
                   (size.label === 'DEFAULT'
-                    ? product.sizes[0].price
+                    ? props.product.sizes[0].price
                     : size.price) + personalization.total
                 )}
               </h3>
@@ -330,7 +311,7 @@ export default function Product({ store, product, error }: Props) {
               >
                 <img
                   src={primaryImage}
-                  alt={`${color.label} ${product.name}`}
+                  alt={`${color.label} ${props.product.name}`}
                 />
               </button>
               {secondaryImages && secondaryImages.length > 0 && (
@@ -343,7 +324,9 @@ export default function Product({ store, product, error }: Props) {
                       >
                         <img
                           src={secImg}
-                          alt={`${color.label} ${product.name} ${index + 2}`}
+                          alt={`${color.label} ${props.product.name} ${
+                            index + 2
+                          }`}
                         />
                       </button>
                     ))}
@@ -352,11 +335,11 @@ export default function Product({ store, product, error }: Props) {
             </div>
             <div className="main">
               <div className="large-header">
-                <h2 className="name">{product.name}</h2>
+                <h2 className="name">{props.product.name}</h2>
                 <h3 className="price">
                   {formatToMoney(
                     (size.label === 'DEFAULT'
-                      ? product.sizes[0].price
+                      ? props.product.sizes[0].price
                       : size.price) + personalization.total
                   )}
                 </h3>
@@ -364,7 +347,7 @@ export default function Product({ store, product, error }: Props) {
               <div className="colors">
                 <h4>Colors</h4>
                 <div className="grid">
-                  {product.colors.map(c => (
+                  {props.product.colors.map(c => (
                     <Color
                       key={c.id}
                       id={c.id}
@@ -377,6 +360,7 @@ export default function Product({ store, product, error }: Props) {
                 </div>
               </div>
               <div className="section sizes">
+                {/* TODO: Move this to it's own component */}
                 {colorOutOfStock && (
                   <div className="color-out-of-stock">
                     <svg
@@ -393,6 +377,7 @@ export default function Product({ store, product, error }: Props) {
                     This color is currently sold out.
                   </div>
                 )}
+                {/* TODO: Move this to it's own component */}
                 {lowInventory && (
                   <div className="few-left-instock">
                     <svg
@@ -412,7 +397,7 @@ export default function Product({ store, product, error }: Props) {
                 <h4>Sizes</h4>
                 {hasMounted && (
                   <div className="grid">
-                    {product.productSkus.map(sku => {
+                    {props.product.productSkus.map(sku => {
                       if (sku.color.id === color.id) {
                         return (
                           <div
@@ -447,7 +432,7 @@ export default function Product({ store, product, error }: Props) {
               </div>
 
               <ProductPersonalization
-                {...product.personalization}
+                {...props.product.personalization}
                 {...personalization}
               />
 
@@ -468,17 +453,17 @@ export default function Product({ store, product, error }: Props) {
               </div>
 
               <div className="section details">
-                {product.description && (
+                {props.product.description && (
                   <div className="section description">
                     <h4>Description</h4>
-                    <p>{product.description}</p>
+                    <p>{props.product.description}</p>
                   </div>
                 )}
-                {product.details && product.details.length > 0 && (
+                {props.product.details && props.product.details.length > 0 && (
                   <div className="other-details">
                     <h4>Details</h4>
                     <ul>
-                      {product?.details.map((d, i) => (
+                      {props.product?.details.map((d, i) => (
                         <li key={i}>{d}</li>
                       ))}
                     </ul>
@@ -488,9 +473,10 @@ export default function Product({ store, product, error }: Props) {
             </div>
           </div>
         </ProductStyles>
+        {/* TODO: add headless ui to the sidebar */}
         <ProductSidebar
-          storeId={store._id}
-          item={product}
+          storeId={props.store._id}
+          item={props.product}
           color={color}
           size={size}
           image={primaryImage}
@@ -502,11 +488,12 @@ export default function Product({ store, product, error }: Props) {
           isSidebarOpen={showSidebar}
         />
       </StoreLayout>
+      {/* TODO: add headlesss ui to the lightbox */}
       {showLightbox && primaryImage ? (
         <Lightbox
           setShowLightbox={setShowLightbox}
           primaryImage={primaryImage}
-          primaryAlt={`${color.label} ${product.name}`}
+          primaryAlt={`${color.label} ${props.product.name}`}
           secondaryImages={secondaryImages}
           clickedImage={clickedImage}
         />

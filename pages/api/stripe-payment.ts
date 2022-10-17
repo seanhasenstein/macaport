@@ -1,21 +1,21 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 import fetch from 'node-fetch';
-import { connectToDb, store } from '../../db';
+import { connectToDb, store as storeModel } from '../../db';
 import {
   CartItem,
   Order,
   OrderItem,
   PersonalizationItem,
-  Store as StoreInterface,
+  Store,
 } from '../../interfaces/';
 import {
   calculateSalesTax,
   calculateCartTotal,
   createReceiptNumber,
   removeNonDigits,
-  isStoreActive,
 } from '../../utils';
+import { getStoreStatus } from '../../utils/store';
 
 type CartAccumulator = {
   verifiedItems: OrderItem[];
@@ -93,11 +93,14 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     } = req.body;
 
     const db = await connectToDb();
-    const { products, openDate, closeDate }: StoreInterface =
-      await store.getStoreById(db, storeId);
+    const store: Store | undefined = await storeModel.getStoreById(db, storeId);
+
+    if (!store) {
+      return res.json({ storeClosed: true });
+    }
 
     // 1. verify that the store is open
-    const isStoreOpen = isStoreActive(openDate, closeDate);
+    const isStoreOpen = getStoreStatus(store.openDate, store.closeDate);
 
     if (isStoreOpen === false) {
       return res.json({ storeClosed: true });
@@ -111,7 +114,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       verifiedSubtotal,
     }: CartAccumulator = items.reduce(
       (cartAccumulator: CartAccumulator, currentItem: CartItem) => {
-        const product = products.find(
+        const product = store.products.find(
           p => p.id === currentItem.sku.storeProductId
         );
         const productSku = product?.productSkus.find(

@@ -1,13 +1,14 @@
 import React from 'react';
 import { GetServerSideProps } from 'next';
-import { connectToDb, store } from '../../../db';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styled from 'styled-components';
+import { connectToDb, store as storeModel } from 'db';
+import { getStoreStatus } from 'utils/store';
 import { useCart } from '../../../hooks/useCart';
 import useHasMounted from '../../../hooks/useHasMounted';
 import { CartItem, Store } from '../../../interfaces';
-import { formatToMoney, isStoreActive } from '../../../utils';
+import { formatToMoney, getUrlParameter } from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
 import CheckoutItem from '../../../components/store/CheckoutItem';
 import CheckoutForm from '../../../components/store/CheckoutForm';
@@ -15,18 +16,16 @@ import OutOfStockModal from '../../../components/store/OutOfStockModal';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
-    const id = Array.isArray(context.query.id)
-      ? context.query.id[0]
-      : context.query.id;
+    const id = getUrlParameter(context.query.id);
 
     if (!id) {
-      throw new Error('No store id provided.');
+      throw new Error("A store id is required but wasn't provided");
     }
 
     const db = await connectToDb();
-    const storeRes = await store.getStoreById(db, id);
+    const store = await storeModel.getStoreById(db, id);
 
-    if (!storeRes) {
+    if (!store) {
       return {
         redirect: {
           permanent: false,
@@ -35,9 +34,9 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    const storeIsActive = isStoreActive(storeRes.openDate, storeRes.closeDate);
+    const isStoreActive = getStoreStatus(store.openDate, store.closeDate);
 
-    if (!storeIsActive) {
+    if (isStoreActive === false) {
       return {
         redirect: {
           permanent: false,
@@ -46,7 +45,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    return { props: { store: storeRes } };
+    return { props: { store } };
   } catch (error) {
     return {
       props: { error },

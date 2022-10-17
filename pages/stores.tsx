@@ -3,15 +3,15 @@ import Link from 'next/link';
 import styled from 'styled-components';
 import { format } from 'date-fns';
 import { connectToDb, store } from '../db';
-import { isStoreActive } from '../utils';
-import { Store } from '../interfaces';
+import { getStoreStatus } from '../utils/store';
+import { StoreForStoresPage } from '../interfaces';
 import Layout from '../components/Layout';
 
 export const getServerSideProps: GetServerSideProps = async () => {
   const db = await connectToDb();
-  const stores: Store[] = await store.getStores(db);
+  const stores = await store.getStoresForStoresPage(db);
   const activeStores = stores?.filter(s => {
-    const isActive = isStoreActive(s.openDate, s.closeDate);
+    const isActive = getStoreStatus(s.openDate, s.closeDate);
     return isActive;
   });
 
@@ -21,67 +21,57 @@ export const getServerSideProps: GetServerSideProps = async () => {
 };
 
 type Props = {
-  stores: Store[];
+  stores: StoreForStoresPage[];
 };
 
-export default function Stores({ stores }: Props) {
+export default function Stores(props: Props) {
   return (
     <Layout>
-      <StoresStyles>
+      <StoresStylesV2>
         <div className="wrapper">
-          <h2>Current Stores</h2>
-          {(!stores || stores.length < 1) && (
+          <h2 className="page-title">Current stores</h2>
+          {(!props.stores || props.stores.length < 1) && (
             <div className="empty">There are currently no active stores.</div>
           )}
-          {stores && stores.length > 0 && (
-            <div className="grid">
-              <div className="header">
-                <span>Store Name</span>
-                <span>Close Date</span>
-              </div>
-              <div>
-                {stores.map(s => (
-                  <Link key={s._id} href={`/store/${s._id}`}>
-                    <a className="store-link">
-                      <div className="item">
-                        <span className="store-name">{s.name}</span>
-                        <span className="store-close-date">
-                          {s.closeDate
-                            ? format(
-                                new Date(s.closeDate),
-                                "LLL. do, yyyy 'at' h:mmaaa"
-                              )
-                            : 'Permanently Open'}
-                        </span>
-                        <span className="visit-store">
-                          <span>Visit store</span>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </span>
-                      </div>
-                    </a>
+          {props.stores && props.stores.length > 0 && (
+            <div className="stores-grid">
+              {props.stores.map(store => (
+                <div key={store._id} className="store">
+                  <h3 className="store-name">{store.name}</h3>
+                  <p className="close-date">
+                    {store.closeDate ? (
+                      <span>
+                        Closes <br />
+                        {format(
+                          new Date(store.closeDate),
+                          "LLL. do, yyyy 'at' h:mmaaa"
+                        )}
+                      </span>
+                    ) : (
+                      'Permanently Open'
+                    )}
+                  </p>
+                  <Link key={store._id} href={`/store/${store._id}`}>
+                    <a className="store-link">Visit store</a>
                   </Link>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           )}
+          <div className="interest-container">
+            <h4>Are you interested in opening an online store?</h4>
+            <Link href="/contact">
+              <a className="contact-link">Send us a message</a>
+            </Link>
+          </div>
         </div>
-      </StoresStyles>
+      </StoresStylesV2>
     </Layout>
   );
 }
 
-const StoresStyles = styled.div`
-  padding: 0 1.5rem;
+const StoresStylesV2 = styled.div`
+  padding: 1.5rem 1.5rem 0;
 
   .wrapper {
     margin: 0 auto;
@@ -90,136 +80,127 @@ const StoresStyles = styled.div`
     width: 100%;
   }
 
-  h2 {
+  .page-title {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.75rem;
+    text-align: center;
+    letter-spacing: -0.0125em;
   }
 
-  p {
-    margin: 1rem 0 0;
-    font-size: 1rem;
-    color: #6b7280;
-    line-height: 1.5;
-    max-width: 32rem;
-  }
-
-  .empty {
-    margin: 1rem 0 0;
-    font-size: 1rem;
-    color: #6b7280;
-  }
-
-  .grid {
-    margin: 2.5rem 0;
-  }
-
-  .header,
-  .item {
-    grid-template-columns: 1fr 1fr 6rem;
-  }
-
-  .header {
-    padding: 0 0 0.75rem;
+  .stores-grid {
+    margin: 4rem 0 0;
     display: grid;
-    font-size: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+    gap: 3rem 2rem;
+  }
+
+  .store {
+    padding: 2.5rem 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #fff;
+    border-radius: 0.125rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  .store-name {
+    margin: 0;
+    font-size: 1.125rem;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.0375em;
-    border-bottom: 1px solid #dcdfe4;
+    color: #111827;
+    text-align: center;
+  }
+
+  .close-date {
+    margin: 1.25rem 0 0;
+    min-height: 3.5rem;
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #595f6b;
+    text-align: center;
+    line-height: 1.85;
   }
 
   .store-link {
-    display: block;
+    margin: 1.75rem 0 0;
+    padding: 0.625rem 1rem;
+    width: 100%;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #f9fafb;
+    text-align: center;
+    background-color: #1f2937;
+    border-radius: 0.25rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: background-color 100ms linear;
 
-    &:hover,
-    &:focus {
-      .visit-store {
-        text-decoration: underline;
-      }
+    &:hover {
+      background-color: #111827;
     }
 
     &:focus {
       outline: 2px solid transparent;
       outline-offset: 2px;
     }
+
+    &:focus-visible {
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #2563eb 0px 0px 0px 4px,
+        rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+    }
   }
 
-  .item {
-    padding: 0.75rem 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
+  .interest-container {
+    margin: 3rem 0 0;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.25rem 0.5rem;
-    font-size: 0.9375rem;
-    border-bottom: 1px solid #dcdfe4;
-  }
+    background-color: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 
-  .visit-store {
-    display: inline-flex;
-    justify-content: flex-end;
-    align-items: center;
-    text-align: right;
-    color: #1629cb;
-    border-bottom: 1px solid transparent;
-
-    svg {
-      margin: 0 0 0 0.1875rem;
-      height: 1rem;
-      width: 1rem;
-      color: #4556eb;
-    }
-  }
-
-  @media (max-width: 700px) {
-    .header {
-      display: none;
-    }
-
-    .grid {
-      border-top: 1px solid #e5e7eb;
-    }
-
-    .item {
-      grid-template-columns: 1fr auto;
-      grid-template-areas:
-        'name link'
-        'close link';
-    }
-
-    .store-name {
-      grid-area: name;
+    h4 {
+      margin: 0 auto;
+      max-width: 20rem;
+      font-size: 1.25rem;
       font-weight: 600;
+      color: #111827;
+      text-align: center;
+      line-height: 1.5;
     }
 
-    .store-close-date {
-      display: none;
-    }
+    .contact-link {
+      margin: 1.625rem 0 0;
+      padding: 0.625rem 1.5rem;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #148653;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: #fff;
+      border-radius: 0.25rem;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1),
+        0 2px 4px -2px rgb(0 0 0 / 0.1);
+      transition: background-color 150ms linear;
 
-    .visit-store {
-      grid-area: link;
-    }
-  }
-
-  @media (max-width: 500px) {
-    .visit-store {
-      span {
-        display: none;
+      &:hover {
+        background-color: #127549;
       }
 
-      svg {
-        height: 1.125rem;
-        width: 1.125rem;
+      &:focus {
+        outline: 2px solid transparent;
+        outline-offset: 2px;
       }
-    }
-  }
 
-  @media (max-width: 375px) {
-    .item {
-      font-size: 0.875rem;
-    }
-
-    .store-close-date {
-      font-size: 0.6875rem;
+      &:focus-visible {
+        box-shadow: #fff 0px 0px 0px 2px, #2563eb 0px 0px 0px 4px,
+          rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+      }
     }
   }
 `;

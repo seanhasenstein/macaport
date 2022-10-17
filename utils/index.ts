@@ -146,20 +146,6 @@ export function getUrlParameter(query: string | string[] | undefined) {
   return Array.isArray(query) ? query[0] : query;
 }
 
-export function isStoreActive(openDate: string, closeDate: string | null) {
-  const open = new Date(openDate);
-  const close = new Date(closeDate || 'Jan 01 9999');
-  const now = new Date();
-
-  if (now < open || now > close) {
-    return false;
-  }
-
-  if (now > open && now < close) {
-    return true;
-  }
-}
-
 export function slugify(input: string) {
   let result = input;
   // trim and convert to lowercase

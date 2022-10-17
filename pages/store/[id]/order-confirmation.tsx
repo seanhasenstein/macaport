@@ -6,31 +6,36 @@ import styled from 'styled-components';
 import { format } from 'date-fns';
 import { connectToDb, order } from '../../../db';
 import { Order } from '../../../interfaces';
-import { formatPhoneNumber, formatToMoney } from '../../../utils';
+import {
+  formatPhoneNumber,
+  formatToMoney,
+  getUrlParameter,
+} from '../../../utils';
 import { useCart } from '../../../hooks/useCart';
 import NoNavLayout from '../../../components/store/NoNavLayout';
+import OrderConfirmationPageError from 'components/store/errors/OrderConfirmationPageError';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
-    if (
-      context.query === undefined ||
-      context.query.id === undefined ||
-      context.query.orderId === undefined
-    ) {
+    const storeId = getUrlParameter(context.query.id);
+
+    if (!storeId) {
       return {
         props: {
-          error: "Must provide valid store and order ID's",
+          error: 'A store id is required',
         },
       };
     }
 
-    const storeId = Array.isArray(context.query.id)
-      ? context.query.id[0]
-      : context.query.id;
+    const orderId = getUrlParameter(context.query.orderId);
 
-    const orderId = Array.isArray(context.query.orderId)
-      ? context.query.orderId[0]
-      : context.query.orderId;
+    if (!orderId) {
+      return {
+        props: {
+          error: 'An order id is required',
+        },
+      };
+    }
 
     const db = await connectToDb();
     const result = await order.getOrderFromStore(db, storeId, orderId);
@@ -82,244 +87,208 @@ export default function Temp({
     }
   }, [emptyCart, router.query.emptyCart]);
 
+  if (error) {
+    return <OrderConfirmationPageError />;
+  }
+
   return (
     <NoNavLayout
-      title={
-        error
-          ? 'Server Error | Order Confirmation | Macaport'
-          : `${order.store.name} Order #${order.orderId} | Macaport`
-      }
+      title={`${order.store.name} Order #${order.orderId} | Macaport`}
     >
-      {error ? (
-        <ErrorMessageStyles>
-          <div className="wrapper">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="icon"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <h3>Something went wrong</h3>
-            <p>
-              We're sorry, we failed to find your order. Please contact us with
-              any questions at{' '}
-              <a href={`mailto:support@macaport.com?subject=Order Inquiry`}>
-                support@macaport.com
-              </a>
-              .
-            </p>
-            <Link href="/">
-              <a className="link-button">Back to macaport.com</a>
-            </Link>
-          </div>
-        </ErrorMessageStyles>
-      ) : (
-        <OrderConfirmationStyles>
-          <div className="order-confirmation-wrapper">
-            {order && (
-              <>
-                <div className="header print-only" aria-hidden="true">
-                  <div className="logo">
-                    <Link href="/">
-                      <a>
-                        <img
-                          src="/images/logo.png"
-                          alt="Macaport text in front of mountains."
-                        />
-                      </a>
-                    </Link>
-                  </div>
-                  <div className="print-only">
-                    <div className="support-link">support@macaport.com</div>
-                    <div className="support-link">www.macaport.com</div>
-                  </div>
+      <OrderConfirmationStyles>
+        <div className="order-confirmation-wrapper">
+          {order && (
+            <>
+              <div className="header print-only" aria-hidden="true">
+                <div className="logo">
+                  <Link href="/">
+                    <a>
+                      <img
+                        src="/images/logo.png"
+                        alt="Macaport text in front of mountains."
+                      />
+                    </a>
+                  </Link>
                 </div>
-                <div className="main-content">
-                  <div className="order-information">
-                    <div className="section ">
-                      <h5>Payment Successful</h5>
-                      <h2>Thank you for your order!</h2>
-                      <p>
-                        We have received your order and are currently processing
-                        it. You should receive a confirmation email shortly. If
-                        you have any questions you can reach us at{' '}
-                        <a href="mailto:support@macaport.com">
-                          support@macaport.com
-                        </a>
-                        .
-                      </p>
+                <div className="print-only">
+                  <div className="support-link">support@macaport.com</div>
+                  <div className="support-link">www.macaport.com</div>
+                </div>
+              </div>
+              <div className="main-content">
+                <div className="order-information">
+                  <div className="section ">
+                    <h5>Payment Successful</h5>
+                    <h2>Thank you for your order!</h2>
+                    <p>
+                      We have received your order and are currently processing
+                      it. You should receive a confirmation email shortly. If
+                      you have any questions you can reach us at{' '}
+                      <a href="mailto:support@macaport.com">
+                        support@macaport.com
+                      </a>
+                      .
+                    </p>
+                  </div>
+                  <div className="section order-details">
+                    <div className="detail-item">
+                      <span>Order Number:</span>#{order.orderId}
                     </div>
-                    <div className="section order-details">
-                      <div className="detail-item">
-                        <span>Order Number:</span>#{order.orderId}
-                      </div>
-                      <div className="detail-item">
-                        <span>Transaction ID:</span>
-                        {order.stripeId}
-                      </div>
-                      <div className="detail-item">
-                        <span>Order Date:</span>
-                        {format(
-                          new Date(order.createdAt!),
-                          "MMM. dd, yyyy 'at' h:mmaa"
-                        )}
-                      </div>
-                      <div className="detail-item">
-                        <span>Store:</span>
-                        {order.store.name}
-                      </div>
-                      {groupRequired && (
-                        <div className="detail-item">
-                          <span className="capitalize">{groupTerm}:</span>
-                          {order.group}
-                        </div>
+                    <div className="detail-item">
+                      <span>Transaction ID:</span>
+                      {order.stripeId}
+                    </div>
+                    <div className="detail-item">
+                      <span>Order Date:</span>
+                      {format(
+                        new Date(order.createdAt!),
+                        "MMM. dd, yyyy 'at' h:mmaa"
                       )}
                     </div>
-                    <div className="section order-info">
-                      <h3>Customer Information</h3>
-                      <p>
-                        {order.customer.firstName} {order.customer.lastName}
-                      </p>
-                      <p>{order.customer.email}</p>
-                      <p>{formatPhoneNumber(order.customer.phone)}</p>
+                    <div className="detail-item">
+                      <span>Store:</span>
+                      {order.store.name}
                     </div>
-
-                    {order.shippingMethod === 'Direct' && (
-                      <div className="section shipping-details">
-                        <h3>Shipping Address</h3>
-                        <p>
-                          {order.shippingMethod === 'Direct'
-                            ? `${order.customer.firstName} ${order.customer.lastName}`
-                            : order.shippingAddress.name}
-                          <br />
-                          {order.shippingAddress.street}{' '}
-                          {order.shippingAddress.street2}
-                          <br />
-                          {order.shippingAddress.city},{' '}
-                          {order.shippingAddress.state}{' '}
-                          {order.shippingAddress.zipcode}
-                        </p>
-                      </div>
-                    )}
-                    {order.shippingMethod === 'Primary' && (
-                      <div className="section shipping-details">
-                        <h3>Order Pickup</h3>
-                        <p>
-                          Your order will be shipped to the organizer of this
-                          store. Please contact them for pickup information.
-                        </p>
+                    {groupRequired && (
+                      <div className="detail-item">
+                        <span className="capitalize">{groupTerm}:</span>
+                        {order.group}
                       </div>
                     )}
                   </div>
-                  <div className="order-items">
-                    <h3>Order Items</h3>
-                    <div>
-                      {order.items.map(item => (
-                        <div key={item.id} className="order-item">
-                          <div className="item-img">
-                            <img
-                              src={item.sku.color.primaryImage}
-                              alt={`${item.sku.color.label} ${item.name}`}
-                            />
-                          </div>
-                          <div className="order-item-column">
-                            <div className="order-item-header">
-                              <div className="order-item-name">{item.name}</div>
-                              <div className="order-item-total">
-                                {formatToMoney(item.itemTotal!)}
-                              </div>
-                            </div>
-                            <div className="order-item-details">
-                              <div className="order-item-detail item-quantity">
-                                Qty:{' '}
-                                <span className="value">{item.quantity}</span>
-                              </div>
-                              <div className="order-item-detail item-color">
-                                Color:{' '}
-                                <span className="value">
-                                  {item.sku.color.label}
-                                </span>
-                              </div>
-                              <div className="order-item-detail item-size">
-                                Size:{' '}
-                                <span className="value">
-                                  {item.sku.size.label}
-                                </span>
-                              </div>
-                              {item.personalizationAddons.length > 0 ? (
-                                <div className="personalization">
-                                  <div className="addon-label">Addons:</div>
-                                  <div className="addon-items">
-                                    {item.personalizationAddons.map(addon => (
-                                      <div
-                                        key={addon.id}
-                                        className="addon-item"
-                                      >
-                                        {addon.value}
-                                        {addon.subItems.length > 0 ? (
-                                          <>
-                                            {addon.subItems.map(subItem => (
-                                              <div
-                                                key={subItem.id}
-                                                className="subitem"
-                                              >
-                                                {subItem.value}
-                                              </div>
-                                            ))}
-                                          </>
-                                        ) : null}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              ) : null}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                  <div className="section order-info">
+                    <h3>Customer Information</h3>
+                    <p>
+                      {order.customer.firstName} {order.customer.lastName}
+                    </p>
+                    <p>{order.customer.email}</p>
+                    <p>{formatPhoneNumber(order.customer.phone)}</p>
+                  </div>
+
+                  {order.shippingMethod === 'Direct' && (
+                    <div className="section shipping-details">
+                      <h3>Shipping Address</h3>
+                      <p>
+                        {order.shippingMethod === 'Direct'
+                          ? `${order.customer.firstName} ${order.customer.lastName}`
+                          : order.shippingAddress.name}
+                        <br />
+                        {order.shippingAddress.street}{' '}
+                        {order.shippingAddress.street2}
+                        <br />
+                        {order.shippingAddress.city},{' '}
+                        {order.shippingAddress.state}{' '}
+                        {order.shippingAddress.zipcode}
+                      </p>
                     </div>
-                    <div className="order-summary">
-                      <h3>Order Summary</h3>
-                      <div className="order-summary-item">
-                        <div className="label">Subtotal</div>
-                        <div className="value">
-                          {formatToMoney(order.summary.subtotal, true)}
+                  )}
+                  {order.shippingMethod === 'Primary' && (
+                    <div className="section shipping-details">
+                      <h3>Order Pickup</h3>
+                      <p>
+                        Your order will be shipped to the organizer of this
+                        store. Please contact them for pickup information.
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <div className="order-items">
+                  <h3>Order Items</h3>
+                  <div>
+                    {order.items.map(item => (
+                      <div key={item.id} className="order-item">
+                        <div className="item-img">
+                          <img
+                            src={item.sku.color.primaryImage}
+                            alt={`${item.sku.color.label} ${item.name}`}
+                          />
+                        </div>
+                        <div className="order-item-column">
+                          <div className="order-item-header">
+                            <div className="order-item-name">{item.name}</div>
+                            <div className="order-item-total">
+                              {formatToMoney(item.itemTotal!)}
+                            </div>
+                          </div>
+                          <div className="order-item-details">
+                            <div className="order-item-detail item-quantity">
+                              Qty:{' '}
+                              <span className="value">{item.quantity}</span>
+                            </div>
+                            <div className="order-item-detail item-color">
+                              Color:{' '}
+                              <span className="value">
+                                {item.sku.color.label}
+                              </span>
+                            </div>
+                            <div className="order-item-detail item-size">
+                              Size:{' '}
+                              <span className="value">
+                                {item.sku.size.label}
+                              </span>
+                            </div>
+                            {item.personalizationAddons.length > 0 ? (
+                              <div className="personalization">
+                                <div className="addon-label">Addons:</div>
+                                <div className="addon-items">
+                                  {item.personalizationAddons.map(addon => (
+                                    <div key={addon.id} className="addon-item">
+                                      {addon.value}
+                                      {addon.subItems.length > 0 ? (
+                                        <>
+                                          {addon.subItems.map(subItem => (
+                                            <div
+                                              key={subItem.id}
+                                              className="subitem"
+                                            >
+                                              {subItem.value}
+                                            </div>
+                                          ))}
+                                        </>
+                                      ) : null}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : null}
+                          </div>
                         </div>
                       </div>
-                      <div className="order-summary-item">
-                        <div className="label">Sales Tax</div>
-                        <div className="value">
-                          {formatToMoney(order.summary.salesTax, true)}
-                        </div>
+                    ))}
+                  </div>
+                  <div className="order-summary">
+                    <h3>Order Summary</h3>
+                    <div className="order-summary-item">
+                      <div className="label">Subtotal</div>
+                      <div className="value">
+                        {formatToMoney(order.summary.subtotal, true)}
                       </div>
-                      <div className="order-summary-item">
-                        <div className="label">Shipping</div>
-                        <div className="value">
-                          {formatToMoney(order.summary.shipping, true)}
-                        </div>
+                    </div>
+                    <div className="order-summary-item">
+                      <div className="label">Sales Tax</div>
+                      <div className="value">
+                        {formatToMoney(order.summary.salesTax, true)}
                       </div>
-                      <div className="order-summary-item total">
-                        <div>Order Total</div>
-                        <div className="value">
-                          {formatToMoney(order.summary.total, true)}
-                        </div>
+                    </div>
+                    <div className="order-summary-item">
+                      <div className="label">Shipping</div>
+                      <div className="value">
+                        {formatToMoney(order.summary.shipping, true)}
+                      </div>
+                    </div>
+                    <div className="order-summary-item total">
+                      <div>Order Total</div>
+                      <div className="value">
+                        {formatToMoney(order.summary.total, true)}
                       </div>
                     </div>
                   </div>
                 </div>
-              </>
-            )}
-          </div>
-        </OrderConfirmationStyles>
-      )}
+              </div>
+            </>
+          )}
+        </div>
+      </OrderConfirmationStyles>
     </NoNavLayout>
   );
 }
@@ -782,93 +751,6 @@ const OrderConfirmationStyles = styled.div`
       .total {
         border-color: #d4d4d4;
       }
-    }
-  }
-`;
-
-const ErrorMessageStyles = styled.div`
-  padding: 6rem 1.5rem;
-
-  .wrapper {
-    padding: 1.875rem 0 2.5rem;
-    max-width: 36rem;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    background-color: #fff;
-    border-radius: 0.375rem;
-    box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
-      rgba(17, 24, 39, 0.05) 0px 0px 0px 1px,
-      rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.06) 0px 2px 4px -1px;
-  }
-
-  svg {
-    margin: 0 0 0.375rem;
-    height: 1.625rem;
-    width: 1.625rem;
-    color: #f43f5e;
-  }
-
-  h3 {
-    margin: 0.25rem 0 0.75rem;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #111827;
-  }
-
-  p {
-    margin: 0 auto;
-    max-width: 28rem;
-    width: 100%;
-    font-size: 1rem;
-    color: #4b5563;
-    line-height: 1.5;
-
-    a {
-      color: #4f46e5;
-      text-decoration: underline;
-
-      &:focus {
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-      }
-    }
-  }
-
-  .link-button {
-    margin: 1.25rem 0 0;
-    padding: 0.625rem 1.5rem;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #31363f;
-    color: #fff;
-    font-size: 0.875rem;
-    font-weight: 500;
-    line-height: 1;
-    letter-spacing: 0.011em;
-    border: 1px solid #181a1e;
-    border-radius: 0.375rem;
-    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
-    cursor: pointer;
-
-    &:hover {
-      background-color: #3a3f4a;
-    }
-
-    &:focus {
-      outline: 2px solid transparent;
-      outline-offset: 2px;
-    }
-
-    &:focus-visible {
-      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4f46e5 0px 0px 0px 4px,
-        rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     }
   }
 `;

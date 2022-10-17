@@ -205,6 +205,15 @@ export interface Store {
   updatedAt: string;
 }
 
+export interface StoreForStoresPage {
+  _id: string;
+  name: string;
+  openDate: string;
+  closeDate: string;
+  permanentlyOpen: boolean;
+  featuredImg: string;
+}
+
 export interface ContactFormValues {
   firstName: string;
   lastName: string;
