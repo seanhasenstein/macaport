@@ -33,7 +33,7 @@ interface Params {
 }
 
 export default function useStoreProductAddToOrder(params: Params) {
-  const handleAddToOrderClick = () => {
+  const handleAddToOrder = () => {
     if (params.size.label === 'DEFAULT') {
       params.setSizeValidationError('A size is required');
       return;
@@ -103,5 +103,5 @@ export default function useStoreProductAddToOrder(params: Params) {
     params.setShowSidebar(true);
   };
 
-  return handleAddToOrderClick;
+  return handleAddToOrder;
 }

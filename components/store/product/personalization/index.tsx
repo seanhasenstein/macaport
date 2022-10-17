@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-import { AddonItems, Personalization } from '../../../interfaces';
+import { AddonItems, Personalization } from '../../../../interfaces';
+import HeadingTitle from '../HeadingTitle';
 import BaseItem from './BaseItem';
 
 interface Props extends Personalization {
@@ -20,7 +21,7 @@ export default function ProductPersonalization(props: Props) {
 
   return (
     <PersonalizationStyles>
-      <h4>Customize your apparel</h4>
+      <HeadingTitle>Customize your apparel</HeadingTitle>
       <p>
         Please be sure to check spelling before adding customized items to your
         order. Customized items are not eligible for return.

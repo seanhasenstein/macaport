@@ -2,10 +2,10 @@ import {
   AddonItems,
   PersonalizationAddon,
   PersonalizationItem,
-} from '../../../interfaces';
+} from '../../../../interfaces';
 import React from 'react';
 import styled from 'styled-components';
-import { createId, formatToMoney } from '../../../utils';
+import { createId, formatToMoney } from '../../../../utils';
 
 type Props = {
   baseAddonItem: PersonalizationAddon;

@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-import { AddonItems, PersonalizationItem } from '../../../interfaces';
-import { createId, formatToMoney } from '../../../utils';
+import { AddonItems, PersonalizationItem } from '../../../../interfaces';
+import { createId, formatToMoney } from '../../../../utils';
 import SubItem from './SubItem';
 import SubItemButtons from './SubItemButtons';
 

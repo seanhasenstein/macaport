@@ -1,6 +1,6 @@
 import styled from 'styled-components';
-import { AddonItems, PersonalizationAddon } from '../../../interfaces';
-import { formatToMoney } from '../../../utils';
+import { AddonItems, PersonalizationAddon } from '../../../../interfaces';
+import { formatToMoney } from '../../../../utils';
 
 interface Props {
   baseAddonItem: PersonalizationAddon;

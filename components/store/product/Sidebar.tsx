@@ -1,14 +1,14 @@
 import React from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
-import { formatToMoney } from '../../utils';
+import { formatToMoney } from '../../../utils';
 import {
   StoreProduct,
   ProductSize,
   ProductColor,
   PersonalizationAddon,
-} from '../../interfaces';
-import LinkButton from './LinkButton';
+} from '../../../interfaces';
+import LinkButton from '../LinkButton';
 
 type Props = {
   storeId: string;
@@ -24,7 +24,7 @@ type Props = {
   isSidebarOpen: boolean;
 };
 
-export default function ProductSidebar({
+export default function Sidebar({
   storeId,
   item,
   color,
@@ -70,7 +70,7 @@ export default function ProductSidebar({
   }, [isSidebarOpen, resetProduct]);
 
   return (
-    <ProductSidebarStyles hasAddons={personalization.addonItems.length > 0}>
+    <SidebarStyles hasAddons={personalization.addonItems.length > 0}>
       <div className={isSidebarOpen ? 'fullscreen' : ''}>
         <div className={`sidebar ${isSidebarOpen ? 'show' : 'hide'}`} ref={ref}>
           <div className="heading">
@@ -176,11 +176,11 @@ export default function ProductSidebar({
           </div>
         </div>
       </div>
-    </ProductSidebarStyles>
+    </SidebarStyles>
   );
 }
 
-const ProductSidebarStyles = styled.div<{ hasAddons: boolean }>`
+const SidebarStyles = styled.div<{ hasAddons: boolean }>`
   .fullscreen {
     position: fixed;
     top: 0;
