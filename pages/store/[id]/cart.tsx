@@ -81,7 +81,7 @@ export default function Cart({ store, error }: Props) {
   }
 
   return (
-    <StoreLayout title={`Cart | ${store.name} | Macaport`}>
+    <StoreLayout title={`Cart | ${store.name}`}>
       <CartStyles>
         <div className="wrapper">
           <h2>Your Cart</h2>

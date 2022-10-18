@@ -9,7 +9,7 @@ type Props = {
 
 export default function ProductPageError(props: Props) {
   return (
-    <StoreLayout title="Error | Macaport">
+    <StoreLayout title="Error">
       <MessageStyles>
         <div className="wrapper">
           <div className="content">

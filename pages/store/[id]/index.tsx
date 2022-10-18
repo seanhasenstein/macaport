@@ -60,7 +60,7 @@ export default function StoreHomepage({ store, error }: Props) {
   }
 
   return (
-    <StoreLayout title={`${store.name} | Macaport`}>
+    <StoreLayout title={`${store.name}`}>
       <StoreStyles>
         <div className="store-header">
           {store.closeDate && (

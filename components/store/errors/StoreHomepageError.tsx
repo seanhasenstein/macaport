@@ -3,7 +3,7 @@ import StoreLayout from '../StoreLayout';
 
 export default function StoreHomepageError() {
   return (
-    <StoreLayout title="Error | Macaport">
+    <StoreLayout title="Error">
       <MessageStyles>
         <div className="wrapper">
           <svg

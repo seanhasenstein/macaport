@@ -142,9 +142,7 @@ export default function Product(props: Props) {
 
   return (
     <>
-      <StoreLayout
-        title={`${props.product.name} | ${props.store.name} | Macaport`}
-      >
+      <StoreLayout title={`${props.product.name} | ${props.store.name}`}>
         <ProductStyles>
           <div className="wrapper">
             <SmallHeader

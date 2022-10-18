@@ -69,7 +69,7 @@ export default function Checkout({ store }: Props) {
   const [showInventoryModal, setShowInventoryModal] = React.useState(false);
 
   return (
-    <StoreLayout title={`Checkout | ${store.name} | Macaport`}>
+    <StoreLayout title={`Checkout | ${store.name}`}>
       <CheckoutStyles>
         <h2>Order Checkout</h2>
         <div className="wrapper">

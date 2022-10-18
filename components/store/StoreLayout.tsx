@@ -11,17 +11,15 @@ type Props = {
   title?: string;
 };
 
-export default function StoreLayout({
-  children,
-  title = 'Macaport Store',
-}: Props) {
+export default function StoreLayout(props: Props) {
   const router = useRouter();
+  const title = props.title ? `${props.title} | ` : '';
 
   return (
     <LayoutStyles>
       <GlobalStyles />
       <Head>
-        <title>{title}</title>
+        <title>{`${title}Macaport | Screen Printing`}</title>
         <meta charSet="utf-8" />
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
       </Head>
@@ -94,7 +92,7 @@ export default function StoreLayout({
           </div>
         </nav>
       </header>
-      <main>{children}</main>
+      <main>{props.children}</main>
       <Footer />
     </LayoutStyles>
   );
