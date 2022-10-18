@@ -5,7 +5,8 @@ import {
 } from '../../../../interfaces';
 import React from 'react';
 import styled from 'styled-components';
-import { createId, formatToMoney } from '../../../../utils';
+import { formatToMoney } from '../../../../utils';
+import usePersonalizationSubItemButtons from 'hooks/usePersonalizationSubItemButtons';
 
 type Props = {
   baseAddonItem: PersonalizationAddon;
@@ -17,69 +18,16 @@ type Props = {
   setTotal: React.Dispatch<React.SetStateAction<number>>;
 };
 
-function createInitialSubItem(
-  personalizationSubItem: PersonalizationItem
-): PersonalizationAddon {
-  const newItem = {
-    id: createId('sub'),
-    itemId: personalizationSubItem.id,
-    addon: personalizationSubItem.name,
-    value: '',
-    name: personalizationSubItem.name,
-    lines: personalizationSubItem.lines,
-    limit: personalizationSubItem.limit,
-    price: personalizationSubItem.price,
-    type: personalizationSubItem.type,
-    list: personalizationSubItem.list,
-    location: personalizationSubItem.location,
-    subItems: [],
-  };
-
-  return newItem;
-}
-
 export default function SubItemButtons(props: Props) {
-  const [filteredSubItems, setFilteredSubItems] = React.useState<
-    PersonalizationAddon[]
-  >([]);
-
-  React.useEffect(() => {
-    const updatedSubItems = props.baseAddonItem.subItems.filter(
-      subItem => subItem.itemId === props.personalizationSubItem.id
-    );
-    setFilteredSubItems(updatedSubItems);
-  }, [props.baseAddonItem.subItems, props.personalizationSubItem.id]);
-
-  const handleAddSubItem = () => {
-    const updatedBaseAddonItem: PersonalizationAddon = {
-      ...props.baseAddonItem,
-      subItems: [
-        ...props.baseAddonItem.subItems,
-        createInitialSubItem(props.personalizationSubItem),
-      ],
-    };
-
-    const updatedBaseAddonItems = props.addonItems[
-      props.baseAddonItem.itemId
-    ].map(addonItem => {
-      if (addonItem.id === updatedBaseAddonItem.id) {
-        return updatedBaseAddonItem;
-      } else {
-        return addonItem;
-      }
+  const { filteredSubItems, handleAddSubItem } =
+    usePersonalizationSubItemButtons({
+      addonItems: props.addonItems,
+      setAddonItems: props.setAddonItems,
+      baseAddonItem: props.baseAddonItem,
+      personalizationSubItem: props.personalizationSubItem,
+      setLinesAvailable: props.setLinesAvailable,
+      setTotal: props.setTotal,
     });
-
-    const updatedAddonItems: AddonItems = {
-      ...props.addonItems,
-      [props.baseAddonItem.itemId]: updatedBaseAddonItems,
-    };
-
-    props.setAddonItems(updatedAddonItems);
-    props.setLinesAvailable(
-      prevState => prevState - props.personalizationSubItem.lines
-    );
-    props.setTotal(prevState => prevState + props.personalizationSubItem.price);
-  };
 
   return (
     <SubItemButtonStyles>
