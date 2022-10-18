@@ -9,18 +9,13 @@ type Props = {
   clickedImage: string;
 };
 
-export default function Lightbox({
-  setShowLightbox,
-  primaryImage,
-  primaryAlt,
-  secondaryImages,
-  clickedImage,
-}: Props) {
+export default function Lightbox(props: Props) {
   const closeButton = React.useRef<HTMLButtonElement>(null);
+
   React.useEffect(() => {
     const handleKeyup = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setShowLightbox(false);
+        props.setShowLightbox(false);
         return;
       }
     };
@@ -28,21 +23,20 @@ export default function Lightbox({
     closeButton?.current && closeButton.current.focus();
     document.body.style.overflow = 'hidden';
     document.body.addEventListener('keyup', handleKeyup);
-    const image = document.querySelector(`#${clickedImage}`);
-    image?.scrollIntoView();
+    document.querySelector(`#${props.clickedImage}`)?.scrollIntoView();
 
     return () => {
       document.body.style.overflow = 'inherit';
       document.body.removeEventListener('keyup', handleKeyup);
     };
-  }, [clickedImage, setShowLightbox]);
+  }, [props.clickedImage, props.setShowLightbox]);
 
   return (
     <LightboxStyles>
       <button
         ref={closeButton}
         className="close-button"
-        onClick={() => setShowLightbox(false)}
+        onClick={() => props.setShowLightbox(false)}
       >
         <span className="sr-only">Close Gallery</span>
         <svg
@@ -61,9 +55,9 @@ export default function Lightbox({
       </button>
       <div className="images">
         <div className="img" id="image-0">
-          <img src={primaryImage} alt={primaryAlt} />
+          <img src={props.primaryImage} alt={props.primaryAlt} />
         </div>
-        {secondaryImages?.map((image, i) => (
+        {props.secondaryImages?.map((image, i) => (
           <div key={image} className="img" id={`image-${i + 1}`}>
             <img src={image} alt={''} />
           </div>
