@@ -12,7 +12,7 @@ import useProductImages from 'hooks/useStoreProductImages';
 import useProductSize from 'hooks/useStoreProductSize';
 import useProductPersonalization from '../../../hooks/useStoreProductPersonalization';
 import useAddProductToOrder from 'hooks/useStoreProductAddToOrder';
-import StoreLayout from '../../../components/store/StoreLayout';
+import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import ProductPersonalization from '../../../components/store/product/personalization';
 import ProductPageError from 'components/store/errors/ProductPageError';
 import SmallHeader from 'components/store/product/SmallHeader';
@@ -24,7 +24,7 @@ import ProductActions from 'components/store/product/ProductActions';
 import ProductDescription from 'components/store/product/ProductDescription';
 import ProductDetails from 'components/store/product/ProductDetails';
 import Sidebar from '../../../components/store/product/Sidebar';
-import Lightbox from '../../../components/store/Lightbox';
+import Lightbox from '../../../components/store/product/Lightbox';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {

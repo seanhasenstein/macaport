@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { MessageStyles } from 'styles/Message';
-import StoreLayout from '../StoreLayout';
+import StoreLayout from '../layouts/StoreLayout';
 
 type Props = {
   error: string;

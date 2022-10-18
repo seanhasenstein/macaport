@@ -2,8 +2,8 @@ import React, { ReactNode } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import styled from 'styled-components';
-import { GlobalStyles } from '../../styles/GlobalStyles';
-import Footer from '../../components/Footer';
+import { GlobalStyles } from '../../../styles/GlobalStyles';
+import Footer from '../../Footer';
 
 type Props = {
   children: ReactNode;

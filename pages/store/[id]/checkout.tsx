@@ -9,10 +9,10 @@ import { useCart } from '../../../hooks/useCart';
 import useHasMounted from '../../../hooks/useHasMounted';
 import { CartItem, Store } from '../../../interfaces';
 import { formatToMoney, getUrlParameter } from '../../../utils';
-import StoreLayout from '../../../components/store/StoreLayout';
-import CheckoutItem from '../../../components/store/CheckoutItem';
-import CheckoutForm from '../../../components/store/CheckoutForm';
-import OutOfStockModal from '../../../components/store/OutOfStockModal';
+import StoreLayout from '../../../components/store/layouts/StoreLayout';
+import CheckoutItem from '../../../components/store/checkout/CheckoutItem';
+import CheckoutForm from '../../../components/store/checkout/CheckoutForm';
+import OutOfStockModal from '../../../components/store/checkout/OutOfStockModal';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {

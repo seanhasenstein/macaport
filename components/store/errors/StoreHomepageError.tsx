@@ -1,5 +1,5 @@
 import { MessageStyles } from 'styles/Message';
-import StoreLayout from '../StoreLayout';
+import StoreLayout from '../layouts/StoreLayout';
 
 export default function StoreHomepageError() {
   return (

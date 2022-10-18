@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import NoNavLayout from '../components/store/NoNavLayout';
+import NoNavLayout from '../components/store/layouts/NoNavLayout';
 import styled from 'styled-components';
 
 export default function StoreClosed() {

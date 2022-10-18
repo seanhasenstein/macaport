@@ -1,13 +1,14 @@
 import React from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
-import { useCart } from '../../hooks/useCart';
-import { createId, formatToMoney } from '../../utils';
+import { useCart } from '../../../hooks/useCart';
+import { formatToMoney } from '../../../utils';
 import {
   CartItem as CartItemInterface,
   ProductSku,
   ProductSize,
-} from '../../interfaces';
+} from '../../../interfaces';
+import useCartItem from 'hooks/useCartItem';
 
 type Props = {
   item: CartItemInterface;
@@ -16,88 +17,26 @@ type Props = {
   sizes: ProductSize[];
 };
 
-export default function CartItem({ item, storeId, skus }: Props) {
-  const [size, setSize] = React.useState(item.sku.size.label);
-  const [quantity, setQuantity] = React.useState(item.quantity);
+export default function CartItem(props: Props) {
   const { items, removeItem, updateItemSize, updateItemQuantity } = useCart();
 
-  React.useEffect(() => {
-    setSize(item.sku.size.label);
-    setQuantity(item.quantity);
-  }, [item]);
-
-  const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const sku = skus.find(
-      sku =>
-        sku.size.label === e.target.value &&
-        sku.color.label === item.sku.color.label
-    );
-
-    if (sku) {
-      setSize(sku.size.label);
-      updateItemSize(item.id, item.sku.id, {
-        ...item,
-        id: `${sku.id}-${createId(false, 5)}`,
-        sku,
-        quantity,
-      });
-    }
-  };
-
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newQuantity = parseInt(e.target.value);
-    setQuantity(newQuantity);
-    updateItemQuantity(item.id, newQuantity);
-  };
-
-  const isSizeOutOfStock = (items: CartItemInterface[], sku: ProductSku) => {
-    const currentSize = sku.size.label === size;
-    const updatedInventory = items.reduce((inventory, currentItem) => {
-      if (currentItem.sku.id === sku.id) {
-        return inventory - currentItem.quantity;
-      }
-      return inventory;
-    }, sku.inventory);
-
-    if (updatedInventory < 1 && !currentSize) {
-      return true;
-    }
-
-    return false;
-  };
-
-  const isOptionDisabled = (
-    items: CartItemInterface[],
-    cartItem: CartItemInterface,
-    optionValue: number
-  ) => {
-    const cartQuantity = items.reduce((cartQuantity, currentCartItem) => {
-      if (currentCartItem.sku.id === cartItem.sku.id) {
-        return cartQuantity + currentCartItem.quantity;
-      }
-      return cartQuantity;
-    }, 0);
-
-    if (
-      optionValue >
-      cartItem.quantity + (cartItem.sku.inventory - cartQuantity)
-    ) {
-      return true;
-    }
-
-    return false;
-  };
+  const cartItem = useCartItem({
+    cartItem: props.item,
+    skus: props.skus,
+    updateItemQuantity,
+    updateItemSize,
+  });
 
   return (
     <CartItemStyles>
       <div className="item-image">
         <Link
-          href={`/store/${storeId}/product?productId=${item.sku.storeProductId}&colorId=${item.sku.color.id}`}
+          href={`/store/${props.storeId}/product?productId=${props.item.sku.storeProductId}&colorId=${props.item.sku.color.id}`}
         >
           <a>
             <img
-              src={item.image}
-              alt={`${item.sku.color.label} ${item.name}`}
+              src={props.item.image}
+              alt={`${props.item.sku.color.label} ${props.item.name}`}
             />
           </a>
         </Link>
@@ -105,21 +44,21 @@ export default function CartItem({ item, storeId, skus }: Props) {
       <div className="item-details">
         <h3 className="primary">
           <Link
-            href={`/store/${storeId}/product?productId=${item.sku.storeProductId}&colorId=${item.sku.color.id}`}
+            href={`/store/${props.storeId}/product?productId=${props.item.sku.storeProductId}&colorId=${props.item.sku.color.id}`}
           >
-            <a>{item.name}</a>
+            <a>{props.item.name}</a>
           </Link>
         </h3>
         <div className="secondary-details">
           <p className="secondary">
             <span className="label">Color:</span>
-            {item.sku.color.label}
+            {props.item.sku.color.label}
           </p>
-          {item.personalizationAddons.length > 0 ? (
+          {props.item.personalizationAddons.length > 0 ? (
             <div className="personalization">
               <div className="addon-label">Addons:</div>
               <div className="addon-items">
-                {item.personalizationAddons.map(item => (
+                {props.item.personalizationAddons.map(item => (
                   <div key={item.id} className="addon-item">
                     {item.value}
                     {item.subItems.length > 0
@@ -136,23 +75,23 @@ export default function CartItem({ item, storeId, skus }: Props) {
           ) : null}
         </div>
       </div>
-      <div className="total">{formatToMoney(item.itemTotal!)}</div>
+      <div className="total">{formatToMoney(props.item.itemTotal!)}</div>
       <div className="inputs">
         <div className="size">
           <label htmlFor="size">Size</label>
           <select
             name="size"
             id="size"
-            value={size}
-            onChange={handleSizeChange}
+            value={cartItem.size}
+            onChange={cartItem.handleSizeChange}
           >
-            {skus.map(sku => {
-              if (sku.color.id === item.sku.color.id) {
+            {props.skus.map(sku => {
+              if (sku.color.id === props.item.sku.color.id) {
                 return (
                   <option
                     key={sku.size.id}
                     value={sku.size.label}
-                    disabled={isSizeOutOfStock(items, sku)}
+                    disabled={cartItem.isSizeOutOfStock(items, sku)}
                   >
                     {sku.size.label}
                   </option>
@@ -166,8 +105,8 @@ export default function CartItem({ item, storeId, skus }: Props) {
           <select
             name="quantity"
             id="quantity"
-            value={quantity}
-            onChange={handleQuantityChange}
+            value={cartItem.quantity}
+            onChange={cartItem.handleQuantityChange}
           >
             {[...Array(11)].map((_v, i) => {
               if (i === 0) return;
@@ -175,7 +114,7 @@ export default function CartItem({ item, storeId, skus }: Props) {
                 <option
                   key={i}
                   value={`${i}`}
-                  disabled={isOptionDisabled(items, item, i)}
+                  disabled={cartItem.isOptionDisabled(items, props.item, i)}
                 >
                   {i}
                 </option>
@@ -185,7 +124,7 @@ export default function CartItem({ item, storeId, skus }: Props) {
         </div>
       </div>
       <div className="remove-button">
-        <button type="button" onClick={() => removeItem(item.id)}>
+        <button type="button" onClick={() => removeItem(props.item.id)}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

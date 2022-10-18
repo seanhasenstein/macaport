@@ -1,8 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
-import { StoreProduct } from '../../interfaces';
-import { formatToMoney } from '../../utils';
+import { StoreProduct } from '../../../interfaces';
+import { formatToMoney } from '../../../utils';
 
 type Props = {
   item: StoreProduct;

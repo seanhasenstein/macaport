@@ -8,7 +8,7 @@ import {
   ProductColor,
   PersonalizationAddon,
 } from '../../../interfaces';
-import LinkButton from '../LinkButton';
+import LinkButton from '../common/LinkButton';
 
 type Props = {
   storeId: string;

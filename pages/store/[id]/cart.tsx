@@ -9,9 +9,9 @@ import { useCart } from '../../../hooks/useCart';
 import useHasMounted from '../../../hooks/useHasMounted';
 import { CartItem as CartItemInterface, Store } from '../../../interfaces';
 import { formatToMoney, getUrlParameter } from '../../../utils';
-import StoreLayout from '../../../components/store/StoreLayout';
-import CartItem from '../../../components/store/CartItem';
-import LinkButton from '../../../components/store/LinkButton';
+import StoreLayout from '../../../components/store/layouts/StoreLayout';
+import CartItem from '../../../components/store/cart/CartItem';
+import LinkButton from '../../../components/store/common/LinkButton';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {

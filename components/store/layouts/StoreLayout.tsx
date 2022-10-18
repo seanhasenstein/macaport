@@ -3,8 +3,8 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styled from 'styled-components';
-import { GlobalStyles } from '../../styles/GlobalStyles';
-import Footer from '../Footer';
+import { GlobalStyles } from '../../../styles/GlobalStyles';
+import Footer from '../../Footer';
 
 type Props = {
   children: ReactNode;

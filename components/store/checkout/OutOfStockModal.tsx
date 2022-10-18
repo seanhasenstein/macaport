@@ -2,9 +2,9 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styled from 'styled-components';
-import useEscapeKeydownClose from '../../hooks/useEscapeKeydownClose';
-import useOutsideClick from '../../hooks/useOutsideClick';
-import { CartItem } from '../../interfaces';
+import useEscapeKeydownClose from '../../../hooks/useEscapeKeydownClose';
+import useOutsideClick from '../../../hooks/useOutsideClick';
+import { CartItem } from '../../../interfaces';
 import OutOfStockItem from './OutOfStockItem';
 
 type Props = {

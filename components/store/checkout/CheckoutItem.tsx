@@ -1,6 +1,6 @@
 import styled from 'styled-components';
-import { CartItem } from '../../interfaces';
-import { formatToMoney } from '../../utils';
+import { CartItem } from '../../../interfaces';
+import { formatToMoney } from '../../../utils';
 
 export default function CheckoutItem({ item }: { item: CartItem }) {
   return (

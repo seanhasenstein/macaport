@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import styled from 'styled-components';
-import NoNavLayout from '../NoNavLayout';
+import NoNavLayout from '../layouts/NoNavLayout';
 
 export default function OrderConfirmationPageError() {
   return (
