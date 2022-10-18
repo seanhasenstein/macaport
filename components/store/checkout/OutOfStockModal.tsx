@@ -15,26 +15,20 @@ type Props = {
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export default function OutOfStockModal({
-  verifiedItems,
-  lowerInventoryItems,
-  outOfStockItems,
-  showModal,
-  setShowModal,
-}: Props) {
+export default function OutOfStockModal(props: Props) {
   const router = useRouter();
   const modalRef = React.useRef<HTMLDivElement>(null);
-  useEscapeKeydownClose(showModal, setShowModal);
-  useOutsideClick(showModal, setShowModal, modalRef);
+  useEscapeKeydownClose(props.showModal, props.setShowModal);
+  useOutsideClick(props.showModal, props.setShowModal, modalRef);
 
   return (
     <OutOfStockModalStyles>
-      {showModal && (
+      {props.showModal && (
         <div className="modal-background">
           <div ref={modalRef} className="modal">
             <button
               type="button"
-              onClick={() => setShowModal(false)}
+              onClick={() => props.setShowModal(false)}
               className="close-button"
             >
               <svg
@@ -53,42 +47,45 @@ export default function OutOfStockModal({
             <div className="heading">
               <h3>
                 Insufficient inventory for cart item
-                {lowerInventoryItems.length > 1 ||
-                outOfStockItems.length > 1 ||
-                (lowerInventoryItems.length > 0 && outOfStockItems.length > 0)
+                {props.lowerInventoryItems.length > 1 ||
+                props.outOfStockItems.length > 1 ||
+                (props.lowerInventoryItems.length > 0 &&
+                  props.outOfStockItems.length > 0)
                   ? 's'
                   : ''}
               </h3>
               <p>
                 We were unable to place your order due to insufficient inventory
                 for{' '}
-                {lowerInventoryItems.length > 1 ||
-                outOfStockItems.length > 1 ||
-                (lowerInventoryItems.length > 0 && outOfStockItems.length > 0)
+                {props.lowerInventoryItems.length > 1 ||
+                props.outOfStockItems.length > 1 ||
+                (props.lowerInventoryItems.length > 0 &&
+                  props.outOfStockItems.length > 0)
                   ? ''
                   : 'an'}{' '}
                 item
-                {lowerInventoryItems.length > 1 ||
-                outOfStockItems.length > 1 ||
-                (lowerInventoryItems.length > 0 && outOfStockItems.length > 0)
+                {props.lowerInventoryItems.length > 1 ||
+                props.outOfStockItems.length > 1 ||
+                (props.lowerInventoryItems.length > 0 &&
+                  props.outOfStockItems.length > 0)
                   ? 's'
                   : ''}{' '}
                 in your cart. The following changes have been made to your cart.
               </p>
             </div>
             <div>
-              {lowerInventoryItems.length > 0 && (
+              {props.lowerInventoryItems.length > 0 && (
                 <div className="section">
                   <h4>Insufficient inventory (quantity updated in cart):</h4>
-                  {lowerInventoryItems.map(item => (
+                  {props.lowerInventoryItems.map(item => (
                     <OutOfStockItem key={item.id} item={item} />
                   ))}
                 </div>
               )}
-              {outOfStockItems.length > 0 && (
+              {props.outOfStockItems.length > 0 && (
                 <div className="section">
                   <h4>Out of stock (removed from cart):</h4>
-                  {outOfStockItems.map(item => (
+                  {props.outOfStockItems.map(item => (
                     <OutOfStockItem key={item.id} item={item} />
                   ))}
                 </div>
@@ -96,7 +93,8 @@ export default function OutOfStockModal({
             </div>
             <div className="footer">
               <p>
-                {verifiedItems.length > 0 || lowerInventoryItems.length > 0
+                {props.verifiedItems.length > 0 ||
+                props.lowerInventoryItems.length > 0
                   ? 'Review your order and submit again. '
                   : ''}
                 If you have any questions contact us at{' '}
@@ -106,7 +104,8 @@ export default function OutOfStockModal({
                 .
               </p>
               <div className="actions">
-                {verifiedItems.length > 0 || lowerInventoryItems.length > 0 ? (
+                {props.verifiedItems.length > 0 ||
+                props.lowerInventoryItems.length > 0 ? (
                   <Link href={`/store/${router.query.id}/cart`}>
                     Back to your cart
                   </Link>
@@ -115,7 +114,7 @@ export default function OutOfStockModal({
                     Back to store home
                   </Link>
                 )}
-                <button type="button" onClick={() => setShowModal(false)}>
+                <button type="button" onClick={() => props.setShowModal(false)}>
                   Back to checkout
                 </button>
               </div>

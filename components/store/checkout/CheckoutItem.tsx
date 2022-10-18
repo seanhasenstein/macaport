@@ -2,28 +2,35 @@ import styled from 'styled-components';
 import { CartItem } from '../../../interfaces';
 import { formatToMoney } from '../../../utils';
 
-export default function CheckoutItem({ item }: { item: CartItem }) {
+type Props = {
+  item: CartItem;
+};
+
+export default function CheckoutItem(props: Props) {
   return (
     <CheckoutItemStyles>
       <div className="image">
-        <img src={item.image} alt={`${item.sku.color.label} ${item.name}`} />
+        <img
+          src={props.item.image}
+          alt={`${props.item.sku.color.label} ${props.item.name}`}
+        />
       </div>
-      <div className="name">{item.name}</div>
-      <div className="total">{formatToMoney(item.itemTotal!)}</div>
+      <div className="name">{props.item.name}</div>
+      <div className="total">{formatToMoney(props.item.itemTotal!)}</div>
       <div className="details">
         <div className="detail">
           <span className="label">Color:</span>
-          <span className="value">{item.sku.color.label}</span>
+          <span className="value">{props.item.sku.color.label}</span>
         </div>
         <div className="detail">
           <span className="label">Size:</span>
-          <span className="value">{item.sku.size.label}</span>
+          <span className="value">{props.item.sku.size.label}</span>
         </div>
-        {item.personalizationAddons.length > 0 ? (
+        {props.item.personalizationAddons.length > 0 ? (
           <div className="personalization">
             <div className="addon-label">Addons:</div>
             <div className="addon-items">
-              {item.personalizationAddons.map(item => (
+              {props.item.personalizationAddons.map(item => (
                 <div key={item.id} className="addon-item">
                   {item.value}
                   {item.subItems.map(subItem => (
@@ -38,7 +45,7 @@ export default function CheckoutItem({ item }: { item: CartItem }) {
         ) : null}
       </div>
       <div className="detail quantity">
-        Qty: <span className="value">{item.quantity}</span>
+        Qty: <span className="value">{props.item.quantity}</span>
       </div>
     </CheckoutItemStyles>
   );

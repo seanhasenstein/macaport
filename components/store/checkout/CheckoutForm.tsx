@@ -1,151 +1,16 @@
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import styled from 'styled-components';
-import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
-import {
-  PaymentMethodResult,
-  StripeCardElementChangeEvent,
-} from '@stripe/stripe-js';
-import {
-  Formik,
-  Form,
-  Field,
-  ErrorMessage as FormikErrorMessage,
-  FormikErrors,
-  FormikTouched,
-} from 'formik';
-import * as Yup from 'yup';
+import { CardElement } from '@stripe/react-stripe-js';
+import { Formik, Form, Field } from 'formik';
 import { CartItem } from '../../../interfaces';
-import {
-  getTouchedErrors,
-  removeNonDigits,
-  unitedStates,
-} from '../../../utils';
-import { useCart } from '../../../hooks/useCart';
+import { unitedStates } from '../../../utils';
 import useHasMounted from '../../../hooks/useHasMounted';
-
-type FormProps = {
-  customer: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-  };
-  groupRequired: boolean;
-  group: string;
-  shippingAddress: {
-    street: string;
-    street2: string;
-    city: string;
-    state: string;
-    zipcode: string;
-  };
-  shippingMethod: 'Primary' | 'Direct' | 'None';
-  cardholderName: string;
-};
-
-type FieldItemProps = {
-  name: string;
-  label: string;
-};
-
-type ErrorMessageProps = {
-  name: string;
-};
-
-type ServerResponse = {
-  success?: true;
-  orderId?: string;
-  storeClosed?: boolean;
-  lowerInventory: boolean;
-  lowerInventoryItems?: CartItem[];
-  outOfStock: boolean;
-  outOfStockItems?: CartItem[];
-  verifiedItems: CartItem[];
-  error?: string;
-};
-
-function FieldItem({ name, label }: FieldItemProps) {
-  return (
-    <FieldItemStyles>
-      <label htmlFor={name}>{label}</label>
-      <Field id={name} name={name} />
-      <ErrorMessage name={name} />
-    </FieldItemStyles>
-  );
-}
-
-function ErrorMessage({ name }: ErrorMessageProps) {
-  return (
-    <FormikErrorMessage
-      name={name}
-      render={msg => <ErrorMessageStyles>{msg}</ErrorMessageStyles>}
-    />
-  );
-}
-
-function TouchedError({ name }: { name: string }) {
-  return (
-    <FormikErrorMessage
-      name={name}
-      render={msg => (
-        <div className="error-item">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-              clipRule="evenodd"
-            />
-          </svg>
-          {msg}
-        </div>
-      )}
-    />
-  );
-}
-
-function TouchedErrors({
-  errors,
-  touched,
-}: {
-  errors: FormikErrors<FormProps>;
-  touched: FormikTouched<FormProps>;
-}) {
-  const [touchedErrors, setTouchedErrors] = React.useState<string[]>([]);
-
-  React.useEffect(() => {
-    const testing = getTouchedErrors(
-      errors as FormikErrors<string>,
-      touched as FormikTouched<boolean>
-    );
-    setTouchedErrors(testing || []);
-  }, [errors, touched]);
-
-  if (touchedErrors.length > 0) {
-    return (
-      <div className="errors-list">
-        <TouchedError name="customer.firstName" />
-        <TouchedError name="customer.lastName" />
-        <TouchedError name="customer.email" />
-        <TouchedError name="customer.phone" />
-        <TouchedError name="group" />
-        <TouchedError name="shippingAddress.street" />
-        <TouchedError name="shippingAddress.city" />
-        <TouchedError name="shippingAddress.state" />
-        <TouchedError name="shippingAddress.zipcode" />
-        <TouchedError name="cardholderName" />
-      </div>
-    );
-  } else {
-    return null;
-  }
-}
+import FieldItem, { FieldItemStyles } from './form/FieldItem';
+import ErrorMessage from './form/ErrorMessage';
+import TouchedErrors from './form/TouchedErrors';
+import useCheckoutSubmit from 'hooks/useCheckoutSubmit';
+import { cardStyle, getCheckoutSchema, getInitialValues } from 'utils/checkout';
 
 type Props = {
   storeId: string;
@@ -169,202 +34,22 @@ type Props = {
   setShowInventoryModal: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export default function CheckoutForm({
-  storeId,
-  storeName,
-  allowDirectShipping,
-  hasPrimaryShipping,
-  primaryShippingAddress,
-  requireGroupSelection,
-  groupTerm,
-  groups,
-  setVerifiedItems,
-  setLowerInventoryItems,
-  setOutOfStockItems,
-  setShowInventoryModal,
-}: Props) {
+export default function CheckoutForm(props: Props) {
   const hasMounted = useHasMounted();
-  const router = useRouter();
-  const stripe = useStripe();
-  const elements = useElements();
-  const { items, cartSubtotal, salesTax, cartTotal, cartIsEmpty, setItems } =
-    useCart();
-  const [stripeError, setStripeError] = React.useState<string>();
-  const [serverResponseError, setServerResponseError] =
-    React.useState<string>();
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-
-  const CheckoutSchema = Yup.object().shape({
-    customer: Yup.object().shape({
-      firstName: Yup.string().required('First name is required'),
-      lastName: Yup.string().required('Last name is required'),
-      email: Yup.string().email('Invalid email').required('Email is required'),
-      phone: Yup.string()
-        .transform(value => {
-          return removeNonDigits(value);
-        })
-        .matches(
-          new RegExp(/^\d{10}$/),
-          'Phone number must be 10 digits (123) 456-7890'
-        )
-        .required('Phone number is required'),
-    }),
-    group: Yup.string().when('groupRequired', {
-      is: true,
-      then: Yup.string().required(`A ${groupTerm} is required`),
-    }),
-    shippingAddress: Yup.object().when('shippingMethod', {
-      is: 'Direct',
-      then: Yup.object({
-        street: Yup.string().required('Street is required'),
-        city: Yup.string().required('City is required'),
-        state: Yup.string().required('State is required'),
-        zipcode: Yup.string().required('Zipcode is required'),
-      }),
-    }),
-    cardholderName: Yup.string().required("Cardholder's name is required"),
-  });
-
-  const handleCardChange = (e: StripeCardElementChangeEvent) => {
-    if (e.error) {
-      setStripeError(e.error.message);
-      return;
-    }
-    setStripeError(undefined);
-  };
-
-  const handleSubmit = async (data: FormProps) => {
-    setIsSubmitting(true);
-    const cardElement = elements?.getElement(CardElement);
-
-    if (!stripe || !cardElement) {
-      setStripeError(
-        'An error has occured loading the page. Please refresh and try again.'
-      );
-      setIsSubmitting(false);
-      return;
-    }
-
-    const result = await stripe.createPaymentMethod({
-      type: 'card',
-      card: cardElement,
-      billing_details: {
-        name: data.cardholderName.trim(),
-        email: data.customer.email.trim().toLowerCase(),
-        phone: data.customer.phone.trim(),
-      },
-    });
-
-    if (result) handlePaymentMethodResult(result, data);
-  };
-
-  const handlePaymentMethodResult = async (
-    result: PaymentMethodResult,
-    data: FormProps
-  ) => {
-    if (result.error) {
-      setStripeError(result.error.message);
-      setIsSubmitting(false);
-      return;
-    } else {
-      const response = await fetch('/api/stripe-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          storeId,
-          storeName,
-          payment_method_id: result.paymentMethod.id,
-          items,
-          customer: data.customer,
-          group: data.group,
-          shippingMethod: data.shippingMethod,
-          shippingAddress:
-            data.shippingMethod === 'Direct'
-              ? data.shippingAddress
-              : data.shippingMethod === 'Primary'
-              ? primaryShippingAddress
-              : undefined,
-          summary: {
-            subtotal: cartSubtotal,
-            shipping: 0,
-            salesTax,
-            total: cartTotal,
-          },
-        }),
-      });
-
-      const serverResponse = await response.json();
-      handleServerResponse(serverResponse);
-    }
-  };
-
-  const handleServerResponse = (serverResponse: ServerResponse) => {
-    if (serverResponse.storeClosed === true) {
-      router.push('/store-closed');
-      return;
-    }
-
-    if (
-      serverResponse.lowerInventory === true ||
-      serverResponse.outOfStock === true
-    ) {
-      if (serverResponse.outOfStockItems) {
-        setOutOfStockItems(serverResponse.outOfStockItems);
-      }
-      if (serverResponse.lowerInventoryItems) {
-        setLowerInventoryItems(serverResponse.lowerInventoryItems);
-      }
-      setVerifiedItems(serverResponse.verifiedItems);
-      setItems([
-        ...serverResponse.verifiedItems,
-        ...(serverResponse.lowerInventoryItems || []),
-      ]);
-      setShowInventoryModal(true);
-      setIsSubmitting(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    if (serverResponse.error) {
-      setServerResponseError(serverResponse.error);
-      console.error(serverResponse.error);
-      setIsSubmitting(false);
-      return;
-    }
-
-    setServerResponseError(undefined);
-    router.push(
-      `/store/${storeId}/order-confirmation?orderId=${serverResponse.orderId!}&emptyCart=true`
-    );
-  };
+  const checkout = useCheckoutSubmit(props);
+  const [initialValues] = React.useState(() =>
+    getInitialValues({
+      requireGroupSelection: props.requireGroupSelection,
+      hasPrimaryShipping: props.hasPrimaryShipping,
+      allowDirectShipping: props.allowDirectShipping,
+    })
+  );
 
   return (
     <Formik
-      initialValues={{
-        customer: {
-          firstName: '',
-          lastName: '',
-          email: '',
-          phone: '',
-        },
-        shippingAddress: {
-          street: '',
-          street2: '',
-          city: '',
-          state: '',
-          zipcode: '',
-        },
-        groupRequired: requireGroupSelection,
-        group: '',
-        shippingMethod: hasPrimaryShipping
-          ? 'Primary'
-          : allowDirectShipping
-          ? 'Direct'
-          : 'None',
-        cardholderName: '',
-      }}
-      validationSchema={CheckoutSchema}
-      onSubmit={handleSubmit}
+      initialValues={initialValues}
+      validationSchema={getCheckoutSchema(props.groupTerm)}
+      onSubmit={checkout.handleSubmit}
     >
       {({ values, errors, touched }) => (
         <CheckoutFormStyles>
@@ -379,17 +64,17 @@ export default function CheckoutForm({
               </div>
               <FieldItem name="customer.email" label="Email Address" />
               <FieldItem name="customer.phone" label="Phone Number" />
-              {requireGroupSelection && (
+              {props.requireGroupSelection && (
                 <div className="field-row">
                   <FieldItemStyles>
                     <label htmlFor="group" className="capitlize">
-                      {groupTerm}
+                      {props.groupTerm}
                     </label>
                     <Field name="group" as="select">
                       <option value="">
-                        Select your {groupTerm.toLowerCase()}
+                        Select your {props.groupTerm.toLowerCase()}
                       </option>
-                      {groups.map((g, i) => (
+                      {props.groups.map((g, i) => (
                         <option key={i} value={g}>
                           {g}
                         </option>
@@ -399,11 +84,11 @@ export default function CheckoutForm({
                   </FieldItemStyles>
                 </div>
               )}
-              {(hasPrimaryShipping || allowDirectShipping) && (
+              {(props.hasPrimaryShipping || props.allowDirectShipping) && (
                 <>
                   <h4>Choose a shipping method:</h4>
                   <div className="radio-shipping-group">
-                    {hasPrimaryShipping && (
+                    {props.hasPrimaryShipping && (
                       <div
                         className={`radio-shipping-item ${
                           values.shippingMethod === 'Primary' ? 'checked' : ''
@@ -416,12 +101,14 @@ export default function CheckoutForm({
                             id="primaryShipping"
                             value="Primary"
                           />
-                          <div>Pick up at {primaryShippingAddress.name}</div>
+                          <div>
+                            Pick up at {props.primaryShippingAddress.name}
+                          </div>
                           <div className="shipping-price">Free</div>
                         </label>
                       </div>
                     )}
-                    {allowDirectShipping && (
+                    {props.allowDirectShipping && (
                       <div
                         className={`radio-shipping-item ${
                           values.shippingMethod === 'Direct' ? 'checked' : ''
@@ -480,15 +167,24 @@ export default function CheckoutForm({
               </h3>
               <FieldItem name="cardholderName" label="Cardholder's Name" />
               <label htmlFor="stripeInput">Card Information</label>
-              <CardElement options={cardStyle} onChange={handleCardChange} />
-              {stripeError && <div className="stripe-error">{stripeError}</div>}
+              <CardElement
+                options={cardStyle}
+                onChange={checkout.handleCardChange}
+              />
+              {checkout.stripeError && (
+                <div className="stripe-error">{checkout.stripeError}</div>
+              )}
               <button
                 type="submit"
-                disabled={!stripe || cartIsEmpty || isSubmitting}
+                disabled={
+                  !checkout.stripe ||
+                  checkout.cartIsEmpty ||
+                  checkout.isSubmitting
+                }
               >
-                {isSubmitting ? (
+                {checkout.isSubmitting ? (
                   <LoadingSpinner />
-                ) : cartIsEmpty ? (
+                ) : checkout.cartIsEmpty ? (
                   <>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -509,13 +205,15 @@ export default function CheckoutForm({
                   'Place your order'
                 )}
               </button>
-              {serverResponseError && (
-                <div className="stripe-error">{serverResponseError}</div>
+              {checkout.serverResponseError && (
+                <div className="stripe-error">
+                  {checkout.serverResponseError}
+                </div>
               )}
-              {hasMounted && cartIsEmpty && !isSubmitting && (
+              {hasMounted && checkout.cartIsEmpty && !checkout.isSubmitting && (
                 <div className="empty-cart">
                   Your order is empty.{' '}
-                  <Link href={`/store/${storeId}`}>
+                  <Link href={`/store/${props.storeId}`}>
                     <a>Continue shopping</a>
                   </Link>
                   .
@@ -756,37 +454,6 @@ const CheckoutFormStyles = styled.div`
     }
   }
 `;
-
-const FieldItemStyles = styled.div`
-  margin: 0 0 1.25rem;
-  display: flex;
-  flex-direction: column;
-`;
-
-const ErrorMessageStyles = styled.div`
-  margin: 0.25rem 0 0;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #b91c1c;
-`;
-
-const cardStyle = {
-  style: {
-    base: {
-      color: '#36383e',
-      fontFamily: 'Inter, sans-serif',
-      fontSmoothing: 'antialiased',
-      fontSize: '14px',
-      '::placeholder': {
-        color: '#36383e',
-      },
-    },
-    invalid: {
-      color: '#ab0202',
-      iconColor: '#b91c1c',
-    },
-  },
-};
 
 const LoadingSpinner = styled.span`
   @keyframes spinner {

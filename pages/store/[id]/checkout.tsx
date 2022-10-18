@@ -1,18 +1,15 @@
 import React from 'react';
 import { GetServerSideProps } from 'next';
-import { useRouter } from 'next/router';
-import Link from 'next/link';
 import styled from 'styled-components';
 import { connectToDb, store as storeModel } from 'db';
 import { getStoreStatus } from 'utils/store';
 import { useCart } from '../../../hooks/useCart';
-import useHasMounted from '../../../hooks/useHasMounted';
 import { CartItem, Store } from '../../../interfaces';
-import { formatToMoney, getUrlParameter } from '../../../utils';
+import { getUrlParameter } from '../../../utils';
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
-import CheckoutItem from '../../../components/store/checkout/CheckoutItem';
 import CheckoutForm from '../../../components/store/checkout/CheckoutForm';
 import OutOfStockModal from '../../../components/store/checkout/OutOfStockModal';
+import CheckoutSidebar from 'components/store/checkout/CheckoutSidebar';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -58,8 +55,6 @@ type Props = {
 };
 
 export default function Checkout({ store }: Props) {
-  const hasMounted = useHasMounted();
-  const router = useRouter();
   const { items, cartSubtotal, salesTax, cartTotal } = useCart();
   const [verifiedItems, setVerifiedItems] = React.useState<CartItem[]>([]);
   const [lowerInventoryItems, setLowerInventoryItems] = React.useState<
@@ -87,52 +82,12 @@ export default function Checkout({ store }: Props) {
             setOutOfStockItems={setOutOfStockItems}
             setShowInventoryModal={setShowInventoryModal}
           />
-          {hasMounted && (
-            <div>
-              <div className="sidebar">
-                <div className="products">
-                  <h3>Order Items</h3>
-                  {items.length < 1 && (
-                    <div className="empty-order">
-                      Your order is empty.{' '}
-                      <Link href={`/store/${router.query.id}`}>
-                        <a>Continue shopping</a>
-                      </Link>
-                      .
-                    </div>
-                  )}
-                  <div className="items">
-                    {items.map(item => (
-                      <CheckoutItem key={item.id} item={item} />
-                    ))}
-                  </div>
-                </div>
-                <div className="order-summary">
-                  <h3>Order Summary</h3>
-                  <div className="item">
-                    <div className="key">Subtotal</div>
-                    <div className="value">
-                      {formatToMoney(cartSubtotal, true)}
-                    </div>
-                  </div>
-                  <div className="item">
-                    <div className="key">Sales Tax</div>
-                    <div className="value">{formatToMoney(salesTax, true)}</div>
-                  </div>
-                  <div className="item">
-                    <div className="key">Shipping</div>
-                    <div className="value">{formatToMoney(0, true)}</div>
-                  </div>
-                  <div className="item total">
-                    <div className="key">Order Total</div>
-                    <div className="value">
-                      {formatToMoney(cartTotal, true)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          <CheckoutSidebar
+            items={items}
+            cartSubtotal={cartSubtotal}
+            salesTax={salesTax}
+            cartTotal={cartTotal}
+          />
         </div>
         <OutOfStockModal
           verifiedItems={verifiedItems}
@@ -166,86 +121,6 @@ const CheckoutStyles = styled.div`
     gap: 0 3rem;
   }
 
-  .sidebar {
-    padding: 2rem 2.5rem;
-    background-color: #fff;
-    border-radius: 0.375rem;
-    border: 1px solid #e5e7eb;
-    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
-
-    h3 {
-      margin: 0 0 1.75rem;
-      font-size: 1.125rem;
-      color: #36383e;
-      font-weight: 600;
-    }
-  }
-
-  .empty-order {
-    font-size: 0.9375rem;
-    color: #6b7280;
-    line-height: 1.5;
-
-    a {
-      display: inline-flex;
-      align-items: center;
-      color: #2837b9;
-      text-decoration: underline;
-
-      &:hover {
-        color: #1629cb;
-      }
-    }
-  }
-
-  .order-summary {
-    padding: 3rem 0 0;
-
-    h3 {
-      margin: 0 0 1rem;
-    }
-
-    .item {
-      padding: 1.125rem 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #e5e7eb;
-
-      &:last-of-type {
-        border: none;
-      }
-
-      .key,
-      .value {
-        font-size: 0.9375rem;
-        font-weight: 500;
-      }
-
-      .key {
-        color: #6b7280;
-      }
-
-      .value {
-        color: #111827;
-      }
-
-      &.total {
-        .key,
-        .value {
-          color: #374151;
-          font-size: 1rem;
-          font-weight: 600;
-        }
-
-        .value {
-          color: #059669;
-        }
-      }
-    }
-  }
-
   @media (max-width: 1024px) {
     h2 {
       margin: 3rem 0;
@@ -257,12 +132,6 @@ const CheckoutStyles = styled.div`
       max-width: 40rem;
       display: flex;
       flex-direction: column-reverse;
-    }
-  }
-
-  @media (max-width: 500px) {
-    .sidebar {
-      padding: 1.75rem 1.5rem;
     }
   }
 `;

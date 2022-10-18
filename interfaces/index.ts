@@ -214,6 +214,26 @@ export interface StoreForStoresPage {
   featuredImg: string;
 }
 
+export interface CheckoutForm {
+  customer: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+  };
+  groupRequired: boolean;
+  group: string;
+  shippingAddress: {
+    street: string;
+    street2: string;
+    city: string;
+    state: string;
+    zipcode: string;
+  };
+  shippingMethod: 'Primary' | 'Direct' | 'None';
+  cardholderName: string;
+}
+
 export interface ContactFormValues {
   firstName: string;
   lastName: string;
