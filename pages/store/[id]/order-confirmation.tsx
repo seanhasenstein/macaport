@@ -72,7 +72,7 @@ type Props = {
   error?: string;
 };
 
-export default function Temp({
+export default function OrderConfirmation({
   order,
   groupRequired,
   groupTerm,
@@ -92,9 +92,7 @@ export default function Temp({
   }
 
   return (
-    <NoNavLayout
-      title={`${order.store.name} Order #${order.orderId} | Macaport`}
-    >
+    <NoNavLayout title={`${order.store.name} Order #${order.orderId}`}>
       <OrderConfirmationStyles>
         <div className="order-confirmation-wrapper">
           {order && (

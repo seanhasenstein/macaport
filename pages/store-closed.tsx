@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 export default function StoreClosed() {
   return (
-    <NoNavLayout>
+    <NoNavLayout title="Store closed">
       <StoreClosedStyles>
         <div className="wrapper">
           <svg

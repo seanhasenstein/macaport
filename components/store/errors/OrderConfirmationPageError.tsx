@@ -4,7 +4,7 @@ import NoNavLayout from '../NoNavLayout';
 
 export default function OrderConfirmationPageError() {
   return (
-    <NoNavLayout title="Error | Order Confirmation | Macaport">
+    <NoNavLayout title="Error | Order Confirmation">
       <ErrorMessageStyles>
         <div className="wrapper">
           <svg

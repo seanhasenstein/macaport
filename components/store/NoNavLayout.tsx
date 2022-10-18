@@ -10,12 +10,13 @@ type Props = {
   title?: string;
 };
 
-export default function NoNavLayout({ children, title = 'Macaport' }: Props) {
+export default function NoNavLayout(props: Props) {
+  const title = props.title ? `${props.title} | ` : '';
   return (
     <LayoutStyles>
       <GlobalStyles />
       <Head>
-        <title>{title}</title>
+        <title>{`${title}Macaport`}</title>
         <meta charSet="utf-8" />
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
       </Head>
@@ -34,7 +35,7 @@ export default function NoNavLayout({ children, title = 'Macaport' }: Props) {
           </div>
         </nav>
       </header>
-      <main>{children}</main>
+      <main>{props.children}</main>
       <Footer />
     </LayoutStyles>
   );

@@ -4,7 +4,7 @@ import NoNavLayout from '../components/store/NoNavLayout';
 
 export default function StoreNotFound() {
   return (
-    <NoNavLayout>
+    <NoNavLayout title="Store not found">
       <StoreNotFoundStyles>
         <div className="wrapper">
           <svg
