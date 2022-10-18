@@ -9,6 +9,7 @@ import {
   PersonalizationAddon,
 } from '../../../interfaces';
 import LinkButton from '../common/LinkButton';
+import useProductSidebar from 'hooks/useProductSidebar';
 
 type Props = {
   storeId: string;
@@ -25,42 +26,12 @@ type Props = {
 };
 
 export default function Sidebar(props: Props) {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const closeButton = React.useRef<HTMLButtonElement>(null);
-  const itemPrice =
-    props.size.price +
-    (props.personalization.addonItems.length > 0
-      ? props.personalization.total
-      : 0);
-
-  React.useEffect(() => {
-    const handleEscapeKeyup = (e: KeyboardEvent) => {
-      if (e.code === 'Escape') {
-        props.resetProduct();
-      }
-    };
-
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node))
-        props.resetProduct();
-    };
-
-    if (props.isOpen) {
-      closeButton?.current && closeButton.current.focus();
-      document.addEventListener('keyup', handleEscapeKeyup);
-      document.addEventListener('click', handleOutsideClick);
-
-      const timeout = setTimeout(() => {
-        props.resetProduct();
-      }, 5000);
-
-      return () => {
-        document.removeEventListener('keyup', handleEscapeKeyup);
-        document.removeEventListener('click', handleOutsideClick);
-        clearTimeout(timeout);
-      };
-    }
-  }, [props.isOpen, props.resetProduct]);
+  const { closeButtonRef, containerRef, itemPrice } = useProductSidebar({
+    isOpen: props.isOpen,
+    sizePrice: props.size.price,
+    personalization: props.personalization,
+    resetProduct: props.resetProduct,
+  });
 
   return (
     <SidebarStyles
@@ -69,7 +40,7 @@ export default function Sidebar(props: Props) {
     >
       <div className={props.isOpen ? 'fullscreen' : ''}>
         <div
-          ref={ref}
+          ref={containerRef}
           role="dialog"
           className={`sidebar ${props.isOpen ? 'show' : 'hide'}`}
         >
@@ -90,7 +61,7 @@ export default function Sidebar(props: Props) {
               <h2>Added to Order</h2>
             </div>
             <button
-              ref={closeButton}
+              ref={closeButtonRef}
               aria-label="Close panel"
               className="close-button"
               onClick={props.resetProduct}
