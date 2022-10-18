@@ -21,44 +21,37 @@ type Props = {
     total: number;
   };
   resetProduct: () => void;
-  isSidebarOpen: boolean;
+  isOpen: boolean;
 };
 
-export default function Sidebar({
-  storeId,
-  item,
-  color,
-  size,
-  image,
-  personalization,
-  resetProduct,
-  isSidebarOpen,
-}: Props) {
+export default function Sidebar(props: Props) {
   const ref = React.useRef<HTMLDivElement>(null);
   const closeButton = React.useRef<HTMLButtonElement>(null);
   const itemPrice =
-    size.price +
-    (personalization.addonItems.length > 0 ? personalization.total : 0);
+    props.size.price +
+    (props.personalization.addonItems.length > 0
+      ? props.personalization.total
+      : 0);
 
   React.useEffect(() => {
     const handleEscapeKeyup = (e: KeyboardEvent) => {
       if (e.code === 'Escape') {
-        resetProduct();
+        props.resetProduct();
       }
     };
 
     const handleOutsideClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node))
-        resetProduct();
+        props.resetProduct();
     };
 
-    if (isSidebarOpen) {
+    if (props.isOpen) {
       closeButton?.current && closeButton.current.focus();
       document.addEventListener('keyup', handleEscapeKeyup);
       document.addEventListener('click', handleOutsideClick);
 
       const timeout = setTimeout(() => {
-        resetProduct();
+        props.resetProduct();
       }, 5000);
 
       return () => {
@@ -67,12 +60,19 @@ export default function Sidebar({
         clearTimeout(timeout);
       };
     }
-  }, [isSidebarOpen, resetProduct]);
+  }, [props.isOpen, props.resetProduct]);
 
   return (
-    <SidebarStyles hasAddons={personalization.addonItems.length > 0}>
-      <div className={isSidebarOpen ? 'fullscreen' : ''}>
-        <div className={`sidebar ${isSidebarOpen ? 'show' : 'hide'}`} ref={ref}>
+    <SidebarStyles
+      hasAddons={props.personalization.addonItems.length > 0}
+      aria-hidden={!props.isOpen}
+    >
+      <div className={props.isOpen ? 'fullscreen' : ''}>
+        <div
+          ref={ref}
+          role="dialog"
+          className={`sidebar ${props.isOpen ? 'show' : 'hide'}`}
+        >
           <div className="heading">
             <div className="title">
               <svg
@@ -93,7 +93,7 @@ export default function Sidebar({
               ref={closeButton}
               aria-label="Close panel"
               className="close-button"
-              onClick={resetProduct}
+              onClick={props.resetProduct}
             >
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -108,21 +108,24 @@ export default function Sidebar({
           <div className="main">
             <div className="item">
               <div className="item-img">
-                <img src={image} alt={`${color.label} ${item.name}`} />
+                <img
+                  src={props.image}
+                  alt={`${props.color.label} ${props.item.name}`}
+                />
               </div>
               <div>
-                <h3 className="item-name">{item.name}</h3>
+                <h3 className="item-name">{props.item.name}</h3>
                 <div className="item-specs">
                   <div>
-                    <span>Color:</span> {color.label}
+                    <span>Color:</span> {props.color.label}
                   </div>
                   <div className="size">
                     <span>Size:</span>{' '}
-                    {size.label !== 'DEFAULT' ? size.label : ''}
+                    {props.size.label !== 'DEFAULT' ? props.size.label : ''}
                   </div>
-                  {personalization.addonItems.length > 0 ? (
+                  {props.personalization.addonItems.length > 0 ? (
                     <div className="personalization">
-                      {personalization.addonItems.map((item, index) => (
+                      {props.personalization.addonItems.map((item, index) => (
                         <div key={item.id} className="addon-item">
                           <span>{index === 0 ? 'Addons:' : null}</span>
                           {item.value}
@@ -145,16 +148,16 @@ export default function Sidebar({
               </div>
             </div>
             <div className="actions">
-              <Link href={`/store/${storeId}/cart`}>
+              <Link href={`/store/${props.storeId}/cart`}>
                 <a className="secondary-button">View Cart</a>
               </Link>
               <LinkButton
-                href={`/store/${storeId}/checkout`}
+                href={`/store/${props.storeId}/checkout`}
                 label="Checkout"
               />
             </div>
             <div className="continue-shopping-link">
-              <Link href={`/store/${storeId}`}>
+              <Link href={`/store/${props.storeId}`}>
                 <a>
                   Continue shopping
                   <svg

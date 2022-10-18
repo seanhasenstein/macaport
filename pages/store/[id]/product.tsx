@@ -208,7 +208,6 @@ export default function Product(props: Props) {
             </div>
           </div>
         </ProductStyles>
-        {/* TODO: add headless ui to the sidebar */}
         <Sidebar
           storeId={props.store._id}
           item={props.product}
@@ -220,10 +219,9 @@ export default function Product(props: Props) {
             addonItems: productPersonalization.flattenedItems,
             total: productPersonalization.total,
           }}
-          isSidebarOpen={showSidebar}
+          isOpen={showSidebar}
         />
       </StoreLayout>
-      {/* TODO: add headlesss ui to the lightbox */}
       {showLightbox && productImages.primaryImage ? (
         <Lightbox
           setShowLightbox={setShowLightbox}
