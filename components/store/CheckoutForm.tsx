@@ -16,8 +16,13 @@ import {
   FormikTouched,
 } from 'formik';
 import * as Yup from 'yup';
-import { CartItem } from '../../interfaces';
-import { getTouchedErrors, removeNonDigits, unitedStates } from '../../utils';
+import { CartItem, ShippingData, ShippingMethod } from '../../interfaces';
+import {
+  formatToMoney,
+  getTouchedErrors,
+  removeNonDigits,
+  unitedStates,
+} from '../../utils';
 import { useCart } from '../../hooks/useCart';
 import useHasMounted from '../../hooks/useHasMounted';
 
@@ -37,7 +42,7 @@ type FormProps = {
     state: string;
     zipcode: string;
   };
-  shippingMethod: 'Primary' | 'Direct' | 'None';
+  shippingMethod: ShippingMethod;
   cardholderName: string;
 };
 
@@ -159,6 +164,7 @@ type Props = {
   requireGroupSelection: boolean;
   groupTerm: string;
   groups: string[];
+  shipping: ShippingData;
   setVerifiedItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
   setLowerInventoryItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
   setOutOfStockItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
@@ -174,6 +180,7 @@ export default function CheckoutForm({
   requireGroupSelection,
   groupTerm,
   groups,
+  shipping,
   setVerifiedItems,
   setLowerInventoryItems,
   setOutOfStockItems,
@@ -183,12 +190,30 @@ export default function CheckoutForm({
   const router = useRouter();
   const stripe = useStripe();
   const elements = useElements();
-  const { items, cartSubtotal, salesTax, cartTotal, cartIsEmpty, setItems } =
-    useCart();
+  const {
+    items,
+    cartSubtotal,
+    salesTax,
+    cartTotal,
+    cartIsEmpty,
+    setItems,
+    updateShipping,
+  } = useCart();
   const [stripeError, setStripeError] = React.useState<string>();
   const [serverResponseError, setServerResponseError] =
     React.useState<string>();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  // only run on first render
+  // reset the shipping data in useCart when user leaves
+  // the checkout page and then returns
+  React.useEffect(() => {
+    updateShipping({
+      price: shipping.price,
+      freeMinimum: shipping.freeMinimum,
+      shippingMethod: 'Primary',
+    });
+  }, []);
 
   const CheckoutSchema = Yup.object().shape({
     customer: Yup.object().shape({
@@ -362,7 +387,7 @@ export default function CheckoutForm({
       validationSchema={CheckoutSchema}
       onSubmit={handleSubmit}
     >
-      {({ values, errors, touched }) => (
+      {({ errors, setFieldValue, touched, values }) => (
         <CheckoutFormStyles>
           <Form>
             <div className="section">
@@ -411,8 +436,19 @@ export default function CheckoutForm({
                             name="shippingMethod"
                             id="primaryShipping"
                             value="Primary"
+                            onChange={() => {
+                              const value = 'Primary' as const;
+                              setFieldValue('shippingMethod', value);
+                              updateShipping({
+                                price: shipping.price,
+                                freeMinimum: shipping.freeMinimum,
+                                shippingMethod: value,
+                              });
+                            }}
                           />
-                          <div>Pick up at {primaryShippingAddress.name}</div>
+                          <div className="shipping-label">
+                            Pick up at {primaryShippingAddress.name}
+                          </div>
                           <div className="shipping-price">Free</div>
                         </label>
                       </div>
@@ -429,15 +465,36 @@ export default function CheckoutForm({
                             name="shippingMethod"
                             id="secondaryShipping"
                             value="Direct"
+                            onChange={() => {
+                              const value = 'Direct' as const;
+                              setFieldValue('shippingMethod', value);
+                              updateShipping({
+                                price: shipping.price,
+                                freeMinimum: shipping.freeMinimum,
+                                shippingMethod: value,
+                              });
+                            }}
                           />
-                          <div>Ship directly to you</div>
-                          <div className="shipping-price">$0.00</div>
+                          <div className="shipping-label">
+                            Ship directly to you
+                            {cartSubtotal >= shipping.freeMinimum
+                              ? ' (free with orders over $100)'
+                              : ''}
+                          </div>
+                          <div className="shipping-price">
+                            {cartSubtotal >= shipping.freeMinimum
+                              ? 'Free'
+                              : formatToMoney(shipping.price, true)}
+                          </div>
                         </label>
                       </div>
                     )}
                   </div>
                   {values.shippingMethod === 'Direct' && (
                     <div>
+                      <h3 className="section-title">
+                        <span>Shipping Address</span>
+                      </h3>
                       <FieldItem
                         name="shippingAddress.street"
                         label="Street Address"
@@ -470,6 +527,7 @@ export default function CheckoutForm({
                 </>
               )}
             </div>
+
             <div className="section">
               <h3 className="section-title">
                 <span>Billing Details</span>
@@ -502,7 +560,7 @@ export default function CheckoutForm({
                     <span className="sr-only">Your order is empty</span>
                   </>
                 ) : (
-                  'Place your order'
+                  `Submit your order of ${formatToMoney(cartTotal, true)}`
                 )}
               </button>
               {serverResponseError && (
@@ -592,8 +650,17 @@ const CheckoutFormStyles = styled.div`
       margin-right: 1rem;
     }
 
+    .shipping-label {
+      padding: 0 1.5rem 0 0;
+      line-height: 1.5;
+    }
+
     .shipping-price {
       margin-left: auto;
+    }
+
+    .linethrough {
+      text-decoration: line-through;
     }
   }
 
@@ -679,7 +746,7 @@ const CheckoutFormStyles = styled.div`
 
   .StripeElement {
     margin: 0.375rem 0 0;
-    padding: 0.625rem 0.75rem;
+    padding: 0.8125rem 0.75rem;
     background-color: #fff;
     border: 1px solid #dddde2;
     border-radius: 0.375rem;

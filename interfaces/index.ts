@@ -127,6 +127,8 @@ export interface OrderItem extends Omit<CartItem, 'sku'> {
   merchandiseCode: string;
 }
 
+export type ShippingMethod = 'Primary' | 'Direct' | 'None';
+
 export interface Order {
   _id?: string;
   orderId: string;
@@ -144,7 +146,7 @@ export interface Order {
   };
   group: string;
   orderStatus: 'Unfulfilled';
-  shippingMethod: 'Primary' | 'Direct' | 'None';
+  shippingMethod: ShippingMethod;
   shippingAddress: {
     name?: string;
     street: string;
@@ -203,6 +205,12 @@ export interface Store {
   };
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ShippingData {
+  _id: string;
+  price: number;
+  freeMinimum: number;
 }
 
 export interface Request extends NextApiRequest {

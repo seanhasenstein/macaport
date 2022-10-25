@@ -66,7 +66,7 @@ export default function Cart({ store, error }: Props) {
     totalItems,
     cartSubtotal,
     salesTax,
-    cartTotal,
+    cartTotalWithoutShipping,
     cartIsEmpty,
     removeItem,
   } = useCart();
@@ -146,7 +146,7 @@ export default function Cart({ store, error }: Props) {
                     <div className="item total">
                       <div className="key">Order Total</div>
                       <div className="value">
-                        {formatToMoney(cartTotal, true)}
+                        {formatToMoney(cartTotalWithoutShipping, true)}
                       </div>
                     </div>
                     <LinkButton

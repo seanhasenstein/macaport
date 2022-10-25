@@ -2,10 +2,11 @@ import { mongoClientPromise } from './connect';
 import * as inventoryProduct from './inventoryProduct';
 import * as order from './order';
 import * as store from './store';
+import * as shipping from './shipping';
 
 async function connectToDb() {
   const client = await mongoClientPromise;
   return client.db();
 }
 
-export { connectToDb, inventoryProduct, order, store };
+export { connectToDb, inventoryProduct, order, shipping, store };

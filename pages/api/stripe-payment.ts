@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 import fetch from 'node-fetch';
-import { connectToDb, store } from '../../db';
+import { connectToDb, shipping as shippingModel, store } from '../../db';
 import {
   CartItem,
   Order,
@@ -15,6 +15,7 @@ import {
   createReceiptNumber,
   removeNonDigits,
   isStoreActive,
+  calculateShipping,
 } from '../../utils';
 
 type CartAccumulator = {
@@ -89,12 +90,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       group,
       shippingMethod,
       shippingAddress,
-      summary,
     } = req.body;
 
     const db = await connectToDb();
     const { products, openDate, closeDate }: StoreInterface =
       await store.getStoreById(db, storeId);
+    const shipping = await shippingModel.getShippingDetails(db);
 
     // 1. verify that the store is open
     const isStoreOpen = isStoreActive(openDate, closeDate);
@@ -242,9 +243,16 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     // 3. calculate order salesTax and total from verified items and subtotal
     const verifiedSalesTax = calculateSalesTax(verifiedSubtotal);
+    const verifiedShipping = calculateShipping(
+      shipping.price,
+      shipping.freeMinimum,
+      verifiedSubtotal,
+      shippingMethod
+    );
     const verifiedTotal = calculateCartTotal(
       verifiedSubtotal,
-      verifiedSalesTax
+      verifiedSalesTax,
+      verifiedShipping
     );
 
     // 4. create orderId
@@ -290,7 +298,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       shippingAddress,
       summary: {
         subtotal: verifiedSubtotal,
-        shipping: summary.shipping,
+        shipping: verifiedShipping,
         salesTax: verifiedSalesTax,
         total: verifiedTotal,
         stripeFee: Math.round(verifiedTotal * 0.029 + 30),

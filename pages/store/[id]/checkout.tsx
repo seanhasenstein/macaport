@@ -1,12 +1,12 @@
 import React from 'react';
 import { GetServerSideProps } from 'next';
-import { connectToDb, store } from '../../../db';
+import { connectToDb, shipping, store } from '../../../db';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { useCart } from '../../../hooks/useCart';
 import useHasMounted from '../../../hooks/useHasMounted';
-import { CartItem, Store } from '../../../interfaces';
+import { CartItem, ShippingData, Store } from '../../../interfaces';
 import { formatToMoney, isStoreActive } from '../../../utils';
 import StoreLayout from '../../../components/store/StoreLayout';
 import CheckoutItem from '../../../components/store/CheckoutItem';
@@ -24,9 +24,10 @@ export const getServerSideProps: GetServerSideProps = async context => {
     }
 
     const db = await connectToDb();
-    const storeRes = await store.getStoreById(db, id);
+    const storeResult = await store.getStoreById(db, id);
+    const shippingResult = await shipping.getShippingDetails(db);
 
-    if (!storeRes) {
+    if (!storeResult) {
       return {
         redirect: {
           permanent: false,
@@ -35,7 +36,10 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    const storeIsActive = isStoreActive(storeRes.openDate, storeRes.closeDate);
+    const storeIsActive = isStoreActive(
+      storeResult.openDate,
+      storeResult.closeDate
+    );
 
     if (!storeIsActive) {
       return {
@@ -46,7 +50,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    return { props: { store: storeRes } };
+    return { props: { store: storeResult, shipping: shippingResult } };
   } catch (error) {
     return {
       props: { error },
@@ -56,12 +60,13 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
 type Props = {
   store: Store;
+  shipping: ShippingData;
 };
 
-export default function Checkout({ store }: Props) {
+export default function Checkout(props: Props) {
   const hasMounted = useHasMounted();
   const router = useRouter();
-  const { items, cartSubtotal, salesTax, cartTotal } = useCart();
+  const { items, cartSubtotal, salesTax, shipping, cartTotal } = useCart();
   const [verifiedItems, setVerifiedItems] = React.useState<CartItem[]>([]);
   const [lowerInventoryItems, setLowerInventoryItems] = React.useState<
     CartItem[]
@@ -70,19 +75,20 @@ export default function Checkout({ store }: Props) {
   const [showInventoryModal, setShowInventoryModal] = React.useState(false);
 
   return (
-    <StoreLayout title={`Checkout | ${store.name} | Macaport`}>
+    <StoreLayout title={`Checkout | ${props.store.name} | Macaport`}>
       <CheckoutStyles>
         <h2>Order Checkout</h2>
         <div className="wrapper">
           <CheckoutForm
-            storeId={store._id}
-            storeName={store.name}
-            allowDirectShipping={store.allowDirectShipping}
-            hasPrimaryShipping={store.hasPrimaryShippingLocation}
-            primaryShippingAddress={store.primaryShippingLocation}
-            requireGroupSelection={store.requireGroupSelection}
-            groupTerm={store.groupTerm}
-            groups={store.groups}
+            storeId={props.store._id}
+            storeName={props.store.name}
+            allowDirectShipping={props.store.allowDirectShipping}
+            hasPrimaryShipping={props.store.hasPrimaryShippingLocation}
+            primaryShippingAddress={props.store.primaryShippingLocation}
+            requireGroupSelection={props.store.requireGroupSelection}
+            groupTerm={props.store.groupTerm}
+            groups={props.store.groups}
+            shipping={props.shipping}
             setVerifiedItems={setVerifiedItems}
             setLowerInventoryItems={setLowerInventoryItems}
             setOutOfStockItems={setOutOfStockItems}
@@ -122,7 +128,7 @@ export default function Checkout({ store }: Props) {
                   </div>
                   <div className="item">
                     <div className="key">Shipping</div>
-                    <div className="value">{formatToMoney(0, true)}</div>
+                    <div className="value">{formatToMoney(shipping, true)}</div>
                   </div>
                   <div className="item total">
                     <div className="key">Order Total</div>
