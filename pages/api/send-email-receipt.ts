@@ -2,35 +2,30 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import nc from 'next-connect';
 import { sendEmail } from '../../utils/mailgun';
 import { generateReceiptEmail } from '../../utils/email';
-import { Store } from '../../interfaces';
+import { Order } from '../../interfaces';
 
 interface Request extends NextApiRequest {
   body: {
-    store: Store;
-    orderId: string;
+    order: Order;
   };
 }
 
 const handler = nc<Request, NextApiResponse>().post(async (req, res) => {
-  const order = req.body.store.orders?.find(
-    o => o.orderId === req.body.orderId
-  );
-  if (!order) {
-    throw new Error(`No order found with ID ${req.body.orderId}`);
+  if (!req.body.order) {
+    throw new Error(`An order is required from the request body.`);
   }
-  const { text, html } = generateReceiptEmail(order);
+
+  const { text, html } = generateReceiptEmail(req.body.order);
 
   const result = await sendEmail({
-    to: order.customer.email,
+    to: req.body.order.customer.email,
     from: `Macaport <support@macaport.com>`,
-    subject: `Apparel Order [#${req.body.orderId}]`,
+    subject: `Apparel Order [#${req.body.order.orderId}]`,
     text,
     html,
   });
 
-  console.log(result);
-
-  res.send({ success: true });
+  res.send(result);
 });
 
 export default handler;

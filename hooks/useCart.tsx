@@ -146,6 +146,8 @@ export function CartProvider({ children, cartId }: CartProviderType) {
   );
   const [state, dispatch] = React.useReducer(reducer, JSON.parse(savedCart));
 
+  // TODO: Need to update cartItems/localStorage (specifically inventory) on reload (1st render)
+
   // React.useEffect(() => {
   //   // check if fetched product is active and has inventory
   //   async function fetchProducts() {
@@ -268,6 +270,7 @@ export function CartProvider({ children, cartId }: CartProviderType) {
           quantity: updatedQuantity,
         },
       });
+
       removeItem(prevId);
     } else {
       let updatedQuantity = payload.quantity;

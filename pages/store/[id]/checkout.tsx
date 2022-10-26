@@ -4,8 +4,9 @@ import styled from 'styled-components';
 import { connectToDb, store as storeModel } from 'db';
 import { getStoreStatus } from 'utils/store';
 import { useCart } from '../../../hooks/useCart';
-import { CartItem, Store } from '../../../interfaces';
+import { Store } from '../../../interfaces';
 import { getUrlParameter } from '../../../utils';
+import useCheckoutSubmit from 'hooks/useCheckoutSubmit';
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import CheckoutForm from '../../../components/store/checkout/CheckoutForm';
 import OutOfStockModal from '../../../components/store/checkout/OutOfStockModal';
@@ -54,47 +55,43 @@ type Props = {
   store: Store;
 };
 
-export default function Checkout({ store }: Props) {
-  const { items, cartSubtotal, salesTax, cartTotal } = useCart();
-  const [verifiedItems, setVerifiedItems] = React.useState<CartItem[]>([]);
-  const [lowerInventoryItems, setLowerInventoryItems] = React.useState<
-    CartItem[]
-  >([]);
-  const [outOfStockItems, setOutOfStockItems] = React.useState<CartItem[]>([]);
-  const [showInventoryModal, setShowInventoryModal] = React.useState(false);
+export default function Checkout(props: Props) {
+  const cart = useCart();
+  const checkout = useCheckoutSubmit({
+    storeId: props.store._id,
+    storeName: props.store.name,
+    primaryShippingAddress: props.store.primaryShippingLocation,
+  });
 
   return (
-    <StoreLayout title={`Checkout | ${store.name}`}>
+    <StoreLayout title={`Checkout | ${props.store.name}`}>
       <CheckoutStyles>
         <h2>Order Checkout</h2>
         <div className="wrapper">
           <CheckoutForm
-            storeId={store._id}
-            storeName={store.name}
-            allowDirectShipping={store.allowDirectShipping}
-            hasPrimaryShipping={store.hasPrimaryShippingLocation}
-            primaryShippingAddress={store.primaryShippingLocation}
-            requireGroupSelection={store.requireGroupSelection}
-            groupTerm={store.groupTerm}
-            groups={store.groups}
-            setVerifiedItems={setVerifiedItems}
-            setLowerInventoryItems={setLowerInventoryItems}
-            setOutOfStockItems={setOutOfStockItems}
-            setShowInventoryModal={setShowInventoryModal}
+            storeId={props.store._id}
+            storeName={props.store.name}
+            allowDirectShipping={props.store.allowDirectShipping}
+            hasPrimaryShipping={props.store.hasPrimaryShippingLocation}
+            primaryShippingAddress={props.store.primaryShippingLocation}
+            requireGroupSelection={props.store.requireGroupSelection}
+            groupTerm={props.store.groupTerm}
+            groups={props.store.groups}
+            checkout={checkout}
           />
           <CheckoutSidebar
-            items={items}
-            cartSubtotal={cartSubtotal}
-            salesTax={salesTax}
-            cartTotal={cartTotal}
+            items={cart.items}
+            cartSubtotal={cart.cartSubtotal}
+            salesTax={cart.salesTax}
+            cartTotal={cart.cartTotal}
           />
         </div>
         <OutOfStockModal
-          verifiedItems={verifiedItems}
-          lowerInventoryItems={lowerInventoryItems}
-          outOfStockItems={outOfStockItems}
-          showModal={showInventoryModal}
-          setShowModal={setShowInventoryModal}
+          verifiedItems={checkout.verifiedItems}
+          lowerInventoryItems={checkout.lowerInventoryItems}
+          outOfStockItems={checkout.outOfStockItems}
+          showModal={checkout.showInventoryModal}
+          setShowModal={checkout.setShowInventoryModal}
         />
       </CheckoutStyles>
     </StoreLayout>

@@ -6,7 +6,7 @@ import {
   ProductSize,
   ProductSku,
 } from 'interfaces';
-import { createId } from 'utils';
+import { getPersonalizationAddonsId } from 'utils/product';
 
 interface Params {
   addItem: (item: CartItem) => void;
@@ -89,9 +89,11 @@ export default function useStoreProductAddToOrder(params: Params) {
       }
     );
 
-    if (sku)
+    if (sku) {
+      const id = `${sku.id}${getPersonalizationAddonsId(formattedAddonItems)}`;
+
       params.addItem({
-        id: `${sku.id}-${createId(false, 5)}`,
+        id,
         sku: sku,
         quantity: 1,
         name: params.productName,
@@ -99,6 +101,7 @@ export default function useStoreProductAddToOrder(params: Params) {
         price: sku.size.price + params.personalization.total,
         personalizationAddons: formattedAddonItems,
       });
+    }
 
     params.setShowSidebar(true);
   };

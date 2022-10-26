@@ -1,6 +1,6 @@
 import React from 'react';
 import { CartItem, ProductSku } from 'interfaces';
-import { createId } from 'utils';
+import { getPersonalizationAddonsId } from 'utils/product';
 
 interface Params {
   cartItem: CartItem;
@@ -23,17 +23,18 @@ export default function useCartItem(params: Params) {
   }, [params.cartItem]);
 
   const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const sku = params.skus.find(
-      sku =>
-        sku.size.label === e.target.value &&
-        sku.color.label === params.cartItem.sku.color.label
-    );
+    const sku = params.skus.find(sku => sku.id === e.target.value);
+    console.log(sku);
 
     if (sku) {
+      const id = `${sku.id}${getPersonalizationAddonsId(
+        params.cartItem.personalizationAddons
+      )}`;
+
       setSize(sku.size.label);
       params.updateItemSize(params.cartItem.id, params.cartItem.sku.id, {
         ...params.cartItem,
-        id: `${sku.id}-${createId(false, 5)}`,
+        id,
         sku,
         quantity,
       });
@@ -67,16 +68,19 @@ export default function useCartItem(params: Params) {
     cartItem: CartItem,
     optionValue: number
   ) => {
-    const cartQuantity = items.reduce((cartQuantity, currentCartItem) => {
-      if (currentCartItem.sku.id === cartItem.sku.id) {
-        return cartQuantity + currentCartItem.quantity;
-      }
-      return cartQuantity;
-    }, 0);
+    const cartSkuItemQuantity = items.reduce(
+      (cartQuantity, currentCartItem) => {
+        if (currentCartItem.sku.id === cartItem.sku.id) {
+          return cartQuantity + currentCartItem.quantity;
+        }
+        return cartQuantity;
+      },
+      0
+    );
 
     if (
       optionValue >
-      cartItem.quantity + (cartItem.sku.inventory - cartQuantity)
+      cartItem.quantity + (cartItem.sku.inventory - cartSkuItemQuantity)
     ) {
       return true;
     }

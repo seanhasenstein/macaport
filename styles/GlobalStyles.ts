@@ -114,7 +114,7 @@ input[type="checkbox"]:checked, input[type='radio']:checked {
   background-repeat: no-repeat;
 }
 
-input[type='checkbox']:focus, input[type='radio']:focus {
+input[type='checkbox']:focus-visible, input[type='radio']:focus-visible {
   outline: 2px solid transparent;
   outline-offset: 2px;
   box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #1f30c2 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px;

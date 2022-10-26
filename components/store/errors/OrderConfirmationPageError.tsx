@@ -41,9 +41,11 @@ export default function OrderConfirmationPageError() {
 
 const ErrorMessageStyles = styled.div`
   padding: 6rem 1.5rem;
+  display: flex;
+  justify-content: center;
 
   .wrapper {
-    padding: 1.875rem 0 2.5rem;
+    padding: 1.875rem 1.5rem 2.5rem;
     max-width: 36rem;
     width: 100%;
     display: flex;

@@ -1,24 +1,9 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
-import {
-  PaymentMethodResult,
-  StripeCardElementChangeEvent,
-} from '@stripe/stripe-js';
-import { CartItem, CheckoutForm } from 'interfaces';
+import { StripeCardElementChangeEvent } from '@stripe/stripe-js';
+import { CartItem, CheckoutForm, UseCheckoutSubmit } from 'interfaces';
 import { useCart } from './useCart';
-
-type ServerResponse = {
-  success?: true;
-  orderId?: string;
-  storeClosed?: boolean;
-  lowerInventory: boolean;
-  lowerInventoryItems?: CartItem[];
-  outOfStock: boolean;
-  outOfStockItems?: CartItem[];
-  verifiedItems: CartItem[];
-  error?: string;
-};
 
 type Props = {
   storeId: string;
@@ -31,13 +16,9 @@ type Props = {
     state: string;
     zipcode: string;
   };
-  setVerifiedItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
-  setLowerInventoryItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
-  setOutOfStockItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
-  setShowInventoryModal: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export default function useCheckoutSubmit(props: Props) {
+export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
   const router = useRouter();
   const elements = useElements();
   const stripe = useStripe();
@@ -45,6 +26,12 @@ export default function useCheckoutSubmit(props: Props) {
   const [serverResponseError, setServerResponseError] =
     React.useState<string>();
   const [stripeError, setStripeError] = React.useState<string>();
+  const [verifiedItems, setVerifiedItems] = React.useState<CartItem[]>([]);
+  const [lowerInventoryItems, setLowerInventoryItems] = React.useState<
+    CartItem[]
+  >([]);
+  const [outOfStockItems, setOutOfStockItems] = React.useState<CartItem[]>([]);
+  const [showInventoryModal, setShowInventoryModal] = React.useState(false);
 
   const { items, cartSubtotal, salesTax, cartTotal, cartIsEmpty, setItems } =
     useCart();
@@ -69,7 +56,7 @@ export default function useCheckoutSubmit(props: Props) {
       return;
     }
 
-    const result = await stripe.createPaymentMethod({
+    const stripePaymentMethodResult = await stripe.createPaymentMethod({
       type: 'card',
       card: cardElement,
       billing_details: {
@@ -79,25 +66,18 @@ export default function useCheckoutSubmit(props: Props) {
       },
     });
 
-    if (result) handlePaymentMethodResult(result, data);
-  };
-
-  const handlePaymentMethodResult = async (
-    result: PaymentMethodResult,
-    data: CheckoutForm
-  ) => {
-    if (result.error) {
-      setStripeError(result.error.message);
+    if (stripePaymentMethodResult.error) {
+      setStripeError(stripePaymentMethodResult.error.message);
       setIsSubmitting(false);
       return;
     } else {
-      const response = await fetch('/api/stripe-payment', {
+      const response = await fetch('/api/submit-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           storeId: props.storeId,
           storeName: props.storeName,
-          payment_method_id: result.paymentMethod.id,
+          payment_method_id: stripePaymentMethodResult.paymentMethod.id,
           items,
           customer: data.customer,
           group: data.group,
@@ -107,7 +87,7 @@ export default function useCheckoutSubmit(props: Props) {
               ? data.shippingAddress
               : data.shippingMethod === 'Primary'
               ? props.primaryShippingAddress
-              : undefined,
+              : data.shippingAddress,
           summary: {
             subtotal: cartSubtotal,
             shipping: 0,
@@ -117,51 +97,41 @@ export default function useCheckoutSubmit(props: Props) {
         }),
       });
 
-      const serverResponse = await response.json();
-      handleServerResponse(serverResponse);
-    }
-  };
+      const res = await response.json();
 
-  const handleServerResponse = (serverResponse: ServerResponse) => {
-    if (serverResponse.storeClosed === true) {
-      router.push('/store-closed');
-      return;
-    }
-
-    if (
-      serverResponse.lowerInventory === true ||
-      serverResponse.outOfStock === true
-    ) {
-      if (serverResponse.outOfStockItems) {
-        props.setOutOfStockItems(serverResponse.outOfStockItems);
+      if (res.storeClosed === true) {
+        router.push('/store-closed');
+        return;
       }
-      if (serverResponse.lowerInventoryItems) {
-        props.setLowerInventoryItems(serverResponse.lowerInventoryItems);
+
+      if (res.lowerInventory || res.outOfStock) {
+        if (res.outOfStockItems) {
+          setOutOfStockItems(res.outOfStockItems);
+        }
+        if (res.lowerInventoryItems) {
+          setLowerInventoryItems(res.lowerInventoryItems);
+        }
+        setVerifiedItems(res.verifiedItems);
+        setItems([...res.verifiedItems, ...(res.lowerInventoryItems || [])]);
+        setShowInventoryModal(true);
+        setIsSubmitting(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
       }
-      props.setVerifiedItems(serverResponse.verifiedItems);
-      setItems([
-        ...serverResponse.verifiedItems,
-        ...(serverResponse.lowerInventoryItems || []),
-      ]);
-      props.setShowInventoryModal(true);
-      setIsSubmitting(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
 
-    if (serverResponse.error) {
-      setServerResponseError(serverResponse.error);
-      console.error(serverResponse.error);
-      setIsSubmitting(false);
-      return;
-    }
+      if (res.error) {
+        setServerResponseError(res.error);
+        console.error(res.error);
+        setIsSubmitting(false);
+        return;
+      }
 
-    setServerResponseError(undefined);
-    router.push(
-      `/store/${
-        props.storeId
-      }/order-confirmation?orderId=${serverResponse.orderId!}&emptyCart=true`
-    );
+      setServerResponseError(undefined);
+
+      router.push(
+        `/store/${props.storeId}/order-confirmation?orderId=${res.orderId}&emptyCart=true`
+      );
+    }
   };
 
   return {
@@ -172,5 +142,13 @@ export default function useCheckoutSubmit(props: Props) {
     serverResponseError,
     stripe,
     stripeError,
+    verifiedItems,
+    setVerifiedItems,
+    lowerInventoryItems,
+    setLowerInventoryItems,
+    outOfStockItems,
+    setOutOfStockItems,
+    showInventoryModal,
+    setShowInventoryModal,
   };
 }

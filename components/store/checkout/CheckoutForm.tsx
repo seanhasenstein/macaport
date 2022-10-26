@@ -3,14 +3,13 @@ import Link from 'next/link';
 import styled from 'styled-components';
 import { CardElement } from '@stripe/react-stripe-js';
 import { Formik, Form, Field } from 'formik';
-import { CartItem } from '../../../interfaces';
-import { unitedStates } from '../../../utils';
+import { UseCheckoutSubmit } from 'interfaces';
 import useHasMounted from '../../../hooks/useHasMounted';
+import { unitedStates } from '../../../utils';
+import { cardStyle, getCheckoutSchema, getInitialValues } from 'utils/checkout';
 import FieldItem, { FieldItemStyles } from './form/FieldItem';
 import ErrorMessage from './form/ErrorMessage';
 import TouchedErrors from './form/TouchedErrors';
-import useCheckoutSubmit from 'hooks/useCheckoutSubmit';
-import { cardStyle, getCheckoutSchema, getInitialValues } from 'utils/checkout';
 
 type Props = {
   storeId: string;
@@ -28,15 +27,11 @@ type Props = {
   requireGroupSelection: boolean;
   groupTerm: string;
   groups: string[];
-  setVerifiedItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
-  setLowerInventoryItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
-  setOutOfStockItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
-  setShowInventoryModal: React.Dispatch<React.SetStateAction<boolean>>;
+  checkout: UseCheckoutSubmit;
 };
 
 export default function CheckoutForm(props: Props) {
   const hasMounted = useHasMounted();
-  const checkout = useCheckoutSubmit(props);
   const [initialValues] = React.useState(() =>
     getInitialValues({
       requireGroupSelection: props.requireGroupSelection,
@@ -49,7 +44,7 @@ export default function CheckoutForm(props: Props) {
     <Formik
       initialValues={initialValues}
       validationSchema={getCheckoutSchema(props.groupTerm)}
-      onSubmit={checkout.handleSubmit}
+      onSubmit={props.checkout.handleSubmit}
     >
       {({ values, errors, touched }) => (
         <CheckoutFormStyles>
@@ -169,22 +164,22 @@ export default function CheckoutForm(props: Props) {
               <label htmlFor="stripeInput">Card Information</label>
               <CardElement
                 options={cardStyle}
-                onChange={checkout.handleCardChange}
+                onChange={props.checkout.handleCardChange}
               />
-              {checkout.stripeError && (
-                <div className="stripe-error">{checkout.stripeError}</div>
+              {props.checkout.stripeError && (
+                <div className="stripe-error">{props.checkout.stripeError}</div>
               )}
               <button
                 type="submit"
                 disabled={
-                  !checkout.stripe ||
-                  checkout.cartIsEmpty ||
-                  checkout.isSubmitting
+                  !props.checkout.stripe ||
+                  props.checkout.cartIsEmpty ||
+                  props.checkout.isSubmitting
                 }
               >
-                {checkout.isSubmitting ? (
+                {props.checkout.isSubmitting ? (
                   <LoadingSpinner />
-                ) : checkout.cartIsEmpty ? (
+                ) : props.checkout.cartIsEmpty ? (
                   <>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -205,20 +200,22 @@ export default function CheckoutForm(props: Props) {
                   'Place your order'
                 )}
               </button>
-              {checkout.serverResponseError && (
+              {props.checkout.serverResponseError && (
                 <div className="stripe-error">
-                  {checkout.serverResponseError}
+                  {props.checkout.serverResponseError}
                 </div>
               )}
-              {hasMounted && checkout.cartIsEmpty && !checkout.isSubmitting && (
-                <div className="empty-cart">
-                  Your order is empty.{' '}
-                  <Link href={`/store/${props.storeId}`}>
-                    <a>Continue shopping</a>
-                  </Link>
-                  .
-                </div>
-              )}
+              {hasMounted &&
+                props.checkout.cartIsEmpty &&
+                !props.checkout.isSubmitting && (
+                  <div className="empty-cart">
+                    Your order is empty.{' '}
+                    <Link href={`/store/${props.storeId}`}>
+                      <a>Continue shopping</a>
+                    </Link>
+                    .
+                  </div>
+                )}
               <TouchedErrors errors={errors} touched={touched} />
             </div>
           </Form>
@@ -397,10 +394,12 @@ const CheckoutFormStyles = styled.div`
   }
 
   .stripe-error {
-    margin: 0.375rem 0 0;
-    font-size: 0.75rem;
+    margin: 1rem 0 0;
+    font-size: 0.875rem;
     font-weight: 500;
     color: #b91c1c;
+    text-align: center;
+    line-height: 1.5;
   }
 
   .empty-cart {

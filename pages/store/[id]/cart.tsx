@@ -57,7 +57,7 @@ type Props = {
   error?: string;
 };
 
-export default function Cart({ store, error }: Props) {
+export default function Cart(props: Props) {
   const hasMounted = useHasMounted();
   const router = useRouter();
   const {
@@ -70,18 +70,21 @@ export default function Cart({ store, error }: Props) {
     removeItem,
   } = useCart();
 
-  if (error) {
-    // TODO: add error component
-  }
+  // if (props.error) {
+  // TODO: add error component
+  // }
 
   // TODO: add this check in getServerSideProps
-  if (hasMounted && (!store.products || store.products.length < 1)) {
+  if (
+    hasMounted &&
+    (!props.store.products || props.store.products.length < 1)
+  ) {
     router.push(`/store/${router.query.id}`);
     return <div />;
   }
 
   return (
-    <StoreLayout title={`Cart | ${store.name}`}>
+    <StoreLayout title={`Cart | ${props.store.name}`}>
       <CartStyles>
         <div className="wrapper">
           <h2>Your Cart</h2>
@@ -96,14 +99,14 @@ export default function Cart({ store, error }: Props) {
                   {cartIsEmpty ? (
                     <div className="empty-cart">
                       Your cart is empty.{' '}
-                      <Link href={`/store/${store._id}`}>
+                      <Link href={`/store/${props.store._id}`}>
                         <a>Continue Shopping</a>
                       </Link>
                       .
                     </div>
                   ) : (
                     items.map((item: CartItemInterface) => {
-                      const product = store.products.find(
+                      const product = props.store.products.find(
                         p => p.id === item.sku.storeProductId
                       );
 
@@ -116,7 +119,7 @@ export default function Cart({ store, error }: Props) {
                         <CartItem
                           key={item.id}
                           item={item}
-                          storeId={store._id}
+                          storeId={props.store._id}
                           skus={product.productSkus}
                           sizes={product.sizes}
                         />
@@ -150,7 +153,7 @@ export default function Cart({ store, error }: Props) {
                       </div>
                     </div>
                     <LinkButton
-                      href={`/store/${store._id}/checkout`}
+                      href={`/store/${props.store._id}/checkout`}
                       label="Checkout"
                     />
                   </div>
@@ -174,7 +177,7 @@ const CartStyles = styled.div`
   }
 
   h2 {
-    margin: 0 0 1.5rem;
+    margin: 0 0 1.75rem;
     font-size: 1.5rem;
   }
 

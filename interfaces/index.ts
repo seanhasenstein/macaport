@@ -1,5 +1,7 @@
+import React from 'react';
 import { NextApiRequest } from 'next';
 import { Db, MongoClient } from 'mongodb';
+import { Stripe, StripeCardElementChangeEvent } from '@stripe/stripe-js';
 
 export interface InventoryColor {
   id: string;
@@ -128,7 +130,6 @@ export interface OrderItem extends Omit<CartItem, 'sku'> {
 }
 
 export interface Order {
-  _id?: string;
   orderId: string;
   store: {
     id: string;
@@ -144,7 +145,7 @@ export interface Order {
   };
   group: string;
   orderStatus: 'Unfulfilled';
-  shippingMethod: 'Primary' | 'Direct' | 'None';
+  shippingMethod: ShippingMethod;
   shippingAddress: {
     name?: string;
     street: string;
@@ -176,14 +177,7 @@ export interface Store {
   permanentlyOpen: boolean;
   closeDate: string | null;
   hasPrimaryShippingLocation: boolean;
-  primaryShippingLocation: {
-    name: string;
-    street: string;
-    street2: string;
-    city: string;
-    state: string;
-    zipcode: string;
-  };
+  primaryShippingLocation: PrimaryShippingAddress;
   allowDirectShipping: boolean;
   contact?: {
     firstName: string;
@@ -223,14 +217,8 @@ export interface CheckoutForm {
   };
   groupRequired: boolean;
   group: string;
-  shippingAddress: {
-    street: string;
-    street2: string;
-    city: string;
-    state: string;
-    zipcode: string;
-  };
-  shippingMethod: 'Primary' | 'Direct' | 'None';
+  shippingAddress: Address;
+  shippingMethod: ShippingMethod;
   cardholderName: string;
 }
 
@@ -241,6 +229,45 @@ export interface ContactFormValues {
   phone: string;
   message: string;
   honeypot: string;
+}
+
+export interface Address {
+  street: string;
+  street2: string;
+  city: string;
+  state: string;
+  zipcode: string;
+}
+
+export interface PrimaryShippingAddress extends Address {
+  name: string;
+}
+
+export type ShippingMethod = 'Primary' | 'Direct' | 'None';
+
+export interface VerifyCartItemsAccumulator {
+  items: OrderItem[];
+  lowerInventoryItems: CartItem[];
+  itemsOutOfStock: CartItem[];
+  subtotal: number;
+}
+
+export interface UseCheckoutSubmit {
+  cartIsEmpty: boolean;
+  handleSubmit: (data: CheckoutForm) => Promise<void>;
+  handleCardChange: (e: StripeCardElementChangeEvent) => void;
+  isSubmitting: boolean;
+  serverResponseError: string | undefined;
+  stripe: Stripe | null;
+  stripeError: string | undefined;
+  verifiedItems: CartItem[];
+  setVerifiedItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  lowerInventoryItems: CartItem[];
+  setLowerInventoryItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  outOfStockItems: CartItem[];
+  setOutOfStockItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  showInventoryModal: boolean;
+  setShowInventoryModal: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export interface Request extends NextApiRequest {

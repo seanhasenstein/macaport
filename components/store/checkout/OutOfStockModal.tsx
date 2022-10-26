@@ -134,7 +134,7 @@ const OutOfStockModalStyles = styled.div`
     left: 0;
     right: 0;
     min-height: 100%;
-    background-color: rgba(209, 213, 219, 0.7);
+    background-color: rgba(50, 50, 50, 0.75);
     z-index: 9999;
   }
 
@@ -145,8 +145,7 @@ const OutOfStockModalStyles = styled.div`
     width: 100%;
     background-color: #fff;
     border-radius: 0.375rem;
-    filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.1))
-      drop-shadow(0 1px 1px rgb(0 0 0 / 0.06));
+    box-shadow: 0 6px 6px -1px rgb(0 0 0 / 0.1), 0 4px 4px -2px rgb(0 0 0 / 0.1);
 
     h3 {
       margin: 0 0 0.875rem;
