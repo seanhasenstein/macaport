@@ -167,14 +167,14 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
     await orderModel.addOrderToStore(db, store._id, order);
 
     // 9. send email receipt
-    fetch(`${process.env.API_HOST}/api/send-email-receipt`, {
+    await fetch(`${process.env.API_HOST}/api/send-email-receipt`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ order }),
     });
 
     // 10. send request to subtract inventory
-    fetch(`${process.env.API_HOST}/api/subtract-inventory`, {
+    await fetch(`${process.env.API_HOST}/api/subtract-inventory`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(order.items),
