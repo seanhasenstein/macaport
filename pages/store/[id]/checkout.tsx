@@ -1,10 +1,10 @@
 import React from 'react';
 import { GetServerSideProps } from 'next';
 import styled from 'styled-components';
-import { connectToDb, store as storeModel } from 'db';
+import { connectToDb, shipping, store } from 'db';
 import { getStoreStatus } from 'utils/store';
 import { useCart } from '../../../hooks/useCart';
-import { Store } from '../../../interfaces';
+import { ShippingData, Store } from '../../../interfaces';
 import { getUrlParameter } from '../../../utils';
 import useCheckoutSubmit from 'hooks/useCheckoutSubmit';
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
@@ -21,9 +21,10 @@ export const getServerSideProps: GetServerSideProps = async context => {
     }
 
     const db = await connectToDb();
-    const store = await storeModel.getStoreById(db, id);
+    const storeResult = await store.getStoreById(db, id);
+    const shippingResult = await shipping.getShippingDetails(db);
 
-    if (!store) {
+    if (!storeResult) {
       return {
         redirect: {
           permanent: false,
@@ -32,7 +33,10 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    const isStoreActive = getStoreStatus(store.openDate, store.closeDate);
+    const isStoreActive = getStoreStatus(
+      storeResult.openDate,
+      storeResult.closeDate
+    );
 
     if (isStoreActive === false) {
       return {
@@ -43,7 +47,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    return { props: { store } };
+    return { props: { store: storeResult, shipping: shippingResult } };
   } catch (error) {
     return {
       props: { error },
@@ -53,6 +57,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
 type Props = {
   store: Store;
+  shipping: ShippingData;
 };
 
 export default function Checkout(props: Props) {
@@ -77,13 +82,19 @@ export default function Checkout(props: Props) {
             requireGroupSelection={props.store.requireGroupSelection}
             groupTerm={props.store.groupTerm}
             groups={props.store.groups}
+            shipping={props.shipping}
+            setVerifiedItems={checkout.setVerifiedItems}
+            setLowerInventoryItems={checkout.setLowerInventoryItems}
+            setOutOfStockItems={checkout.setOutOfStockItems}
+            setShowInventoryModal={checkout.setShowInventoryModal}
             checkout={checkout}
           />
           <CheckoutSidebar
-            items={cart.items}
             cartSubtotal={cart.cartSubtotal}
-            salesTax={cart.salesTax}
+            cartShipping={cart.shipping}
             cartTotal={cart.cartTotal}
+            items={cart.items}
+            salesTax={cart.salesTax}
           />
         </div>
         <OutOfStockModal

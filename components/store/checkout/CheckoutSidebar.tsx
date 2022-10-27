@@ -7,10 +7,11 @@ import useHasMounted from 'hooks/useHasMounted';
 import CheckoutItem from './CheckoutItem';
 
 type Props = {
-  items: CartItem[];
   cartSubtotal: number;
-  salesTax: number;
   cartTotal: number;
+  items: CartItem[];
+  salesTax: number;
+  cartShipping: number;
 };
 
 export default function CheckoutSidebar(props: Props) {
@@ -55,7 +56,9 @@ export default function CheckoutSidebar(props: Props) {
               </div>
               <div className="item">
                 <div className="key">Shipping</div>
-                <div className="value">{formatToMoney(0, true)}</div>
+                <div className="value">
+                  {formatToMoney(props.cartShipping, true)}
+                </div>
               </div>
               <div className="item total">
                 <div className="key">Order Total</div>

@@ -24,7 +24,6 @@ export default function useCartItem(params: Params) {
 
   const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const sku = params.skus.find(sku => sku.id === e.target.value);
-    console.log(sku);
 
     if (sku) {
       const id = `${sku.id}${getPersonalizationAddonsId(

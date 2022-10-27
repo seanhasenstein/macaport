@@ -129,6 +129,8 @@ export interface OrderItem extends Omit<CartItem, 'sku'> {
   merchandiseCode: string;
 }
 
+export type ShippingMethod = 'Primary' | 'Direct' | 'None';
+
 export interface Order {
   orderId: string;
   store: {
@@ -243,8 +245,6 @@ export interface PrimaryShippingAddress extends Address {
   name: string;
 }
 
-export type ShippingMethod = 'Primary' | 'Direct' | 'None';
-
 export interface VerifyCartItemsAccumulator {
   items: OrderItem[];
   lowerInventoryItems: CartItem[];
@@ -268,6 +268,12 @@ export interface UseCheckoutSubmit {
   setOutOfStockItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
   showInventoryModal: boolean;
   setShowInventoryModal: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export interface ShippingData {
+  _id: string;
+  price: number;
+  freeMinimum: number;
 }
 
 export interface Request extends NextApiRequest {

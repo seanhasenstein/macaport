@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 import { FormikErrors, FormikTouched } from 'formik';
-import { CartItem, ProductSku } from '../interfaces';
+import { CartItem, ProductSku, ShippingMethod } from '../interfaces';
 
 export function calculateCartSubtotal(cartItems: CartItem[]) {
   return cartItems.reduce((total, item) => {
@@ -10,6 +10,23 @@ export function calculateCartSubtotal(cartItems: CartItem[]) {
 
 export function calculateSalesTax(subtotal: number) {
   return Math.round(subtotal * 0.055);
+}
+
+export function calculateShipping(
+  price: number,
+  freeMinimum: number,
+  cartSubtotal: number,
+  shippingMethod: ShippingMethod
+) {
+  if (
+    shippingMethod === 'Primary' ||
+    shippingMethod === 'None' ||
+    cartSubtotal >= freeMinimum
+  ) {
+    return 0;
+  }
+
+  return price;
 }
 
 export function calculateCartTotal(

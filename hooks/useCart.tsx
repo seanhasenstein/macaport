@@ -4,9 +4,16 @@ import {
   calculateCartSubtotal,
   calculateSalesTax,
   calculateCartTotal,
+  calculateShipping,
 } from '../utils';
-import { CartItem } from '../interfaces';
+import { CartItem, ShippingMethod } from '../interfaces';
 import useLocalStorage from './useLocalStorage';
+
+interface ShippingPayload {
+  price: number;
+  freeMinimum: number;
+  shippingMethod: ShippingMethod;
+}
 
 type InitialState = {
   id: string;
@@ -16,6 +23,8 @@ type InitialState = {
   totalUniqueItems: number;
   cartSubtotal: number;
   salesTax: number;
+  shipping: number;
+  cartTotalWithoutShipping: number;
   cartTotal: number;
 };
 
@@ -31,6 +40,7 @@ interface CartProviderState extends InitialState {
   updateItemQuantity: (id: string, quantity: number) => void;
   emptyCart: () => void;
   setItems: (items: CartItem[]) => void;
+  updateShipping: (payload: ShippingPayload) => void;
 }
 
 type Actions =
@@ -42,7 +52,8 @@ type Actions =
       payload: Record<string, unknown>;
     }
   | { type: 'REMOVE_ITEM'; id: string }
-  | { type: 'EMPTY_CART' };
+  | { type: 'EMPTY_CART' }
+  | { type: 'UPDATE_SHIPPING'; payload: ShippingPayload };
 
 const initialState: any = {
   id: '',
@@ -52,7 +63,9 @@ const initialState: any = {
   totalUniqueItems: 0,
   cartSubtotal: 0,
   salesTax: 0,
+  cartTotalWithoutShipping: 0,
   cartTotal: 0,
+  shipping: 0,
 };
 
 const CartContext = React.createContext<CartProviderState | undefined>(
@@ -94,18 +107,47 @@ function reducer(state: CartProviderState, action: Actions) {
     }
     case 'EMPTY_CART':
       return initialState;
+    case 'UPDATE_SHIPPING': {
+      const { price, freeMinimum, shippingMethod } = action.payload;
+      return generateCartState(state, state.items, {
+        price,
+        freeMinimum,
+        shippingMethod,
+      });
+    }
     default:
       throw new Error('No action specified');
   }
 }
 
-const generateCartState = (state = initialState, items: CartItem[]) => {
+const defaultShippingData: ShippingPayload = {
+  price: 0,
+  freeMinimum: 0,
+  shippingMethod: 'None',
+};
+
+const generateCartState = (
+  state = initialState,
+  items: CartItem[],
+  shippingData = defaultShippingData
+) => {
   const totalUniqueItems = calculateUniqueItems(items);
   const cartIsEmpty = totalUniqueItems === 0;
   const cartItems = calculateItemTotals(items);
   const cartSubtotal = calculateCartSubtotal(cartItems);
   const salesTax = calculateSalesTax(cartSubtotal);
-  const cartTotal = calculateCartTotal(cartSubtotal, salesTax);
+  const shipping = calculateShipping(
+    shippingData.price,
+    shippingData.freeMinimum,
+    cartSubtotal,
+    shippingData.shippingMethod
+  );
+  const cartTotalWithoutShipping = calculateCartTotal(
+    cartSubtotal,
+    salesTax,
+    0
+  );
+  const cartTotal = calculateCartTotal(cartSubtotal, salesTax, shipping);
 
   return {
     ...initialState,
@@ -115,6 +157,8 @@ const generateCartState = (state = initialState, items: CartItem[]) => {
     totalUniqueItems,
     cartSubtotal,
     salesTax,
+    shipping,
+    cartTotalWithoutShipping,
     cartTotal,
     cartIsEmpty,
   };
@@ -318,6 +362,9 @@ export function CartProvider({ children, cartId }: CartProviderType) {
 
   const emptyCart = () => dispatch({ type: 'EMPTY_CART' });
 
+  const updateShipping = (payload: ShippingPayload) =>
+    dispatch({ type: 'UPDATE_SHIPPING', payload });
+
   return (
     <CartContext.Provider
       value={{
@@ -328,6 +375,7 @@ export function CartProvider({ children, cartId }: CartProviderType) {
         updateItemQuantity,
         removeItem,
         emptyCart,
+        updateShipping,
       }}
     >
       {children}

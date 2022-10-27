@@ -60,15 +60,7 @@ type Props = {
 export default function Cart(props: Props) {
   const hasMounted = useHasMounted();
   const router = useRouter();
-  const {
-    items,
-    totalItems,
-    cartSubtotal,
-    salesTax,
-    cartTotal,
-    cartIsEmpty,
-    removeItem,
-  } = useCart();
+  const cart = useCart();
 
   // if (props.error) {
   // TODO: add error component
@@ -91,12 +83,13 @@ export default function Cart(props: Props) {
           {hasMounted ? (
             <>
               <div className="order-details">
-                ({totalItems} Item
-                {totalItems > 1 ? 's' : totalItems === 0 ? 's' : null})
+                ({cart.totalItems} Item
+                {cart.totalItems > 1 ? 's' : cart.totalItems === 0 ? 's' : null}
+                )
               </div>
               <div className="grid">
                 <div className="items">
-                  {cartIsEmpty ? (
+                  {cart.cartIsEmpty ? (
                     <div className="empty-cart">
                       Your cart is empty.{' '}
                       <Link href={`/store/${props.store._id}`}>
@@ -105,13 +98,13 @@ export default function Cart(props: Props) {
                       .
                     </div>
                   ) : (
-                    items.map((item: CartItemInterface) => {
+                    cart.items.map((item: CartItemInterface) => {
                       const product = props.store.products.find(
                         p => p.id === item.sku.storeProductId
                       );
 
                       if (!product) {
-                        removeItem(item.sku.id);
+                        cart.removeItem(item.sku.id);
                         return;
                       }
 
@@ -133,13 +126,13 @@ export default function Cart(props: Props) {
                     <div className="item">
                       <div className="key">Subtotal</div>
                       <div className="value">
-                        {formatToMoney(cartSubtotal, true)}
+                        {formatToMoney(cart.cartSubtotal, true)}
                       </div>
                     </div>
                     <div className="item">
                       <div className="key">Sales Tax</div>
                       <div className="value">
-                        {formatToMoney(salesTax, true)}
+                        {formatToMoney(cart.salesTax, true)}
                       </div>
                     </div>
                     <div className="item">
@@ -149,7 +142,7 @@ export default function Cart(props: Props) {
                     <div className="item total">
                       <div className="key">Order Total</div>
                       <div className="value">
-                        {formatToMoney(cartTotal, true)}
+                        {formatToMoney(cart.cartTotalWithoutShipping, true)}
                       </div>
                     </div>
                     <LinkButton

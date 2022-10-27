@@ -3,9 +3,10 @@ import Link from 'next/link';
 import styled from 'styled-components';
 import { CardElement } from '@stripe/react-stripe-js';
 import { Formik, Form, Field } from 'formik';
-import { UseCheckoutSubmit } from 'interfaces';
+import { CartItem, ShippingData, UseCheckoutSubmit } from 'interfaces';
 import useHasMounted from '../../../hooks/useHasMounted';
-import { unitedStates } from '../../../utils';
+import { useCart } from 'hooks/useCart';
+import { formatToMoney, unitedStates } from '../../../utils';
 import { cardStyle, getCheckoutSchema, getInitialValues } from 'utils/checkout';
 import FieldItem, { FieldItemStyles } from './form/FieldItem';
 import ErrorMessage from './form/ErrorMessage';
@@ -27,11 +28,17 @@ type Props = {
   requireGroupSelection: boolean;
   groupTerm: string;
   groups: string[];
+  shipping: ShippingData;
+  setVerifiedItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  setLowerInventoryItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  setOutOfStockItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  setShowInventoryModal: React.Dispatch<React.SetStateAction<boolean>>;
   checkout: UseCheckoutSubmit;
 };
 
 export default function CheckoutForm(props: Props) {
   const hasMounted = useHasMounted();
+  const cart = useCart();
   const [initialValues] = React.useState(() =>
     getInitialValues({
       requireGroupSelection: props.requireGroupSelection,
@@ -40,13 +47,24 @@ export default function CheckoutForm(props: Props) {
     })
   );
 
+  // only run on first render
+  // reset the shipping data in useCart when user leaves
+  // the page and then returns
+  React.useEffect(() => {
+    cart.updateShipping({
+      price: props.shipping.price,
+      freeMinimum: props.shipping.freeMinimum,
+      shippingMethod: 'Primary',
+    });
+  }, []);
+
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={getCheckoutSchema(props.groupTerm)}
       onSubmit={props.checkout.handleSubmit}
     >
-      {({ values, errors, touched }) => (
+      {({ errors, setFieldValue, touched, values }) => (
         <CheckoutFormStyles>
           <Form>
             <div className="section">
@@ -95,8 +113,17 @@ export default function CheckoutForm(props: Props) {
                             name="shippingMethod"
                             id="primaryShipping"
                             value="Primary"
+                            onChange={() => {
+                              const value = 'Primary' as const;
+                              setFieldValue('shippingMethod', value);
+                              cart.updateShipping({
+                                price: props.shipping.price,
+                                freeMinimum: props.shipping.freeMinimum,
+                                shippingMethod: value,
+                              });
+                            }}
                           />
-                          <div>
+                          <div className="shipping-label">
                             Pick up at {props.primaryShippingAddress.name}
                           </div>
                           <div className="shipping-price">Free</div>
@@ -115,15 +142,39 @@ export default function CheckoutForm(props: Props) {
                             name="shippingMethod"
                             id="secondaryShipping"
                             value="Direct"
+                            onChange={() => {
+                              const value = 'Direct' as const;
+                              setFieldValue('shippingMethod', value);
+                              cart.updateShipping({
+                                price: props.shipping.price,
+                                freeMinimum: props.shipping.freeMinimum,
+                                shippingMethod: value,
+                              });
+                            }}
                           />
-                          <div>Ship directly to you</div>
-                          <div className="shipping-price">$0.00</div>
+                          <div className="shipping-label">
+                            Ship directly to you
+                            {cart.cartSubtotal >= props.shipping.freeMinimum
+                              ? ` (free with orders over ${formatToMoney(
+                                  props.shipping.freeMinimum,
+                                  true
+                                )}`
+                              : ''}
+                          </div>
+                          <div className="shipping-price">
+                            {cart.cartSubtotal >= props.shipping.freeMinimum
+                              ? 'Free'
+                              : formatToMoney(props.shipping.price, true)}
+                          </div>
                         </label>
                       </div>
                     )}
                   </div>
                   {values.shippingMethod === 'Direct' && (
                     <div>
+                      <h3 className="section-title">
+                        <span>Shipping address</span>
+                      </h3>
                       <FieldItem
                         name="shippingAddress.street"
                         label="Street Address"
@@ -156,6 +207,7 @@ export default function CheckoutForm(props: Props) {
                 </>
               )}
             </div>
+
             <div className="section">
               <h3 className="section-title">
                 <span>Billing Details</span>
@@ -197,7 +249,7 @@ export default function CheckoutForm(props: Props) {
                     <span className="sr-only">Your order is empty</span>
                   </>
                 ) : (
-                  'Place your order'
+                  `Submit your order of ${formatToMoney(cart.cartTotal, true)}`
                 )}
               </button>
               {props.checkout.serverResponseError && (
@@ -291,6 +343,11 @@ const CheckoutFormStyles = styled.div`
       margin-right: 1rem;
     }
 
+    .shipping-label {
+      padding: 0 1.5rem 0 0;
+      line-height: 1.5;
+    }
+
     .shipping-price {
       margin-left: auto;
     }
@@ -378,7 +435,7 @@ const CheckoutFormStyles = styled.div`
 
   .StripeElement {
     margin: 0.375rem 0 0;
-    padding: 0.625rem 0.75rem;
+    padding: 0.8125rem 0.75rem;
     background-color: #fff;
     border: 1px solid #dddde2;
     border-radius: 0.375rem;

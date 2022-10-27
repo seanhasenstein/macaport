@@ -5,6 +5,7 @@ import {
   connectToDb,
   order as orderModel,
   store as storeModel,
+  shipping as shippingModel,
 } from '../../db';
 import {
   Address,
@@ -18,6 +19,7 @@ import {
   calculateSalesTax,
   calculateCartTotal,
   createReceiptNumber,
+  calculateShipping,
   removeNonDigits,
 } from '../../utils';
 import { getStoreStatus } from '../../utils/store';
@@ -38,12 +40,6 @@ interface ExtendedRequest extends NextApiRequest {
     group: string;
     shippingMethod: ShippingMethod;
     shippingAddress: Address | PrimaryShippingAddress;
-    summary: {
-      subtotal: number;
-      shipping: number;
-      salesTax: number;
-      total: number;
-    };
   };
 }
 
@@ -63,6 +59,9 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       db,
       req.body.storeId
     );
+
+    // get the shipping data
+    const shipping = await shippingModel.getShippingDetails(db);
 
     if (!store) {
       return res.json({ storeClosed: true });
@@ -92,13 +91,18 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       });
     }
 
-    // TODO: loop over verified.items and remove active and inventory from productSku
-
     // 4. calculate order salesTax and total from verified items and subtotal
     const verifiedSalesTax = calculateSalesTax(verified.subtotal);
+    const verifiedShipping = calculateShipping(
+      shipping.price,
+      shipping.freeMinimum,
+      verified.subtotal,
+      req.body.shippingMethod
+    );
     const verifiedTotal = calculateCartTotal(
       verified.subtotal,
-      verifiedSalesTax
+      verifiedSalesTax,
+      verifiedShipping
     );
 
     // 5. create orderId
@@ -145,7 +149,7 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       shippingAddress: req.body.shippingAddress,
       summary: {
         subtotal: verified.subtotal,
-        shipping: req.body.summary.shipping,
+        shipping: verifiedShipping,
         salesTax: verifiedSalesTax,
         total: verifiedTotal,
         stripeFee: Math.round(verifiedTotal * 0.029 + 30),
