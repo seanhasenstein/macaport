@@ -72,12 +72,7 @@ type Props = {
   error?: string;
 };
 
-export default function OrderConfirmation({
-  order,
-  groupRequired,
-  groupTerm,
-  error,
-}: Props) {
+export default function OrderConfirmation(props: Props) {
   const router = useRouter();
   const { emptyCart } = useCart();
 
@@ -87,12 +82,14 @@ export default function OrderConfirmation({
     }
   }, [emptyCart, router.query.emptyCart]);
 
-  if (error) {
+  if (props.error) {
     return <OrderConfirmationPageError />;
   }
 
   return (
-    <NoNavLayout title={`${order.store.name} Order #${order.orderId}`}>
+    <NoNavLayout
+      title={`${props.order.store.name} Order #${props.order.orderId}`}
+    >
       <OrderConfirmationStyles>
         <div className="order-confirmation-wrapper">
           {order && (
@@ -130,57 +127,58 @@ export default function OrderConfirmation({
                   </div>
                   <div className="section order-details">
                     <div className="detail-item">
-                      <span>Order Number:</span>#{order.orderId}
+                      <span>Order Number:</span>#{props.order.orderId}
                     </div>
                     <div className="detail-item">
                       <span>Transaction ID:</span>
-                      {order.stripeId}
+                      {props.order.stripeId}
                     </div>
                     <div className="detail-item">
                       <span>Order Date:</span>
                       {format(
-                        new Date(order.createdAt!),
+                        new Date(props.order.createdAt!),
                         "MMM. dd, yyyy 'at' h:mmaa"
                       )}
                     </div>
                     <div className="detail-item">
                       <span>Store:</span>
-                      {order.store.name}
+                      {props.order.store.name}
                     </div>
-                    {groupRequired && (
+                    {props.groupRequired && (
                       <div className="detail-item">
-                        <span className="capitalize">{groupTerm}:</span>
-                        {order.group}
+                        <span className="capitalize">{props.groupTerm}:</span>
+                        {props.order.group}
                       </div>
                     )}
                   </div>
                   <div className="section order-info">
                     <h3>Customer Information</h3>
                     <p>
-                      {order.customer.firstName} {order.customer.lastName}
+                      {props.order.customer.firstName}{' '}
+                      {props.order.customer.lastName}
                     </p>
-                    <p>{order.customer.email}</p>
-                    <p>{formatPhoneNumber(order.customer.phone)}</p>
+                    <p>{props.order.customer.email}</p>
+                    <p>{formatPhoneNumber(props.order.customer.phone)}</p>
                   </div>
 
-                  {order.shippingMethod === 'Direct' && (
+                  {props.order.shippingMethod === 'Direct' && (
                     <div className="section shipping-details">
                       <h3>Shipping Address</h3>
                       <p>
-                        {order.shippingMethod === 'Direct'
-                          ? `${order.customer.firstName} ${order.customer.lastName}`
-                          : order.shippingAddress.name}
+                        {props.order.shippingMethod === 'Direct'
+                          ? `${props.order.customer.firstName} ${props.order.customer.lastName}`
+                          : props.order.shippingAddress.name}
                         <br />
-                        {order.shippingAddress.street}{' '}
-                        {order.shippingAddress.street2}
+                        {props.order.shippingAddress.street}{' '}
+                        {props.order.shippingAddress.street2}
                         <br />
-                        {order.shippingAddress.city},{' '}
-                        {order.shippingAddress.state}{' '}
-                        {order.shippingAddress.zipcode}
+                        {props.order.shippingAddress.city},{' '}
+                        {props.order.shippingAddress.state}{' '}
+                        {props.order.shippingAddress.zipcode}
                       </p>
                     </div>
                   )}
-                  {order.shippingMethod === 'Primary' && (
+                  {props.order.shippingMethod === 'Primary' && (
                     <div className="section shipping-details">
                       <h3>Order Pickup</h3>
                       <p>
@@ -193,7 +191,7 @@ export default function OrderConfirmation({
                 <div className="order-items">
                   <h3>Order Items</h3>
                   <div>
-                    {order.items.map(item => (
+                    {props.order.items.map(item => (
                       <div key={item.id} className="order-item">
                         <div className="item-img">
                           <img
@@ -259,25 +257,25 @@ export default function OrderConfirmation({
                     <div className="order-summary-item">
                       <div className="label">Subtotal</div>
                       <div className="value">
-                        {formatToMoney(order.summary.subtotal, true)}
+                        {formatToMoney(props.order.summary.subtotal, true)}
                       </div>
                     </div>
                     <div className="order-summary-item">
                       <div className="label">Sales Tax</div>
                       <div className="value">
-                        {formatToMoney(order.summary.salesTax, true)}
+                        {formatToMoney(props.order.summary.salesTax, true)}
                       </div>
                     </div>
                     <div className="order-summary-item">
                       <div className="label">Shipping</div>
                       <div className="value">
-                        {formatToMoney(order.summary.shipping, true)}
+                        {formatToMoney(props.order.summary.shipping, true)}
                       </div>
                     </div>
                     <div className="order-summary-item total">
                       <div>Order Total</div>
                       <div className="value">
-                        {formatToMoney(order.summary.total, true)}
+                        {formatToMoney(props.order.summary.total, true)}
                       </div>
                     </div>
                   </div>

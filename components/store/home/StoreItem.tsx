@@ -9,26 +9,28 @@ type Props = {
   storeId: string;
 };
 
-export default function StoreItem({ item, storeId }: Props) {
+export default function StoreItem(props: Props) {
   return (
     <Link
-      href={`/store/${storeId}/product?productId=${item.id}&colorId=${item.colors[0].id}`}
+      href={`/store/${props.storeId}/product?productId=${props.item.id}&colorId=${props.item.colors[0].id}`}
       passHref
     >
       <StoreItemStyles>
         <div className="img-wrapper">
           <img
-            src={item.colors[0].primaryImage}
-            alt={`${item.colors[0].label} ${item.name}`}
+            src={props.item.colors[0].primaryImage}
+            alt={`${props.item.colors[0].label} ${props.item.name}`}
           />
         </div>
         <div className="details">
-          <h3 className="primary">{item.name}</h3>
-          <h4 className="secondary">{item.tag}</h4>
+          <h3 className="primary">{props.item.name}</h3>
+          <h4 className="secondary">{props.item.tag}</h4>
           <div className="bottom-row">
-            <h4 className="price">{formatToMoney(item.sizes[0].price)}</h4>
+            <h4 className="price">
+              {formatToMoney(props.item.sizes[0].price)}
+            </h4>
             <div className="colors">
-              {item.colors.map(color => (
+              {props.item.colors.map(color => (
                 <Color key={color.id} hex={color.hex} title={color.label}>
                   <span className="sr-only">{color.label}</span>
                 </Color>

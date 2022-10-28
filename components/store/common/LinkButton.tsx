@@ -6,10 +6,10 @@ type Props = {
   label: string;
 };
 
-export default function LinkButton({ href, label }: Props) {
+export default function LinkButton(props: Props) {
   return (
-    <NextLink href={href} passHref>
-      <LinkButtonStyles>{label}</LinkButtonStyles>
+    <NextLink href={props.href} passHref>
+      <LinkButtonStyles>{props.label}</LinkButtonStyles>
     </NextLink>
   );
 }

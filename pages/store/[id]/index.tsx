@@ -54,31 +54,31 @@ type Props = {
   error?: string;
 };
 
-export default function StoreHomepage({ store, error }: Props) {
-  if (error) {
+export default function StoreHomepage(props: Props) {
+  if (props.error) {
     return <StoreHomepageError />;
   }
 
   return (
-    <StoreLayout title={`${store.name}`}>
+    <StoreLayout title={`${props.store.name}`}>
       <StoreStyles>
         <div className="store-header">
-          {store.closeDate && (
+          {props.store.closeDate && (
             <div className="close-date">
               <span>
                 This store will close on{' '}
                 {format(
-                  new Date(store.closeDate),
+                  new Date(props.store.closeDate),
                   "eee. LLL. do, yyyy 'at' h:mmaaa"
                 )}
               </span>
             </div>
           )}
           <h2 className="store-name">
-            <span>{store.name}</span>
+            <span>{props.store.name}</span>
           </h2>
         </div>
-        {!store.products || store.products.length < 1 ? (
+        {!props.store.products || props.store.products.length < 1 ? (
           <div className="no-products">
             <div className="wrapper">
               <svg
@@ -101,8 +101,8 @@ export default function StoreHomepage({ store, error }: Props) {
           </div>
         ) : (
           <div className="items">
-            {store.products.map((p: StoreProduct) => (
-              <StoreItem key={p.id} item={p} storeId={store._id} />
+            {props.store.products.map((p: StoreProduct) => (
+              <StoreItem key={p.id} item={p} storeId={props.store._id} />
             ))}
           </div>
         )}
