@@ -122,6 +122,7 @@ export interface CartItem {
   quantity: number;
   itemTotal?: number;
   personalizationAddons: PersonalizationAddon[];
+  personalizationTotal: number;
 }
 
 export interface OrderItem extends Omit<CartItem, 'sku'> {

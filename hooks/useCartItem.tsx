@@ -31,11 +31,13 @@ export default function useCartItem(params: Params) {
       )}`;
 
       setSize(sku.size.label);
+
       params.updateItemSize(params.cartItem.id, params.cartItem.sku.id, {
         ...params.cartItem,
         id,
         sku,
         quantity,
+        price: sku.size.price + params.cartItem.personalizationTotal,
       });
     }
   };
@@ -47,15 +49,19 @@ export default function useCartItem(params: Params) {
   };
 
   const isSizeOutOfStock = (items: CartItem[], sku: ProductSku) => {
-    const currentSize = sku.size.label === size;
-    const updatedInventory = items.reduce((inventory, currentItem) => {
-      if (currentItem.sku.id === sku.id) {
-        return inventory - currentItem.quantity;
-      }
-      return inventory;
-    }, sku.inventory);
+    const isCurrentSize = sku.size.label === size;
 
-    if (updatedInventory < 1 && !currentSize) {
+    const regularPlusPersonalizedInventory = items.reduce(
+      (inventory, currentItem) => {
+        if (currentItem.sku.id === sku.id) {
+          return inventory - currentItem.quantity;
+        }
+        return inventory;
+      },
+      sku.inventory
+    );
+
+    if (!isCurrentSize && regularPlusPersonalizedInventory - quantity < 0) {
       return true;
     }
 

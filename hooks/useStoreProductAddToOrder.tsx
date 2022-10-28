@@ -100,6 +100,7 @@ export default function useStoreProductAddToOrder(params: Params) {
         image: params.primaryImage,
         price: sku.size.price + params.personalization.total,
         personalizationAddons: formattedAddonItems,
+        personalizationTotal: params.personalization.total,
       });
     }
 

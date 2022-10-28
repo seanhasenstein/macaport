@@ -10,7 +10,7 @@ import useHasMounted from '../../../hooks/useHasMounted';
 import useProductColor from 'hooks/useStoreProductColor';
 import useProductImages from 'hooks/useStoreProductImages';
 import useProductSize from 'hooks/useStoreProductSize';
-import useProductPersonalization from '../../../hooks/useStoreProductPersonalization';
+import useStoreProductPersonalization from '../../../hooks/useStoreProductPersonalization';
 import useAddProductToOrder from 'hooks/useStoreProductAddToOrder';
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import ProductPersonalization from '../../../components/store/product/personalization';
@@ -89,7 +89,7 @@ export default function Product(props: Props) {
 
   const { addItem, items } = useCart();
 
-  const productPersonalization = useProductPersonalization(
+  const productPersonalization = useStoreProductPersonalization(
     props.product.personalization.addons,
     props.product.personalization.maxLines
   );

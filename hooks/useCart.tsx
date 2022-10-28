@@ -1,5 +1,4 @@
 import React from 'react';
-// import { useRouter } from 'next/router';
 import {
   calculateCartSubtotal,
   calculateSalesTax,
@@ -183,79 +182,11 @@ type CartProviderType = {
 };
 
 export function CartProvider({ children, cartId }: CartProviderType) {
-  // const router = useRouter();
   const [savedCart, saveCart] = useLocalStorage(
     cartId,
     JSON.stringify(initialState)
   );
   const [state, dispatch] = React.useReducer(reducer, JSON.parse(savedCart));
-
-  // TODO: Need to update cartItems/localStorage (specifically inventory) on reload (1st render)
-
-  // React.useEffect(() => {
-  //   // check if fetched product is active and has inventory
-  //   async function fetchProducts() {
-  //     function validateSavedCart(
-  //       localStorageCart: string,
-  //       fetchedProducts: StoreProduct[]
-  //     ) {
-  //       const parsedCart: InitialState = JSON.parse(localStorageCart);
-
-  //       // update parsedCart inventory with inventory from db
-  //       return parsedCart.items.reduce(
-  //         (accumulator: CartItem[], currentCartItem) => {
-  //           const fetchedProduct = fetchedProducts.find(
-  //             fp => fp.id === currentCartItem.sku.storeProductId
-  //           );
-  //           const fetchedSku = fetchedProduct?.productSkus.find(
-  //             ps => ps.id === currentCartItem.sku.id
-  //           );
-
-  //           if (
-  //             !fetchedProduct ||
-  //             !fetchedSku ||
-  //             fetchedSku.inventory - currentCartItem.quantity < 0
-  //           )
-  //             return accumulator;
-
-  //           let updatedQuantity = currentCartItem.quantity;
-
-  //           if (currentCartItem.quantity > fetchedSku.inventory) {
-  //             updatedQuantity = fetchedSku.inventory;
-  //           }
-
-  //           return [
-  //             ...accumulator,
-  //             {
-  //               ...currentCartItem,
-  //               quantity: updatedQuantity,
-  //               sku: {
-  //                 ...currentCartItem.sku,
-  //                 inventory: fetchedSku?.inventory,
-  //               },
-  //             },
-  //           ];
-  //         },
-  //         []
-  //       );
-  //     }
-
-  //     const response = await fetch(`/api/store?id=${router.query.id}`);
-
-  //     if (!response.ok) {
-  //       throw new Error('Failed to fetch the store.');
-  //     }
-
-  //     const data: Store = await response.json();
-
-  //     dispatch({
-  //       type: 'SET_ITEMS',
-  //       payload: validateSavedCart(savedCart, data.products),
-  //     });
-  //   }
-
-  //   fetchProducts();
-  // }, [router.query.id, savedCart]);
 
   React.useEffect(() => {
     saveCart(JSON.stringify(state));
@@ -328,7 +259,6 @@ export function CartProvider({ children, cartId }: CartProviderType) {
         id: prevId,
         payload: {
           ...payload,
-          price: payload.sku.size.price,
           quantity: updatedQuantity,
         },
       });
