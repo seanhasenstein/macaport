@@ -2,27 +2,26 @@ import React from 'react';
 import styled from 'styled-components';
 import { format } from 'date-fns';
 import { GetServerSideProps } from 'next';
-import { connectToDb, store } from '../../../db';
-import { Store as StoreInterface, StoreProduct } from '../../../interfaces';
-import { isStoreActive } from '../../../utils';
-import { MessageStyles } from '../../../styles/Message';
-import StoreLayout from '../../../components/store/StoreLayout';
-import StoreItem from '../../../components/store/StoreItem';
+import { connectToDb, store as storeModel } from 'db';
+import { Store as Store, StoreProduct } from '../../../interfaces';
+import StoreLayout from '../../../components/store/layouts/StoreLayout';
+import StoreItem from '../../../components/store/home/StoreItem';
+import { getUrlParameter } from 'utils';
+import { getStoreStatus } from 'utils/store';
+import StoreHomepageError from 'components/store/errors/StoreHomepageError';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
-    const id = Array.isArray(context.query.id)
-      ? context.query.id[0]
-      : context.query.id;
+    const id = getUrlParameter(context.query.id);
 
     if (!id) {
-      throw new Error('No store id provided.');
+      throw new Error("A store id is required but wasn't provided");
     }
 
     const db = await connectToDb();
-    const storeRes = await store.getStoreById(db, id);
+    const store = await storeModel.getStoreById(db, id);
 
-    if (!storeRes) {
+    if (!store) {
       return {
         redirect: {
           permanent: false,
@@ -31,9 +30,9 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    const storeIsActive = isStoreActive(storeRes.openDate, storeRes.closeDate);
+    const isStoreActive = getStoreStatus(store.openDate, store.closeDate);
 
-    if (!storeIsActive) {
+    if (isStoreActive === false) {
       return {
         redirect: {
           permanent: false,
@@ -42,7 +41,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    return { props: { store: storeRes } };
+    return { props: { store } };
   } catch (error) {
     return {
       props: { error },
@@ -51,42 +50,17 @@ export const getServerSideProps: GetServerSideProps = async context => {
 };
 
 type Props = {
-  store: StoreInterface;
+  store: Store;
   error?: string;
 };
 
-export default function StoreHome({ store, error }: Props) {
+export default function StoreHomepage({ store, error }: Props) {
   if (error) {
-    return (
-      <StoreLayout>
-        <MessageStyles>
-          <div className="wrapper">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <h3>An error has occurred</h3>
-            <p>
-              If you continue to have problems please contact us at{' '}
-              <a href="mailto:support@macaport.com">support@macaport.com</a>.
-            </p>
-          </div>
-        </MessageStyles>
-      </StoreLayout>
-    );
+    return <StoreHomepageError />;
   }
 
   return (
-    <StoreLayout title={`${store.name} | Macaport`}>
+    <StoreLayout title={`${store.name}`}>
       <StoreStyles>
         <div className="store-header">
           {store.closeDate && (

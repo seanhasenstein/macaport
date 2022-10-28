@@ -1,31 +1,30 @@
 import React from 'react';
 import { GetServerSideProps } from 'next';
-import { connectToDb, store } from '../../../db';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
+import { connectToDb, store as storeModel } from 'db';
+import { getStoreStatus } from 'utils/store';
 import { useCart } from '../../../hooks/useCart';
 import useHasMounted from '../../../hooks/useHasMounted';
 import { CartItem as CartItemInterface, Store } from '../../../interfaces';
-import { formatToMoney, isStoreActive } from '../../../utils';
-import StoreLayout from '../../../components/store/StoreLayout';
-import CartItem from '../../../components/store/CartItem';
-import LinkButton from '../../../components/store/LinkButton';
+import { formatToMoney, getUrlParameter } from '../../../utils';
+import StoreLayout from '../../../components/store/layouts/StoreLayout';
+import CartItem from '../../../components/store/cart/CartItem';
+import LinkButton from '../../../components/store/common/LinkButton';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
-    const id = Array.isArray(context.query.id)
-      ? context.query.id[0]
-      : context.query.id;
+    const id = getUrlParameter(context.query.id);
 
     if (!id) {
-      throw new Error('No store id provided.');
+      throw new Error("A store id is required but wasn't provided");
     }
 
     const db = await connectToDb();
-    const storeRes = await store.getStoreById(db, id);
+    const store = await storeModel.getStoreById(db, id);
 
-    if (!storeRes) {
+    if (!store) {
       return {
         redirect: {
           permanent: false,
@@ -34,9 +33,9 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    const storeIsActive = isStoreActive(storeRes.openDate, storeRes.closeDate);
+    const isStoreActive = getStoreStatus(store.openDate, store.closeDate);
 
-    if (!storeIsActive) {
+    if (isStoreActive === false) {
       return {
         redirect: {
           permanent: false,
@@ -45,7 +44,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    return { props: { store: storeRes } };
+    return { props: { store } };
   } catch (error) {
     return {
       props: { error },
@@ -58,57 +57,54 @@ type Props = {
   error?: string;
 };
 
-export default function Cart({ store, error }: Props) {
+export default function Cart(props: Props) {
   const hasMounted = useHasMounted();
   const router = useRouter();
-  const {
-    items,
-    totalItems,
-    cartSubtotal,
-    salesTax,
-    cartTotalWithoutShipping,
-    cartIsEmpty,
-    removeItem,
-  } = useCart();
+  const cart = useCart();
 
-  if (error) {
-    // TODO
-  }
+  // if (props.error) {
+  // TODO: add error component
+  // }
 
-  if (hasMounted && (!store.products || store.products.length < 1)) {
+  // TODO: add this check in getServerSideProps
+  if (
+    hasMounted &&
+    (!props.store.products || props.store.products.length < 1)
+  ) {
     router.push(`/store/${router.query.id}`);
     return <div />;
   }
 
   return (
-    <StoreLayout title={`Cart | ${store.name} | Macaport`}>
+    <StoreLayout title={`Cart | ${props.store.name}`}>
       <CartStyles>
         <div className="wrapper">
           <h2>Your Cart</h2>
           {hasMounted ? (
             <>
               <div className="order-details">
-                ({totalItems} Item
-                {totalItems > 1 ? 's' : totalItems === 0 ? 's' : null})
+                ({cart.totalItems} Item
+                {cart.totalItems > 1 ? 's' : cart.totalItems === 0 ? 's' : null}
+                )
               </div>
               <div className="grid">
                 <div className="items">
-                  {cartIsEmpty ? (
+                  {cart.cartIsEmpty ? (
                     <div className="empty-cart">
                       Your cart is empty.{' '}
-                      <Link href={`/store/${store._id}`}>
+                      <Link href={`/store/${props.store._id}`}>
                         <a>Continue Shopping</a>
                       </Link>
                       .
                     </div>
                   ) : (
-                    items.map((item: CartItemInterface) => {
-                      const product = store.products.find(
+                    cart.items.map((item: CartItemInterface) => {
+                      const product = props.store.products.find(
                         p => p.id === item.sku.storeProductId
                       );
 
                       if (!product) {
-                        removeItem(item.sku.id);
+                        cart.removeItem(item.sku.id);
                         return;
                       }
 
@@ -116,7 +112,7 @@ export default function Cart({ store, error }: Props) {
                         <CartItem
                           key={item.id}
                           item={item}
-                          storeId={store._id}
+                          storeId={props.store._id}
                           skus={product.productSkus}
                           sizes={product.sizes}
                         />
@@ -130,13 +126,13 @@ export default function Cart({ store, error }: Props) {
                     <div className="item">
                       <div className="key">Subtotal</div>
                       <div className="value">
-                        {formatToMoney(cartSubtotal, true)}
+                        {formatToMoney(cart.cartSubtotal, true)}
                       </div>
                     </div>
                     <div className="item">
                       <div className="key">Sales Tax</div>
                       <div className="value">
-                        {formatToMoney(salesTax, true)}
+                        {formatToMoney(cart.salesTax, true)}
                       </div>
                     </div>
                     <div className="item">
@@ -146,11 +142,11 @@ export default function Cart({ store, error }: Props) {
                     <div className="item total">
                       <div className="key">Order Total</div>
                       <div className="value">
-                        {formatToMoney(cartTotalWithoutShipping, true)}
+                        {formatToMoney(cart.cartTotalWithoutShipping, true)}
                       </div>
                     </div>
                     <LinkButton
-                      href={`/store/${store._id}/checkout`}
+                      href={`/store/${props.store._id}/checkout`}
                       label="Checkout"
                     />
                   </div>
@@ -174,7 +170,7 @@ const CartStyles = styled.div`
   }
 
   h2 {
-    margin: 0 0 1.5rem;
+    margin: 0 0 1.75rem;
     font-size: 1.5rem;
   }
 

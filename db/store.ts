@@ -3,6 +3,7 @@ import {
   InventoryProduct,
   ProductColor,
   Store,
+  StoreForStoresPage,
   StoreProduct,
 } from '../interfaces';
 
@@ -15,7 +16,7 @@ export async function getStoreById(db: Db, id: string) {
     );
 
   if (!store) {
-    throw new Error('No store found.');
+    return undefined;
   }
 
   let storeProducts: StoreProduct[] = [];
@@ -90,6 +91,21 @@ export async function getStores(db: Db, filter: Record<string, unknown> = {}) {
       },
     ])
     .project({ orders: 0, contact: 0, notes: 0 })
+    .toArray();
+  return await result;
+}
+
+export async function getStoresForStoresPage(db: Db) {
+  const result = await db
+    .collection<StoreForStoresPage>('stores')
+    .aggregate([
+      {
+        $set: {
+          _id: { $toString: '$_id' },
+        },
+      },
+    ])
+    .project({ _id: 1, name: 1, openDate: 1, closeDate: 1, permanentlyOpen: 1 })
     .toArray();
   return await result;
 }

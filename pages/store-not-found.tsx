@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import styled from 'styled-components';
-import NoNavLayout from '../components/store/NoNavLayout';
+import NoNavLayout from '../components/store/layouts/NoNavLayout';
 
 export default function StoreNotFound() {
   return (
-    <NoNavLayout>
+    <NoNavLayout title="Store not found">
       <StoreNotFoundStyles>
         <div className="wrapper">
           <svg

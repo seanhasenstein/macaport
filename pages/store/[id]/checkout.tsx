@@ -1,26 +1,23 @@
 import React from 'react';
 import { GetServerSideProps } from 'next';
-import { connectToDb, shipping, store } from '../../../db';
-import { useRouter } from 'next/router';
-import Link from 'next/link';
 import styled from 'styled-components';
+import { connectToDb, shipping, store } from 'db';
+import { getStoreStatus } from 'utils/store';
 import { useCart } from '../../../hooks/useCart';
-import useHasMounted from '../../../hooks/useHasMounted';
-import { CartItem, ShippingData, Store } from '../../../interfaces';
-import { formatToMoney, isStoreActive } from '../../../utils';
-import StoreLayout from '../../../components/store/StoreLayout';
-import CheckoutItem from '../../../components/store/CheckoutItem';
-import CheckoutForm from '../../../components/store/CheckoutForm';
-import OutOfStockModal from '../../../components/store/OutOfStockModal';
+import { ShippingData, Store } from '../../../interfaces';
+import { getUrlParameter } from '../../../utils';
+import useCheckoutSubmit from 'hooks/useCheckoutSubmit';
+import StoreLayout from '../../../components/store/layouts/StoreLayout';
+import CheckoutForm from '../../../components/store/checkout/CheckoutForm';
+import OutOfStockModal from '../../../components/store/checkout/OutOfStockModal';
+import CheckoutSidebar from 'components/store/checkout/CheckoutSidebar';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
-    const id = Array.isArray(context.query.id)
-      ? context.query.id[0]
-      : context.query.id;
+    const id = getUrlParameter(context.query.id);
 
     if (!id) {
-      throw new Error('No store id provided.');
+      throw new Error("A store id is required but wasn't provided");
     }
 
     const db = await connectToDb();
@@ -36,12 +33,12 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    const storeIsActive = isStoreActive(
+    const isStoreActive = getStoreStatus(
       storeResult.openDate,
       storeResult.closeDate
     );
 
-    if (!storeIsActive) {
+    if (isStoreActive === false) {
       return {
         redirect: {
           permanent: false,
@@ -64,18 +61,15 @@ type Props = {
 };
 
 export default function Checkout(props: Props) {
-  const hasMounted = useHasMounted();
-  const router = useRouter();
-  const { items, cartSubtotal, salesTax, shipping, cartTotal } = useCart();
-  const [verifiedItems, setVerifiedItems] = React.useState<CartItem[]>([]);
-  const [lowerInventoryItems, setLowerInventoryItems] = React.useState<
-    CartItem[]
-  >([]);
-  const [outOfStockItems, setOutOfStockItems] = React.useState<CartItem[]>([]);
-  const [showInventoryModal, setShowInventoryModal] = React.useState(false);
+  const cart = useCart();
+  const checkout = useCheckoutSubmit({
+    storeId: props.store._id,
+    storeName: props.store.name,
+    primaryShippingAddress: props.store.primaryShippingLocation,
+  });
 
   return (
-    <StoreLayout title={`Checkout | ${props.store.name} | Macaport`}>
+    <StoreLayout title={`Checkout | ${props.store.name}`}>
       <CheckoutStyles>
         <h2>Order Checkout</h2>
         <div className="wrapper">
@@ -89,64 +83,26 @@ export default function Checkout(props: Props) {
             groupTerm={props.store.groupTerm}
             groups={props.store.groups}
             shipping={props.shipping}
-            setVerifiedItems={setVerifiedItems}
-            setLowerInventoryItems={setLowerInventoryItems}
-            setOutOfStockItems={setOutOfStockItems}
-            setShowInventoryModal={setShowInventoryModal}
+            setVerifiedItems={checkout.setVerifiedItems}
+            setLowerInventoryItems={checkout.setLowerInventoryItems}
+            setOutOfStockItems={checkout.setOutOfStockItems}
+            setShowInventoryModal={checkout.setShowInventoryModal}
+            checkout={checkout}
           />
-          {hasMounted && (
-            <div>
-              <div className="sidebar">
-                <div className="products">
-                  <h3>Order Items</h3>
-                  {items.length < 1 && (
-                    <div className="empty-order">
-                      Your order is empty.{' '}
-                      <Link href={`/store/${router.query.id}`}>
-                        <a>Continue shopping</a>
-                      </Link>
-                      .
-                    </div>
-                  )}
-                  <div className="items">
-                    {items.map(item => (
-                      <CheckoutItem key={item.id} item={item} />
-                    ))}
-                  </div>
-                </div>
-                <div className="order-summary">
-                  <h3>Order Summary</h3>
-                  <div className="item">
-                    <div className="key">Subtotal</div>
-                    <div className="value">
-                      {formatToMoney(cartSubtotal, true)}
-                    </div>
-                  </div>
-                  <div className="item">
-                    <div className="key">Sales Tax</div>
-                    <div className="value">{formatToMoney(salesTax, true)}</div>
-                  </div>
-                  <div className="item">
-                    <div className="key">Shipping</div>
-                    <div className="value">{formatToMoney(shipping, true)}</div>
-                  </div>
-                  <div className="item total">
-                    <div className="key">Order Total</div>
-                    <div className="value">
-                      {formatToMoney(cartTotal, true)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          <CheckoutSidebar
+            cartSubtotal={cart.cartSubtotal}
+            cartShipping={cart.shipping}
+            cartTotal={cart.cartTotal}
+            items={cart.items}
+            salesTax={cart.salesTax}
+          />
         </div>
         <OutOfStockModal
-          verifiedItems={verifiedItems}
-          lowerInventoryItems={lowerInventoryItems}
-          outOfStockItems={outOfStockItems}
-          showModal={showInventoryModal}
-          setShowModal={setShowInventoryModal}
+          verifiedItems={checkout.verifiedItems}
+          lowerInventoryItems={checkout.lowerInventoryItems}
+          outOfStockItems={checkout.outOfStockItems}
+          showModal={checkout.showInventoryModal}
+          setShowModal={checkout.setShowInventoryModal}
         />
       </CheckoutStyles>
     </StoreLayout>
@@ -173,86 +129,6 @@ const CheckoutStyles = styled.div`
     gap: 0 3rem;
   }
 
-  .sidebar {
-    padding: 2rem 2.5rem;
-    background-color: #fff;
-    border-radius: 0.375rem;
-    border: 1px solid #e5e7eb;
-    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
-
-    h3 {
-      margin: 0 0 1.75rem;
-      font-size: 1.125rem;
-      color: #36383e;
-      font-weight: 600;
-    }
-  }
-
-  .empty-order {
-    font-size: 0.9375rem;
-    color: #6b7280;
-    line-height: 1.5;
-
-    a {
-      display: inline-flex;
-      align-items: center;
-      color: #2837b9;
-      text-decoration: underline;
-
-      &:hover {
-        color: #1629cb;
-      }
-    }
-  }
-
-  .order-summary {
-    padding: 3rem 0 0;
-
-    h3 {
-      margin: 0 0 1rem;
-    }
-
-    .item {
-      padding: 1.125rem 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #e5e7eb;
-
-      &:last-of-type {
-        border: none;
-      }
-
-      .key,
-      .value {
-        font-size: 0.9375rem;
-        font-weight: 500;
-      }
-
-      .key {
-        color: #6b7280;
-      }
-
-      .value {
-        color: #111827;
-      }
-
-      &.total {
-        .key,
-        .value {
-          color: #374151;
-          font-size: 1rem;
-          font-weight: 600;
-        }
-
-        .value {
-          color: #059669;
-        }
-      }
-    }
-  }
-
   @media (max-width: 1024px) {
     h2 {
       margin: 3rem 0;
@@ -264,12 +140,6 @@ const CheckoutStyles = styled.div`
       max-width: 40rem;
       display: flex;
       flex-direction: column-reverse;
-    }
-  }
-
-  @media (max-width: 500px) {
-    .sidebar {
-      padding: 1.75rem 1.5rem;
     }
   }
 `;

@@ -3,15 +3,15 @@ import Link from 'next/link';
 import styled from 'styled-components';
 import { format } from 'date-fns';
 import { connectToDb, store } from '../db';
-import { isStoreActive } from '../utils';
-import { Store } from '../interfaces';
+import { getStoreStatus } from '../utils/store';
+import { StoreForStoresPage } from '../interfaces';
 import Layout from '../components/Layout';
 
 export const getServerSideProps: GetServerSideProps = async () => {
   const db = await connectToDb();
-  const stores: Store[] = await store.getStores(db);
+  const stores = await store.getStoresForStoresPage(db);
   const activeStores = stores?.filter(s => {
-    const isActive = isStoreActive(s.openDate, s.closeDate);
+    const isActive = getStoreStatus(s.openDate, s.closeDate);
     return isActive;
   });
 
@@ -21,26 +21,26 @@ export const getServerSideProps: GetServerSideProps = async () => {
 };
 
 type Props = {
-  stores: Store[];
+  stores: StoreForStoresPage[];
 };
 
-export default function Stores({ stores }: Props) {
+export default function Stores(props: Props) {
   return (
     <Layout>
       <StoresStyles>
         <div className="wrapper">
           <h2>Current Stores</h2>
-          {(!stores || stores.length < 1) && (
+          {(!props.stores || props.stores.length < 1) && (
             <div className="empty">There are currently no active stores.</div>
           )}
-          {stores && stores.length > 0 && (
+          {props.stores && props.stores.length > 0 && (
             <div className="grid">
               <div className="header">
                 <span>Store Name</span>
                 <span>Close Date</span>
               </div>
               <div>
-                {stores.map(s => (
+                {props.stores.map(s => (
                   <Link key={s._id} href={`/store/${s._id}`}>
                     <a className="store-link">
                       <div className="item">

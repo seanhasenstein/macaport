@@ -24,30 +24,31 @@ export async function sendEmail({
   bcc,
   replyTo,
 }: SendEmailParams) {
-  try {
-    const form = new FormData();
-    const endpoint = `https://api.mailgun.net/v3/${process.env.MAILGUN_DOMAIN}/messages`;
+  const form = new FormData();
+  const endpoint = `https://api.mailgun.net/v3/${process.env.MAILGUN_DOMAIN}/messages`;
 
-    form.append('to', to);
-    form.append('from', from);
-    form.append('subject', subject);
-    form.append('text', text);
+  form.append('to', to);
+  form.append('from', from);
+  form.append('subject', subject);
+  form.append('text', text);
 
-    if (html) form.append('html', html);
-    if (bcc) form.append('bcc', bcc);
-    if (replyTo) form.append('h:Reply-To', replyTo);
+  if (html) form.append('html', html);
+  if (bcc) form.append('bcc', bcc);
+  if (replyTo) form.append('h:Reply-To', replyTo);
 
-    const res = await fetch(endpoint, {
-      method: 'post',
-      body: form,
-      headers: {
-        Authorization: AUTHTOKEN,
-      },
-    });
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    body: form,
+    headers: {
+      Authorization: AUTHTOKEN,
+    },
+  });
 
-    const data = await res.json();
-    return data;
-  } catch (error) {
-    console.error(error);
+  const ok = await res.ok;
+
+  if (!ok) {
+    throw new Error('An error occurred with the MailGun API.');
+  } else {
+    return { success: true };
   }
 }
