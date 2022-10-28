@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { format } from 'date-fns';
 import { GetServerSideProps } from 'next';
 import { connectToDb, store as storeModel } from 'db';
-import { Store as Store, StoreProduct } from '../../../interfaces';
+import { Store, StoreProduct } from '../../../interfaces';
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import StoreItem from '../../../components/store/home/StoreItem';
 import { getUrlParameter } from 'utils';

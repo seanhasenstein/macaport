@@ -92,7 +92,7 @@ export default function OrderConfirmation(props: Props) {
     >
       <OrderConfirmationStyles>
         <div className="order-confirmation-wrapper">
-          {order && (
+          {props.order && (
             <>
               <div className="header print-only" aria-hidden="true">
                 <div className="logo">
