@@ -31,7 +31,11 @@ export default function useStoreProductImages(params: Params) {
     if (params.error) return;
 
     router.push(
-      `/store/${params.storeId}/product?productId=${params.productId}&colorId=${params.selectedColor.id}`,
+      `/store/${params.storeId}/${
+        router.pathname.split('/').includes('demo') ? 'demo/' : ''
+      }product?productId=${params.productId}&colorId=${
+        params.selectedColor.id
+      }`,
       undefined,
       { shallow: true }
     );

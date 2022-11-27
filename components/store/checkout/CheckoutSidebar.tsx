@@ -28,7 +28,11 @@ export default function CheckoutSidebar(props: Props) {
               {props.items.length < 1 && (
                 <div className="empty-order">
                   Your order is empty.{' '}
-                  <Link href={`/store/${router.query.id}`}>
+                  <Link
+                    href={`/store/${router.query.id}${
+                      router.pathname.split('/').includes('demo') ? '/demo' : ''
+                    }`}
+                  >
                     <a>Continue shopping</a>
                   </Link>
                   .

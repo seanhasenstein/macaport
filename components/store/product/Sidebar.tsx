@@ -1,4 +1,5 @@
 import React from 'react';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { formatToMoney } from '../../../utils';
@@ -26,6 +27,7 @@ type Props = {
 };
 
 export default function Sidebar(props: Props) {
+  const router = useRouter();
   const { closeButtonRef, containerRef, itemPrice } = useProductSidebar({
     isOpen: props.isOpen,
     sizePrice: props.size.price,
@@ -119,16 +121,26 @@ export default function Sidebar(props: Props) {
               </div>
             </div>
             <div className="actions">
-              <Link href={`/store/${props.storeId}/cart`}>
+              <Link
+                href={`/store/${props.storeId}/${
+                  router.pathname.split('/').includes('demo') ? 'demo/' : ''
+                }cart`}
+              >
                 <a className="secondary-button">View Cart</a>
               </Link>
               <LinkButton
-                href={`/store/${props.storeId}/checkout`}
+                href={`/store/${props.storeId}/${
+                  router.pathname.split('/').includes('demo') ? 'demo/' : ''
+                }checkout`}
                 label="Checkout"
               />
             </div>
             <div className="continue-shopping-link">
-              <Link href={`/store/${props.storeId}`}>
+              <Link
+                href={`/store/${props.storeId}${
+                  router.pathname.split('/').includes('demo') ? '/demo' : ''
+                }`}
+              >
                 <a>
                   Continue shopping
                   <svg

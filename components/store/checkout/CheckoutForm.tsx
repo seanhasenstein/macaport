@@ -1,4 +1,5 @@
 import React from 'react';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { CardElement } from '@stripe/react-stripe-js';
@@ -37,6 +38,7 @@ type Props = {
 };
 
 export default function CheckoutForm(props: Props) {
+  const router = useRouter();
   const hasMounted = useHasMounted();
   const cart = useCart();
   const [initialValues] = React.useState(() =>
@@ -226,7 +228,8 @@ export default function CheckoutForm(props: Props) {
                 disabled={
                   !props.checkout.stripe ||
                   props.checkout.cartIsEmpty ||
-                  props.checkout.isSubmitting
+                  props.checkout.isSubmitting ||
+                  router.pathname.split('/').includes('demo')
                 }
               >
                 {props.checkout.isSubmitting ? (
@@ -249,7 +252,14 @@ export default function CheckoutForm(props: Props) {
                     <span className="sr-only">Your order is empty</span>
                   </>
                 ) : (
-                  `Submit your order of ${formatToMoney(cart.cartTotal, true)}`
+                  `${
+                    router.pathname.split('/').includes('demo')
+                      ? ' This is a demo store'
+                      : `Submit your order of ${formatToMoney(
+                          cart.cartTotal,
+                          true
+                        )}`
+                  }`
                 )}
               </button>
               {props.checkout.serverResponseError && (
@@ -262,7 +272,13 @@ export default function CheckoutForm(props: Props) {
                 !props.checkout.isSubmitting && (
                   <div className="empty-cart">
                     Your order is empty.{' '}
-                    <Link href={`/store/${props.storeId}`}>
+                    <Link
+                      href={`/store/${props.storeId}${
+                        router.pathname.split('/').includes('demo')
+                          ? '/demo'
+                          : ''
+                      }`}
+                    >
                       <a>Continue shopping</a>
                     </Link>
                     .

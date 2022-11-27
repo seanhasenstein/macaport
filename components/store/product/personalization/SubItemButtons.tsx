@@ -1,10 +1,10 @@
+import React from 'react';
+import styled from 'styled-components';
 import {
   AddonItems,
   PersonalizationAddon,
   PersonalizationItem,
 } from '../../../../interfaces';
-import React from 'react';
-import styled from 'styled-components';
 import { formatToMoney } from '../../../../utils';
 import usePersonalizationSubItemButtons from 'hooks/usePersonalizationSubItemButtons';
 

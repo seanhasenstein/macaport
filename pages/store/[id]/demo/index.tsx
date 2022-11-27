@@ -1,13 +1,14 @@
 import React from 'react';
+import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { format } from 'date-fns';
 import { GetServerSideProps } from 'next';
 import { connectToDb, store as storeModel } from 'db';
-import { Store, StoreProduct } from '../../../interfaces';
-import StoreLayout from '../../../components/store/layouts/StoreLayout';
-import StoreItem from '../../../components/store/home/StoreItem';
+import { Store, StoreProduct } from '../../../../interfaces';
+import StoreLayout from '../../../../components/store/layouts/StoreLayout';
+import StoreItem from '../../../../components/store/home/StoreItem';
 import { getUrlParameter } from 'utils';
-import { getStoreStatus } from 'utils/store';
+// import { getStoreStatus } from 'utils/store';
 import StoreHomepageError from 'components/store/errors/StoreHomepageError';
 
 export const getServerSideProps: GetServerSideProps = async context => {
@@ -30,16 +31,16 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    const isStoreActive = getStoreStatus(store.openDate, store.closeDate);
+    // const isStoreActive = getStoreStatus(store.openDate, store.closeDate);
 
-    if (isStoreActive === false) {
-      return {
-        redirect: {
-          permanent: false,
-          destination: '/store-closed',
-        },
-      };
-    }
+    // if (isStoreActive === false) {
+    //   return {
+    //     redirect: {
+    //       permanent: false,
+    //       destination: '/store-closed',
+    //     },
+    //   };
+    // }
 
     return { props: { store } };
   } catch (error) {
@@ -54,14 +55,16 @@ type Props = {
   error?: string;
 };
 
-export default function StoreHomepage(props: Props) {
+export default function StoreDemoHomepage(props: Props) {
+  const router = useRouter();
+
   if (props.error) {
     return <StoreHomepageError />;
   }
 
   return (
     <StoreLayout title={`${props.store.name}`}>
-      <StoreStyles>
+      <StoreDemoStyles>
         <div className="store-header">
           {props.store.closeDate && (
             <div className="close-date">
@@ -106,17 +109,17 @@ export default function StoreHomepage(props: Props) {
                 key={p.id}
                 item={p}
                 storeId={props.store._id}
-                isDemo={false}
+                isDemo={router.pathname.split('/').includes('demo')}
               />
             ))}
           </div>
         )}
-      </StoreStyles>
+      </StoreDemoStyles>
     </StoreLayout>
   );
 }
 
-const StoreStyles = styled.div`
+const StoreDemoStyles = styled.div`
   position: relative;
   margin: 4rem 0 0;
 

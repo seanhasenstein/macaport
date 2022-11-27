@@ -26,7 +26,11 @@ export default function StoreLayout(props: Props) {
       <header>
         <nav>
           <div className="wrapper">
-            <Link href={`/store/${router.query.id}`}>
+            <Link
+              href={`/store/${router.query.id}${
+                router.pathname.split('/').includes('demo') ? '/demo' : ''
+              }`}
+            >
               <a title="Store Home">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -43,7 +47,11 @@ export default function StoreLayout(props: Props) {
                 </svg>
               </a>
             </Link>
-            <Link href={`/store/${router.query.id}`}>
+            <Link
+              href={`/store/${router.query.id}${
+                router.pathname.split('/').includes('demo') ? '/demo' : ''
+              }`}
+            >
               <a>
                 <img
                   src="/images/logo.png"
@@ -53,7 +61,11 @@ export default function StoreLayout(props: Props) {
               </a>
             </Link>
             {router.asPath.includes('cart') ? (
-              <Link href={`/store/${router.query.id}/checkout`}>
+              <Link
+                href={`/store/${router.query.id}/${
+                  router.pathname.split('/').includes('demo') ? 'demo/' : ''
+                }checkout`}
+              >
                 <a title="Checkout">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -71,7 +83,11 @@ export default function StoreLayout(props: Props) {
                 </a>
               </Link>
             ) : (
-              <Link href={`/store/${router.query.id}/cart`}>
+              <Link
+                href={`/store/${router.query.id}/${
+                  router.pathname.split('/').includes('demo') ? 'demo/' : ''
+                }cart`}
+              >
                 <a title="Cart">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

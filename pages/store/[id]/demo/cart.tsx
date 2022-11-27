@@ -4,14 +4,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { connectToDb, store as storeModel } from 'db';
-import { getStoreStatus } from 'utils/store';
-import { useCart } from '../../../hooks/useCart';
-import useHasMounted from '../../../hooks/useHasMounted';
-import { CartItem as CartItemInterface, Store } from '../../../interfaces';
-import { formatToMoney, getUrlParameter } from '../../../utils';
-import StoreLayout from '../../../components/store/layouts/StoreLayout';
-import CartItem from '../../../components/store/cart/CartItem';
-import LinkButton from '../../../components/store/common/LinkButton';
+// import { getStoreStatus } from 'utils/store';
+import { useCart } from '../../../../hooks/useCart';
+import useHasMounted from '../../../../hooks/useHasMounted';
+import { CartItem as CartItemInterface, Store } from '../../../../interfaces';
+import { formatToMoney, getUrlParameter } from '../../../../utils';
+import StoreLayout from '../../../../components/store/layouts/StoreLayout';
+import CartItem from '../../../../components/store/cart/CartItem';
+import LinkButton from '../../../../components/store/common/LinkButton';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -33,16 +33,16 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    const isStoreActive = getStoreStatus(store.openDate, store.closeDate);
+    // const isStoreActive = getStoreStatus(store.openDate, store.closeDate);
 
-    if (isStoreActive === false) {
-      return {
-        redirect: {
-          permanent: false,
-          destination: '/store-closed',
-        },
-      };
-    }
+    // if (isStoreActive === false) {
+    //   return {
+    //     redirect: {
+    //       permanent: false,
+    //       destination: '/store-closed',
+    //     },
+    //   };
+    // }
 
     return { props: { store } };
   } catch (error) {
@@ -57,9 +57,9 @@ type Props = {
   error?: string;
 };
 
-export default function Cart(props: Props) {
-  const hasMounted = useHasMounted();
+export default function DemoCart(props: Props) {
   const router = useRouter();
+  const hasMounted = useHasMounted();
   const cart = useCart();
 
   // if (props.error) {
@@ -77,7 +77,7 @@ export default function Cart(props: Props) {
 
   return (
     <StoreLayout title={`Cart | ${props.store.name}`}>
-      <CartStyles>
+      <DemoCartStyles>
         <div className="wrapper">
           <h2>Your Cart</h2>
           {hasMounted ? (
@@ -92,7 +92,13 @@ export default function Cart(props: Props) {
                   {cart.cartIsEmpty ? (
                     <div className="empty-cart">
                       Your cart is empty.{' '}
-                      <Link href={`/store/${props.store._id}`}>
+                      <Link
+                        href={`/store/${props.store._id}${
+                          router.pathname.split('/').includes('demo')
+                            ? '/demo'
+                            : ''
+                        }`}
+                      >
                         <a>Continue Shopping</a>
                       </Link>
                       .
@@ -115,7 +121,7 @@ export default function Cart(props: Props) {
                           storeId={props.store._id}
                           skus={product.productSkus}
                           sizes={product.sizes}
-                          isDemo={false}
+                          isDemo={router.pathname.split('/').includes('demo')}
                         />
                       );
                     })
@@ -147,7 +153,11 @@ export default function Cart(props: Props) {
                       </div>
                     </div>
                     <LinkButton
-                      href={`/store/${props.store._id}/checkout`}
+                      href={`/store/${props.store._id}/${
+                        router.pathname.split('/').includes('demo')
+                          ? 'demo/'
+                          : ''
+                      }checkout`}
                       label="Checkout"
                     />
                   </div>
@@ -156,12 +166,12 @@ export default function Cart(props: Props) {
             </>
           ) : null}
         </div>
-      </CartStyles>
+      </DemoCartStyles>
     </StoreLayout>
   );
 }
 
-const CartStyles = styled.div`
+const DemoCartStyles = styled.div`
   padding: 0 1.5rem;
 
   .wrapper {

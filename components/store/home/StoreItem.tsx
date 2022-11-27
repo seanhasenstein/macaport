@@ -7,12 +7,15 @@ import { formatToMoney } from '../../../utils';
 type Props = {
   item: StoreProduct;
   storeId: string;
+  isDemo: boolean;
 };
 
 export default function StoreItem(props: Props) {
   return (
     <Link
-      href={`/store/${props.storeId}/product?productId=${props.item.id}&colorId=${props.item.colors[0].id}`}
+      href={`/store/${props.storeId}/${
+        props.isDemo ? 'demo/' : ''
+      }product?productId=${props.item.id}&colorId=${props.item.colors[0].id}`}
       passHref
     >
       <StoreItemStyles>

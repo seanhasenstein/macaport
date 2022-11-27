@@ -15,6 +15,7 @@ type Props = {
   storeId: string;
   skus: ProductSku[];
   sizes: ProductSize[];
+  isDemo: boolean;
 };
 
 export default function CartItem(props: Props) {
@@ -37,7 +38,11 @@ export default function CartItem(props: Props) {
       <div className="item-grid">
         <div className="item-image">
           <Link
-            href={`/store/${props.storeId}/product?productId=${props.item.sku.storeProductId}&colorId=${props.item.sku.color.id}`}
+            href={`/store/${props.storeId}/${
+              props.isDemo ? 'demo/' : ''
+            }product?productId=${props.item.sku.storeProductId}&colorId=${
+              props.item.sku.color.id
+            }`}
           >
             <a>
               <img
@@ -50,7 +55,11 @@ export default function CartItem(props: Props) {
         <div className="item-details">
           <h3 className="primary">
             <Link
-              href={`/store/${props.storeId}/product?productId=${props.item.sku.storeProductId}&colorId=${props.item.sku.color.id}`}
+              href={`/store/${props.storeId}/${
+                props.isDemo ? 'demo/' : ''
+              }product?productId=${props.item.sku.storeProductId}&colorId=${
+                props.item.sku.color.id
+              }`}
             >
               <a>{props.item.name}</a>
             </Link>
