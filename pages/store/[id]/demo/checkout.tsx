@@ -2,7 +2,6 @@ import React from 'react';
 import { GetServerSideProps } from 'next';
 import styled from 'styled-components';
 import { connectToDb, shipping, store } from 'db';
-// import { getStoreStatus } from 'utils/store';
 import { useCart } from '../../../../hooks/useCart';
 import { ShippingData, Store } from '../../../../interfaces';
 import { getUrlParameter } from '../../../../utils';
@@ -11,6 +10,7 @@ import StoreLayout from '../../../../components/store/layouts/StoreLayout';
 import CheckoutForm from '../../../../components/store/checkout/CheckoutForm';
 import OutOfStockModal from '../../../../components/store/checkout/OutOfStockModal';
 import CheckoutSidebar from 'components/store/checkout/CheckoutSidebar';
+import DemoBanner from 'components/store/demo/banner';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -32,20 +32,6 @@ export const getServerSideProps: GetServerSideProps = async context => {
         },
       };
     }
-
-    // const isStoreActive = getStoreStatus(
-    //   storeResult.openDate,
-    //   storeResult.closeDate
-    // );
-
-    // if (isStoreActive === false) {
-    //   return {
-    //     redirect: {
-    //       permanent: false,
-    //       destination: '/store-closed',
-    //     },
-    //   };
-    // }
 
     return { props: { store: storeResult, shipping: shippingResult } };
   } catch (error) {
@@ -105,6 +91,7 @@ export default function Checkout(props: Props) {
           setShowModal={checkout.setShowInventoryModal}
         />
       </DemoCheckoutStyles>
+      <DemoBanner />
     </StoreLayout>
   );
 }

@@ -5,11 +5,11 @@ import { format } from 'date-fns';
 import { GetServerSideProps } from 'next';
 import { connectToDb, store as storeModel } from 'db';
 import { Store, StoreProduct } from '../../../../interfaces';
+import { getUrlParameter } from 'utils';
 import StoreLayout from '../../../../components/store/layouts/StoreLayout';
 import StoreItem from '../../../../components/store/home/StoreItem';
-import { getUrlParameter } from 'utils';
-// import { getStoreStatus } from 'utils/store';
 import StoreHomepageError from 'components/store/errors/StoreHomepageError';
+import DemoBanner from 'components/store/demo/banner';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -30,17 +30,6 @@ export const getServerSideProps: GetServerSideProps = async context => {
         },
       };
     }
-
-    // const isStoreActive = getStoreStatus(store.openDate, store.closeDate);
-
-    // if (isStoreActive === false) {
-    //   return {
-    //     redirect: {
-    //       permanent: false,
-    //       destination: '/store-closed',
-    //     },
-    //   };
-    // }
 
     return { props: { store } };
   } catch (error) {
@@ -115,6 +104,7 @@ export default function StoreDemoHomepage(props: Props) {
           </div>
         )}
       </StoreDemoStyles>
+      <DemoBanner />
     </StoreLayout>
   );
 }

@@ -25,6 +25,7 @@ import ProductDescription from 'components/store/product/ProductDescription';
 import ProductDetails from 'components/store/product/ProductDetails';
 import Sidebar from '../../../../components/store/product/Sidebar';
 import Lightbox from '../../../../components/store/product/Lightbox';
+import DemoBanner from 'components/store/demo/banner';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -45,17 +46,6 @@ export const getServerSideProps: GetServerSideProps = async context => {
         },
       };
     }
-
-    // const isStoreActive = getStoreStatus(store.openDate, store.closeDate);
-
-    // if (isStoreActive === false) {
-    //   return {
-    //     redirect: {
-    //       permanent: false,
-    //       destination: '/store-closed',
-    //     },
-    //   };
-    // }
 
     const product = store.products.find(p => p.id === context.query.productId);
 
@@ -230,6 +220,7 @@ export default function DemoProduct(props: Props) {
           clickedImage={productImages.clickedImage}
         />
       ) : null}
+      <DemoBanner />
     </>
   );
 }

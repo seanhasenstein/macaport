@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { connectToDb, store as storeModel } from 'db';
-// import { getStoreStatus } from 'utils/store';
 import { useCart } from '../../../../hooks/useCart';
 import useHasMounted from '../../../../hooks/useHasMounted';
 import { CartItem as CartItemInterface, Store } from '../../../../interfaces';
@@ -12,6 +11,7 @@ import { formatToMoney, getUrlParameter } from '../../../../utils';
 import StoreLayout from '../../../../components/store/layouts/StoreLayout';
 import CartItem from '../../../../components/store/cart/CartItem';
 import LinkButton from '../../../../components/store/common/LinkButton';
+import DemoBanner from 'components/store/demo/banner';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -32,17 +32,6 @@ export const getServerSideProps: GetServerSideProps = async context => {
         },
       };
     }
-
-    // const isStoreActive = getStoreStatus(store.openDate, store.closeDate);
-
-    // if (isStoreActive === false) {
-    //   return {
-    //     redirect: {
-    //       permanent: false,
-    //       destination: '/store-closed',
-    //     },
-    //   };
-    // }
 
     return { props: { store } };
   } catch (error) {
@@ -71,7 +60,7 @@ export default function DemoCart(props: Props) {
     hasMounted &&
     (!props.store.products || props.store.products.length < 1)
   ) {
-    router.push(`/store/${router.query.id}`);
+    router.push(`/store/${router.query.id}/demo`);
     return <div />;
   }
 
@@ -167,6 +156,7 @@ export default function DemoCart(props: Props) {
           ) : null}
         </div>
       </DemoCartStyles>
+      <DemoBanner />
     </StoreLayout>
   );
 }
