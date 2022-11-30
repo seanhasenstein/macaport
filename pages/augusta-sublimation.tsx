@@ -8,7 +8,7 @@ export default function AugustaSublimation() {
 
   if (hasMounted) {
     return (
-      <Layout title="Sublimation">
+      <Layout title="FreeStyle Sublimation">
         <SublimationChild />
       </Layout>
     );
@@ -631,43 +631,39 @@ function SublimationChild() {
 
   return (
     <SublimationStyles>
-      <div className="container">
-        <div className="Body-content">
-          <h1>FreeStyle Sublimation</h1>
-          <>
-            <div id="loaderAlign">
-              <div className="loader"></div>
-            </div>
-            <div
-              id="iframediv"
-              style={{ display: 'none', height: '2905px', minHeight: '600px' }}
-            >
-              <iframe
-                title="augusta-sublimation"
-                id="myIframe"
-                scrolling="no"
-                height="100%"
-                width="100%"
-                src="https://www.augustasportswear.com/custom-sublimation"
-              ></iframe>
-            </div>
-          </>
-        </div>
+      <div className="Body-content">
+        <h1>FreeStyle Sublimation</h1>
+        <>
+          <div id="loaderAlign">
+            <div className="loader"></div>
+          </div>
+          <div
+            id="iframediv"
+            style={{ display: 'none', height: '2905px', minHeight: '600px' }}
+          >
+            <iframe
+              title="augusta-sublimation"
+              id="myIframe"
+              scrolling="no"
+              height="100%"
+              width="100%"
+              src="https://www.augustasportswear.com/custom-sublimation"
+            ></iframe>
+          </div>
+        </>
       </div>
     </SublimationStyles>
   );
 }
 
 const SublimationStyles = styled.div`
-  .container {
-    margin: 0 auto;
-    padding: 4rem 1.5rem;
-    max-width: 80rem;
-    width: 100%;
-  }
+  margin: 0 auto;
+  max-width: 75rem;
+  width: 100%;
 
   .Body-content {
-    /* padding: 3rem 0 0; */
+    margin: 3rem auto;
+    width: calc(100% - 3rem);
     background-color: #fff;
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.2), 0 2px 4px -2px rgb(0 0 0 / 0.2);
   }
@@ -699,9 +695,7 @@ const SublimationStyles = styled.div`
   }
 
   iframe {
-    border: 2px solid #aaa;
     border: none;
-    /* border-radius: 0.25rem; */
   }
 
   /* Safari */
@@ -720,6 +714,12 @@ const SublimationStyles = styled.div`
     }
     100% {
       transform: rotate(360deg);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .Body-content {
+      margin: 1rem auto 3rem;
     }
   }
 `;
