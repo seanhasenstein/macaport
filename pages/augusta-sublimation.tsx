@@ -717,7 +717,7 @@ const SublimationStyles = styled.div`
     }
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 1024px) {
     .Body-content {
       margin: 1rem auto 3rem;
     }
