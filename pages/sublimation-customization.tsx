@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import useHasMounted from 'hooks/useHasMounted';
 import Layout from '../components/Layout';
 
-export default function AugustaSublimation() {
+export default function SublimationCustomization() {
   const hasMounted = useHasMounted();
 
   if (hasMounted) {
