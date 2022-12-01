@@ -1,15 +1,15 @@
 import React from 'react';
 import styled from 'styled-components';
 import useHasMounted from 'hooks/useHasMounted';
-import Layout from '../components/Layout';
+import Layout from 'components/Layout';
 
-export default function SublimationCustomization() {
+export default function HeadwareCustomization() {
   const hasMounted = useHasMounted();
 
   if (hasMounted) {
     return (
-      <Layout title="Sublimation Customization">
-        <SublimationChild />
+      <Layout title="Headware Customization">
+        <HeadwareChild />
       </Layout>
     );
   } else {
@@ -17,7 +17,7 @@ export default function SublimationCustomization() {
   }
 }
 
-function SublimationChild() {
+function HeadwareChild() {
   React.useEffect(() => {
     document.querySelector('#myIframe')?.addEventListener('load', () => {
       sendParentHeightToChild();
@@ -47,6 +47,134 @@ function SublimationChild() {
   };
 
   const categoryArray = [
+    {
+      name: 'custom-headwear',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'styles',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'running-hats',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'beanies-knits',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'camo-hats',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'on-field-hats',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'lifestyle-outdoor-hats',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'sideline-coaches-hats',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'trucker-hats',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'visors',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'boonie-hats',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'features',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'flexfit-hats',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'snapback-hats',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'structured-hats',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'unstructured-hats',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'search-display-view-tags',
+      tag: 'search-display-view-tags',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
+    {
+      name: 'search-display-view-term',
+      searchTerm: 'search-display-view-tags',
+      discount: defaultConfig.discount,
+      addlLeadTime: defaultConfig.addlLeadTime,
+      moq: defaultConfig.moq,
+      moqPrice: defaultConfig.moqPrice,
+    },
     {
       name: 'fanwear',
       discount: defaultConfig.discount,
@@ -173,137 +301,27 @@ function SublimationChild() {
       moq: defaultConfig.moq,
       moqPrice: defaultConfig.moqPrice,
     },
-    {
-      name: 'search-display-view-tags',
-      tag: 'search-display-view-tags',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'search-display-view-term',
-      searchTerm: 'search-display-view-tags',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'custom-headwear',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'styles',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'running-hats',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'beanies-knits',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'camo-hats',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'on-field-hats',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'lifestyle-outdoor-hats',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'sideline-coaches-hats',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'trucker-hats',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'visors',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'boonie-hats',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'features',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'flexfit-hats',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'snapback-hats',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'structured-hats',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
-    {
-      name: 'unstructured-hats',
-      discount: defaultConfig.discount,
-      addlLeadTime: defaultConfig.addlLeadTime,
-      moq: defaultConfig.moq,
-      moqPrice: defaultConfig.moqPrice,
-    },
   ];
 
   const categoryShareMapper: any = {
+    'custom headwear': 'custom-headwear',
+    styles: 'styles',
+    'active/lightweight': 'running-hats',
+    beanies: 'beanies-knits',
+    camo: 'camo-hats',
+    'on-field': 'on-field-hats',
+    outdoor: 'lifestyle-outdoor-hats',
+    sideline: 'sideline-coaches-hats',
+    'truckers / mesh back': 'trucker-hats',
+    visors: 'visors',
+    'wide brim / boonie': 'boonie-hats',
+    features: 'features',
+    flexfit: 'flexfit-hats',
+    snapback: 'snapback-hats',
+    structured: 'structured-hats',
+    unstructured: 'unstructured-hats',
+    'search-display-view-tags': 'search-display-view-tags',
+    'search-display-view-term': 'search-display-view-term',
     fanwear: 'fanwear',
     lacrosse: 'lacrosse',
     baseball: 'baseball',
@@ -323,24 +341,6 @@ function SublimationChild() {
     compression: 'compression',
     'semi-sublimated': 'semi-sublimated',
     'freestyle sublimation': 'default-page',
-    'search-display-view-tags': 'search-display-view-tags',
-    'search-display-view-term': 'search-display-view-term',
-    'custom headwear': 'custom-headwear',
-    styles: 'styles',
-    'active/lightweight': 'running-hats',
-    beanies: 'beanies-knits',
-    camo: 'camo-hats',
-    'on-field': 'on-field-hats',
-    outdoor: 'lifestyle-outdoor-hats',
-    sideline: 'sideline-coaches-hats',
-    'truckers / mesh back': 'trucker-hats',
-    visors: 'visors',
-    'wide brim / boonie': 'boonie-hats',
-    features: 'features',
-    flexfit: 'flexfit-hats',
-    snapback: 'snapback-hats',
-    structured: 'structured-hats',
-    unstructured: 'unstructured-hats',
   };
 
   window.onmessage = e => {
@@ -353,15 +353,12 @@ function SublimationChild() {
       const domain = e.data.domainUrl;
       domainUrl = domain.replace(/^https?:\/\//, '');
       setIframeSrc();
-      // const iframeSrc = getIframeSrc();
+      // const iframeSrc =  getIframeSrc();
     }
     if (data.indexOf('asgIframeHeight') > -1) {
-      const iframeDiv = document.getElementById('iframediv');
       const iframeHeight = e.data.split(':');
-
-      if (iframeDiv) {
-        iframeDiv.style.height = iframeHeight[1] + 'px';
-      }
+      (document.getElementById('iframediv') as HTMLIFrameElement).style.height =
+        iframeHeight[1] + 'px';
     }
     if (data.indexOf('reLoadIframe') > -1) {
       //document.getElementById("showSummary").style.display = "none";
@@ -393,7 +390,6 @@ function SublimationChild() {
       localStorage.setItem('cartObject', objList);
       localStorage.setItem('cartCategoryName', categoryName);
       localStorage.setItem('cartPath', path);
-      // TODO: window.location = '/cart';
       window.location.href = '/cart';
     }
   };
@@ -407,7 +403,7 @@ function SublimationChild() {
       document.body.clientHeight ||
       window.innerHeight;
     const calcHeight = windowHeight - elemTop;
-    if (child && child.postMessage) {
+    if (child?.postMessage) {
       child.postMessage('parentHeight:' + calcHeight, '*');
       child.postMessage('parentDomain:' + domainUrl, '*');
     }
@@ -415,7 +411,7 @@ function SublimationChild() {
   function sendDataToChild() {
     const child = (document.getElementById('myIframe') as HTMLIFrameElement)
       .contentWindow;
-    if (child && child.postMessage) {
+    if (child?.postMessage) {
       child.postMessage('loadNextPageIframe', '*');
     }
   }
@@ -464,7 +460,7 @@ function SublimationChild() {
     if (url) {
       (document.getElementById('myIframe') as HTMLIFrameElement).src = url;
     } else {
-      // const iframe = document.getElementById('myIframe') as HTMLIFrameElement;
+      // const iframe = document.getElementById('myIframe');
       // iframe.src = iframe.src;
     }
     setTimeout(function () {
@@ -538,34 +534,28 @@ function SublimationChild() {
       document.getElementById('myIframe') as HTMLIFrameElement
     ).src;
     const queryString = getCurrentUrlParams();
-    let replaceText = 'custom-sublimation';
+    let replaceText = 'freestyle-custom-headwear';
     if (categoryName) {
-      replaceText = 'custom-sublimation-' + categoryName;
-      if (isConfiguratorPage()) {
-        replaceText = 'Configurator';
-        categoryName = categoryShareMapper[categoryName];
-      } else if (isCapConfiguratorPage()) {
+      categoryName = categoryShareMapper[categoryName];
+      replaceText = 'freestyle-custom-headwear-' + categoryName;
+      if (isCapConfiguratorPage()) {
         replaceText = 'CapConfigurator';
-        categoryName = categoryShareMapper[categoryName];
+      } else if (isConfiguratorPage()) {
+        replaceText = 'Configurator';
       } else if (!isCategoryName) {
         replaceText = 'SearchDisplayView';
         categoryName = categoryShareMapper[categoryName];
-      } else if (
-        categoryName === '5-day-turbo' ||
-        categoryName === 'semi-sublimated'
-      ) {
-        replaceText = categoryName;
       } else if (!checkCategory(categoryName)) {
-        categoryName = 'default-page';
-        replaceText = 'custom-sublimation';
+        categoryName = 'custom-headwear';
+        replaceText = 'freestyle-custom-headwear';
       }
     } else {
-      categoryName = 'default-page';
-      if (isConfiguratorPage()) {
-        replaceText = 'Configurator';
-      } else if (isCapConfiguratorPage()) {
-        categoryName = 'custom-headwear';
+      categoryName = 'custom-headwear';
+      if (isCapConfiguratorPage()) {
         replaceText = 'CapConfigurator';
+      } else if (isConfiguratorPage()) {
+        categoryName = 'default-page';
+        replaceText = 'Configurator';
       }
     }
     const Index = categoryArray.findIndex(
@@ -605,6 +595,7 @@ function SublimationChild() {
 
     return href.toString();
   }
+
   function isScrolledIntoView() {
     const elem = document.getElementById('iframediv')!;
     const docViewTop =
@@ -628,11 +619,10 @@ function SublimationChild() {
       }
     };
   }
-
   return (
-    <SublimationStyles>
+    <HeadwareStyles>
       <div className="Body-content">
-        <h1>FreeStyle Sublimation</h1>
+        <h1>Headwear</h1>
         <>
           <div id="loaderAlign">
             <div className="loader"></div>
@@ -642,21 +632,21 @@ function SublimationChild() {
             style={{ display: 'none', height: '2905px', minHeight: '600px' }}
           >
             <iframe
-              title="augusta-sublimation"
+              title="headware"
               id="myIframe"
               scrolling="no"
               height="100%"
               width="100%"
-              src="https://www.augustasportswear.com/custom-sublimation"
+              src="https://www.augustasportswear.com/freestyle-custom-headwear"
             ></iframe>
           </div>
         </>
       </div>
-    </SublimationStyles>
+    </HeadwareStyles>
   );
 }
 
-const SublimationStyles = styled.div`
+const HeadwareStyles = styled.div`
   margin: 0 auto;
   max-width: 75rem;
   width: 100%;
@@ -677,7 +667,6 @@ const SublimationStyles = styled.div`
   .store-front {
     height: auto !important;
   }
-
   #loaderAlign {
     height: 100vh;
     display: flex;
