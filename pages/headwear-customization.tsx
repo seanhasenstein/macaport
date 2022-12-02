@@ -3,13 +3,13 @@ import styled from 'styled-components';
 import useHasMounted from 'hooks/useHasMounted';
 import Layout from 'components/Layout';
 
-export default function HeadwareCustomization() {
+export default function HeadwearCustomization() {
   const hasMounted = useHasMounted();
 
   if (hasMounted) {
     return (
-      <Layout title="Headware Customization">
-        <HeadwareChild />
+      <Layout title="Headwear Customization">
+        <HeadwearChild />
       </Layout>
     );
   } else {
@@ -17,7 +17,7 @@ export default function HeadwareCustomization() {
   }
 }
 
-function HeadwareChild() {
+function HeadwearChild() {
   React.useEffect(() => {
     document.querySelector('#myIframe')?.addEventListener('load', () => {
       sendParentHeightToChild();
@@ -620,7 +620,7 @@ function HeadwareChild() {
     };
   }
   return (
-    <HeadwareStyles>
+    <HeadwearStyles>
       <div className="Body-content">
         <h1>Headwear</h1>
         <>
@@ -632,7 +632,7 @@ function HeadwareChild() {
             style={{ display: 'none', height: '2905px', minHeight: '600px' }}
           >
             <iframe
-              title="headware"
+              title="headwear"
               id="myIframe"
               scrolling="no"
               height="100%"
@@ -642,11 +642,11 @@ function HeadwareChild() {
           </div>
         </>
       </div>
-    </HeadwareStyles>
+    </HeadwearStyles>
   );
 }
 
-const HeadwareStyles = styled.div`
+const HeadwearStyles = styled.div`
   margin: 0 auto;
   max-width: 75rem;
   width: 100%;
