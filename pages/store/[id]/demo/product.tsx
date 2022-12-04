@@ -110,6 +110,7 @@ export default function DemoProduct(props: Props) {
 
   const handleAddToOrder = useAddProductToOrder({
     addItem,
+    artworkId: props.product.artworkId || '',
     productName: props.product.name,
     primaryImage: productImages.primaryImage,
     size: productSize.size,

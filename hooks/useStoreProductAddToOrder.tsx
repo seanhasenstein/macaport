@@ -8,9 +8,10 @@ import {
 } from 'interfaces';
 import { getPersonalizationAddonsId } from 'utils/product';
 
-interface Params {
+interface UseStoreProductAddToOrder {
   addItem: (item: CartItem) => void;
   productName: string;
+  artworkId: string;
   primaryImage: string | undefined;
   size: ProductSize;
   color: ProductColor;
@@ -32,7 +33,9 @@ interface Params {
   >;
 }
 
-export default function useStoreProductAddToOrder(params: Params) {
+export default function useStoreProductAddToOrder(
+  params: UseStoreProductAddToOrder
+) {
   const handleAddToOrder = () => {
     if (params.size.label === 'DEFAULT') {
       params.setSizeValidationError('A size is required');
@@ -95,6 +98,7 @@ export default function useStoreProductAddToOrder(params: Params) {
       params.addItem({
         id,
         sku: sku,
+        artworkId: params.artworkId,
         quantity: 1,
         name: params.productName,
         image: params.primaryImage,
