@@ -87,7 +87,6 @@ export interface Personalization {
 export interface StoreProduct {
   id: string;
   inventoryProductId: string;
-  artworkId?: string;
   merchandiseCode: string;
   name: string;
   description?: string;
@@ -117,7 +116,6 @@ export interface PersonalizationAddon {
 export interface CartItem {
   id: string;
   sku: ProductSku;
-  artworkId: string;
   name: string;
   image?: string;
   price: number;

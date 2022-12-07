@@ -11,7 +11,6 @@ import { getPersonalizationAddonsId } from 'utils/product';
 interface UseStoreProductAddToOrder {
   addItem: (item: CartItem) => void;
   productName: string;
-  artworkId: string;
   primaryImage: string | undefined;
   size: ProductSize;
   color: ProductColor;
@@ -98,7 +97,6 @@ export default function useStoreProductAddToOrder(
       params.addItem({
         id,
         sku: sku,
-        artworkId: params.artworkId,
         quantity: 1,
         name: params.productName,
         image: params.primaryImage,
