@@ -161,6 +161,13 @@ export default function OrderConfirmation(props: Props) {
                     <p>{formatPhoneNumber(props.order.customer.phone)}</p>
                   </div>
 
+                  {props.order.note ? (
+                    <div className="section">
+                      <h3>Order Notes</h3>
+                      <p>{props.order.note}</p>
+                    </div>
+                  ) : null}
+
                   {props.order.shippingMethod === 'Direct' && (
                     <div className="section shipping-details">
                       <h3>Shipping Address</h3>
