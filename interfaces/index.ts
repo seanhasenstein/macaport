@@ -224,6 +224,7 @@ export interface CheckoutForm {
   shippingAddress: Address;
   shippingMethod: ShippingMethod;
   cardholderName: string;
+  note?: string;
 }
 
 export interface ContactFormValues {
