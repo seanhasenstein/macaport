@@ -168,6 +168,7 @@ export interface Order {
     status: 'None' | 'Partial' | 'Full';
     amount: number;
   };
+  note?: string;
   createdAt?: string;
   updatedAt?: string;
 }
