@@ -52,6 +52,7 @@ export function getInitialValues({
       ? ('Direct' as const)
       : ('None' as const),
     cardholderName: '',
+    note: '',
   };
 }
 

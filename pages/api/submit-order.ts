@@ -40,6 +40,7 @@ interface ExtendedRequest extends NextApiRequest {
     group: string;
     shippingMethod: ShippingMethod;
     shippingAddress: Address | PrimaryShippingAddress;
+    note?: string;
   };
 }
 
@@ -159,6 +160,7 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
         amount: 0,
       },
       stripeId: intent.id,
+      note: req.body.note?.trim() ?? '',
       createdAt: timestamp,
       updatedAt: timestamp,
     };

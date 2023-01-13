@@ -86,7 +86,7 @@ label {
   color: #6e788c;
 }
 
-input, select {
+input, textarea, select {
   appearance: none;
   background-color: #fff;
   border: 1px solid #d1d5db;
@@ -95,7 +95,7 @@ input, select {
   box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
 }
 
-input:not([type="checkbox"], [type="radio"]) {
+input:not([type="checkbox"], [type="radio"]), textarea {
   padding: 0.6875rem 0.75rem;
 
   &:focus {
@@ -147,6 +147,11 @@ input[type="radio"] {
 
 input[type="radio"]:checked {
   background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e");
+}
+
+textarea {
+  min-height: 7.5rem;
+  resize: vertical;
 }
 
 select {

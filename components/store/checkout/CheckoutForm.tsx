@@ -212,6 +212,16 @@ export default function CheckoutForm(props: Props) {
 
             <div className="section">
               <h3 className="section-title">
+                <span>Order Notes</span>
+              </h3>
+              <div className="form-item">
+                <label htmlFor="notes">Include any order notes here:</label>
+                <Field as="textarea" name="note" id="note" />
+              </div>
+            </div>
+
+            <div className="section">
+              <h3 className="section-title">
                 <span>Billing Details</span>
               </h3>
               <FieldItem name="cardholderName" label="Cardholder's Name" />
@@ -311,6 +321,11 @@ const CheckoutFormStyles = styled.div`
     text-transform: uppercase;
     letter-spacing: 0.0375em;
     color: #6b7280;
+  }
+
+  .form-item {
+    display: flex;
+    flex-direction: column;
   }
 
   .radio-shipping-group {

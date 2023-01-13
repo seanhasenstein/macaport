@@ -94,6 +94,7 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
             salesTax,
             total: cartTotal,
           },
+          note: data.note ?? '',
         }),
       });
 
