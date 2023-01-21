@@ -1,7 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
+
 import { StoreProduct } from '../../../interfaces';
+
 import { formatToMoney } from '../../../utils';
 
 type Props = {
@@ -47,6 +49,9 @@ export default function StoreItem(props: Props) {
 }
 
 const StoreItemStyles = styled.a`
+  flex-shrink: 0;
+  max-width: 22rem;
+  width: 100%;
   padding: 0 1rem 0.875rem 1rem;
   position: relative;
   background-color: #fff;

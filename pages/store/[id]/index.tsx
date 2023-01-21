@@ -1,13 +1,17 @@
 import React from 'react';
+import { GetServerSideProps } from 'next';
 import styled from 'styled-components';
 import { format } from 'date-fns';
-import { GetServerSideProps } from 'next';
+
 import { connectToDb, store as storeModel } from 'db';
+
 import { Store, StoreProduct } from '../../../interfaces';
-import StoreLayout from '../../../components/store/layouts/StoreLayout';
-import StoreItem from '../../../components/store/home/StoreItem';
+
 import { getUrlParameter } from 'utils';
 import { getStoreStatus } from 'utils/store';
+
+import StoreLayout from '../../../components/store/layouts/StoreLayout';
+import StoreItem from '../../../components/store/home/StoreItem';
 import StoreHomepageError from 'components/store/errors/StoreHomepageError';
 
 export const getServerSideProps: GetServerSideProps = async context => {
@@ -203,15 +207,14 @@ const StoreStyles = styled.div`
     max-width: 72rem;
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(296px, 1fr));
-    gap: 2.5rem 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(1px, 22rem));
+    gap: 1.5rem;
     justify-content: center;
   }
 
   @media (max-width: 1024px) {
     .items {
       padding: 0 1.5rem;
-      grid-template-columns: 1fr 1fr;
     }
   }
 
@@ -220,8 +223,6 @@ const StoreStyles = styled.div`
 
     .items {
       margin: 3.75rem 0 0;
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
     }
   }
 `;
