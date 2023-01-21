@@ -202,7 +202,7 @@ const StoreStyles = styled.div`
   }
 
   .items {
-    margin: 4rem auto 3rem;
+    margin: 3.5rem auto 3rem;
     padding: 0 1.5rem;
     max-width: 72rem;
     width: 100%;
