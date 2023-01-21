@@ -13,6 +13,9 @@ type Props = {
 };
 
 export default function StoreItem(props: Props) {
+  const totalColors = props.item.colors.length;
+  const colorsToShow = 5;
+
   return (
     <Link
       href={`/store/${props.storeId}/${
@@ -34,12 +37,21 @@ export default function StoreItem(props: Props) {
             <h4 className="price">
               {formatToMoney(props.item.sizes[0].price)}
             </h4>
-            <div className="colors">
-              {props.item.colors.map(color => (
-                <Color key={color.id} hex={color.hex} title={color.label}>
-                  <span className="sr-only">{color.label}</span>
-                </Color>
-              ))}
+            <div className="colors-row">
+              <div className="colors">
+                {props.item.colors.map((color, index) => {
+                  if (index < colorsToShow) {
+                    return (
+                      <Color key={color.id} hex={color.hex} title={color.label}>
+                        <span className="sr-only">{color.label}</span>
+                      </Color>
+                    );
+                  }
+                })}
+              </div>
+              {totalColors > colorsToShow ? (
+                <p className="more-colors">+{totalColors - colorsToShow}</p>
+              ) : null}
             </div>
           </div>
         </div>
@@ -125,9 +137,20 @@ const StoreItemStyles = styled.a`
     color: #36383e;
   }
 
+  .colors-row {
+    display: flex;
+    gap: 0 0.375rem;
+  }
+
   .colors {
     display: flex;
-    gap: 0.375rem;
+    gap: 0.28125rem;
+  }
+
+  .more-colors {
+    padding: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
   }
 `;
 
