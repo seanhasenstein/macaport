@@ -191,20 +191,19 @@ const StoreDemoStyles = styled.div`
   }
 
   .items {
-    margin: 4rem auto 3rem;
+    margin: 3.5rem auto 3rem;
     padding: 0 1.5rem;
     max-width: 72rem;
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(296px, 1fr));
-    gap: 2.5rem 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(1px, 22rem));
+    gap: 1.5rem;
     justify-content: center;
   }
 
   @media (max-width: 1024px) {
     .items {
       padding: 0 1.5rem;
-      grid-template-columns: 1fr 1fr;
     }
   }
 
@@ -213,8 +212,6 @@ const StoreDemoStyles = styled.div`
 
     .items {
       margin: 3.75rem 0 0;
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
     }
   }
 `;
