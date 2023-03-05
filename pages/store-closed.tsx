@@ -22,7 +22,7 @@ export default function StoreClosed() {
           </svg>
           <h3>Store Closed</h3>
           <p>
-            The store you're looking for has closed. Please contact us with any
+            The store you're looking for is closed. Please contact us with any
             questions at{' '}
             <a href="mailto:support@macaport.com">support@macaport.com</a>.
           </p>
@@ -36,10 +36,12 @@ export default function StoreClosed() {
 }
 
 const StoreClosedStyles = styled.div`
-  padding: 6rem 1.5rem;
+  padding: 4.5rem 1.5rem;
+  display: flex;
+  justify-content: center;
 
   .wrapper {
-    padding: 1.875rem 0 2.5rem;
+    padding: 1.875rem 1.5rem 2.5rem;
     max-width: 32rem;
     width: 100%;
     display: flex;
@@ -78,16 +80,7 @@ const StoreClosedStyles = styled.div`
 
     a {
       color: #4f46e5;
-
-      &:hover,
-      &:focus-visible {
-        text-decoration: underline;
-      }
-
-      &:focus {
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-      }
+      text-decoration: underline;
     }
   }
 
@@ -123,5 +116,9 @@ const StoreClosedStyles = styled.div`
       box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4f46e5 0px 0px 0px 4px,
         rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     }
+  }
+
+  @media (max-width: 500px) {
+    padding: 1.5rem;
   }
 `;
