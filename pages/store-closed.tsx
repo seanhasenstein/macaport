@@ -60,7 +60,7 @@ const StoreClosedStyles = styled.div`
     margin: 0 0 0.375rem;
     height: 1.625rem;
     width: 1.625rem;
-    color: #f43f5e;
+    color: #e31e42;
   }
 
   h3 {
@@ -91,20 +91,17 @@ const StoreClosedStyles = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #31363f;
+    background-color: #1f2937;
     color: #fff;
     font-size: 0.875rem;
     font-weight: 500;
     line-height: 1;
     letter-spacing: 0.011em;
-    border: 1px solid #181a1e;
     border-radius: 0.375rem;
-    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     cursor: pointer;
 
     &:hover {
-      background-color: #3a3f4a;
+      background-color: #111827;
     }
 
     &:focus {
