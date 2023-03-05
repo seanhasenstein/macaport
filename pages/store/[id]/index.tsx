@@ -127,7 +127,7 @@ const StoreStyles = styled.div<{ hasCloseDate: boolean }>`
   }
 
   .close-date {
-    margin: 2rem 0 0;
+    margin: 2.25rem 0 0;
     padding: 0 1.5rem;
     display: flex;
     justify-content: center;
