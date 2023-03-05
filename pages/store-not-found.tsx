@@ -37,10 +37,12 @@ export default function StoreNotFound() {
 }
 
 const StoreNotFoundStyles = styled.div`
-  padding: 6rem 1.5rem;
+  padding: 4.5rem 1.5rem;
+  display: flex;
+  justify-content: center;
 
   .wrapper {
-    padding: 1.875rem 0 2.5rem;
+    padding: 1.875rem 1.5rem 2.5rem;
     max-width: 36rem;
     width: 100%;
     display: flex;
@@ -59,7 +61,7 @@ const StoreNotFoundStyles = styled.div`
     margin: 0 0 0.375rem;
     height: 1.625rem;
     width: 1.625rem;
-    color: #f43f5e;
+    color: #e31e42;
   }
 
   h3 {
@@ -79,16 +81,7 @@ const StoreNotFoundStyles = styled.div`
 
     a {
       color: #4f46e5;
-
-      &:hover,
-      &:focus-visible {
-        text-decoration: underline;
-      }
-
-      &:focus {
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-      }
+      text-decoration: underline;
     }
   }
 
@@ -99,20 +92,17 @@ const StoreNotFoundStyles = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #31363f;
+    background-color: #1f2937;
     color: #fff;
     font-size: 0.875rem;
     font-weight: 500;
     line-height: 1;
     letter-spacing: 0.011em;
-    border: 1px solid #181a1e;
     border-radius: 0.375rem;
-    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     cursor: pointer;
 
     &:hover {
-      background-color: #3a3f4a;
+      background-color: #111827;
     }
 
     &:focus {
@@ -124,5 +114,9 @@ const StoreNotFoundStyles = styled.div`
       box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #4f46e5 0px 0px 0px 4px,
         rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     }
+  }
+
+  @media (max-width: 500px) {
+    padding: 1.5rem;
   }
 `;
