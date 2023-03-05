@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
 
-import { StoreProduct } from '../../../interfaces';
+import { ProductColor, StoreProduct } from '../../../interfaces';
 
 import { formatToMoney } from '../../../utils';
 
@@ -16,18 +16,20 @@ export default function StoreItem(props: Props) {
   const totalColors = props.item.colors.length;
   const colorsToShow = 5;
 
+  const [activeColor, setActiveColor] = React.useState(props.item.colors[0]);
+
   return (
     <Link
       href={`/store/${props.storeId}/${
         props.isDemo ? 'demo/' : ''
-      }product?productId=${props.item.id}&colorId=${props.item.colors[0].id}`}
+      }product?productId=${props.item.id}&colorId=${activeColor.id}`}
       passHref
     >
       <StoreItemStyles>
         <div className="img-wrapper">
           <img
-            src={props.item.colors[0].primaryImage}
-            alt={`${props.item.colors[0].label} ${props.item.name}`}
+            src={activeColor.primaryImage}
+            alt={`${activeColor.label} ${props.item.name}`}
           />
         </div>
         <div className="details">
@@ -42,9 +44,11 @@ export default function StoreItem(props: Props) {
                 {props.item.colors.map((color, index) => {
                   if (index < colorsToShow) {
                     return (
-                      <Color key={color.id} hex={color.hex} title={color.label}>
-                        <span className="sr-only">{color.label}</span>
-                      </Color>
+                      <Color
+                        key={color.id}
+                        color={color}
+                        setActiveColor={setActiveColor}
+                      />
                     );
                   }
                 })}
@@ -154,7 +158,24 @@ const StoreItemStyles = styled.a`
   }
 `;
 
-const Color = styled.div<{ hex: string }>`
+type ColorProps = {
+  color: ProductColor;
+  setActiveColor: (c: ProductColor) => void;
+};
+
+function Color(props: ColorProps) {
+  return (
+    <ColorStyles
+      hex={props.color.hex}
+      title={props.color.label}
+      onMouseEnter={() => props.setActiveColor(props.color)}
+    >
+      <span className="sr-only">{props.color.label}</span>
+    </ColorStyles>
+  );
+}
+
+const ColorStyles = styled.div<{ hex: string }>`
   height: 1.125rem;
   width: 1.125rem;
   background-color: ${props => props.hex};
