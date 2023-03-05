@@ -63,25 +63,25 @@ export default function StoreHomepage(props: Props) {
     return <StoreHomepageError />;
   }
 
+  const hasCloseDate = !!props.store.closeDate;
+
   return (
     <StoreLayout title={`${props.store.name}`}>
-      <StoreStyles>
-        <div className="store-header">
-          {props.store.closeDate && (
-            <div className="close-date">
-              <span>
-                This store will close on{' '}
-                {format(
-                  new Date(props.store.closeDate),
-                  "eee. LLL. do, yyyy 'at' h:mmaaa"
-                )}
-              </span>
-            </div>
-          )}
-          <h2 className="store-name">
-            <span>{props.store.name}</span>
-          </h2>
-        </div>
+      <StoreStyles hasCloseDate={hasCloseDate}>
+        {props.store.closeDate && (
+          <div className="close-date">
+            <span>
+              This store will close on{' '}
+              {format(
+                new Date(props.store.closeDate),
+                "LLL do, yyyy 'at' h:mmaaa"
+              )}
+            </span>
+          </div>
+        )}
+        <h2 className="store-name">
+          <span>{props.store.name}</span>
+        </h2>
         {!props.store.products || props.store.products.length < 1 ? (
           <div className="no-products">
             <div className="wrapper">
@@ -120,36 +120,35 @@ export default function StoreHomepage(props: Props) {
   );
 }
 
-const StoreStyles = styled.div`
-  position: relative;
-  margin: 4rem 0 0;
-
+const StoreStyles = styled.div<{ hasCloseDate: boolean }>`
   .store-name,
   p {
     text-align: center;
   }
 
   .close-date {
+    margin: 3rem 0 0;
     padding: 0 1.5rem;
     display: flex;
     justify-content: center;
+    width: 100%;
 
     span {
-      padding: 0.5rem 1.25rem;
+      padding: 0.6875rem 1.625rem;
       font-size: 0.9375rem;
       font-weight: 500;
-      color: #7f1d1d;
+      color: #590b19;
       text-align: center;
       line-height: 1.5;
-      background-color: #fee2e2;
-      border-radius: 0.1875rem;
-      border: 1px solid #fecaca;
+      background-color: #fbdee3;
+      border: 2px solid #f9cdd5;
+      border-radius: 0.5rem;
       box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     }
   }
 
   .store-name {
-    margin: 3.25rem auto 0;
+    margin: ${props => (props.hasCloseDate ? '2.25rem' : '4.25rem')} auto 0;
     padding: 0 1.5rem;
     font-size: 1.625rem;
     color: #111827;
@@ -202,7 +201,7 @@ const StoreStyles = styled.div`
   }
 
   .items {
-    margin: 3.5rem auto 3rem;
+    margin: 4rem auto 3rem;
     padding: 0 1.5rem;
     max-width: 72rem;
     width: 100%;
@@ -218,11 +217,16 @@ const StoreStyles = styled.div`
     }
   }
 
-  @media (max-width: 640px) {
-    margin: 3rem 0 0;
+  @media (max-width: 767px) {
+    .close-date {
+      margin-top: 1.5rem;
+    }
+    .store-name {
+      margin: ${props => (props.hasCloseDate ? '2.25rem' : '3rem')} auto 0;
+    }
 
     .items {
-      margin: 3.75rem 0 0;
+      margin-top: 2.875rem;
     }
   }
 `;
