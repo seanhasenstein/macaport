@@ -127,7 +127,7 @@ const StoreStyles = styled.div<{ hasCloseDate: boolean }>`
   }
 
   .close-date {
-    margin: 2.25rem 0 0;
+    margin: 3rem 0 0;
     padding: 0 1.5rem;
     display: flex;
     justify-content: center;
@@ -148,7 +148,7 @@ const StoreStyles = styled.div<{ hasCloseDate: boolean }>`
   }
 
   .store-name {
-    margin: ${props => (props.hasCloseDate ? '2rem' : '4.25rem')} auto 0;
+    margin: ${props => (props.hasCloseDate ? '2.25rem' : '4.25rem')} auto 0;
     padding: 0 1.5rem;
     font-size: 1.625rem;
     color: #111827;
@@ -222,7 +222,7 @@ const StoreStyles = styled.div<{ hasCloseDate: boolean }>`
       margin-top: 1.5rem;
     }
     .store-name {
-      margin: ${props => (props.hasCloseDate ? '2rem' : '3rem')} auto 0;
+      margin: ${props => (props.hasCloseDate ? '2.25rem' : '3rem')} auto 0;
     }
 
     .items {
