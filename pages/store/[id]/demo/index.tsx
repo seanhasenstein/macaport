@@ -1,7 +1,6 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
-import { format } from 'date-fns';
 import { GetServerSideProps } from 'next';
 import { connectToDb, store as storeModel } from 'db';
 import { Store, StoreProduct } from '../../../../interfaces';
@@ -55,17 +54,6 @@ export default function StoreDemoHomepage(props: Props) {
     <StoreLayout title={`${props.store.name}`}>
       <StoreDemoStyles>
         <div className="store-header">
-          {props.store.closeDate && (
-            <div className="close-date">
-              <span>
-                This store will close on{' '}
-                {format(
-                  new Date(props.store.closeDate),
-                  "eee. LLL. do, yyyy 'at' h:mmaaa"
-                )}
-              </span>
-            </div>
-          )}
           <h2 className="store-name">
             <span>{props.store.name}</span>
           </h2>
@@ -118,27 +106,8 @@ const StoreDemoStyles = styled.div`
     text-align: center;
   }
 
-  .close-date {
-    padding: 0 1.5rem;
-    display: flex;
-    justify-content: center;
-
-    span {
-      padding: 0.5rem 1.25rem;
-      font-size: 0.9375rem;
-      font-weight: 500;
-      color: #7f1d1d;
-      text-align: center;
-      line-height: 1.5;
-      background-color: #fee2e2;
-      border-radius: 0.1875rem;
-      border: 1px solid #fecaca;
-      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    }
-  }
-
   .store-name {
-    margin: 3.25rem auto 0;
+    margin: 4.75rem auto 0;
     padding: 0 1.5rem;
     font-size: 1.625rem;
     color: #111827;
