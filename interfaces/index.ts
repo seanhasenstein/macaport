@@ -199,6 +199,7 @@ export interface Store {
     text: string;
     createdAt: string;
   };
+  showOnStoresPage: boolean;
   createdAt: string;
   updatedAt: string;
 }
