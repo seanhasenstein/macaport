@@ -12,7 +12,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
   const stores = await store.getStoresForStoresPage(db);
   const activeStores = stores?.filter(s => {
     const isActive = getStoreStatus(s.openDate, s.closeDate);
-    return isActive;
+    return isActive && s.showOnStoresPage;
   });
 
   const res = activeStores || null;
