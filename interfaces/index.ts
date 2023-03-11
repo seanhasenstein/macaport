@@ -199,6 +199,7 @@ export interface Store {
     text: string;
     createdAt: string;
   };
+  showOnStoresPage: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -210,6 +211,7 @@ export interface StoreForStoresPage {
   closeDate: string;
   permanentlyOpen: boolean;
   featuredImg: string;
+  showOnStoresPage: boolean;
 }
 
 export interface CheckoutForm {
