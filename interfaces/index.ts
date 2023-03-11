@@ -211,6 +211,7 @@ export interface StoreForStoresPage {
   closeDate: string;
   permanentlyOpen: boolean;
   featuredImg: string;
+  showOnStoresPage: boolean;
 }
 
 export interface CheckoutForm {
