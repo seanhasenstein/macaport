@@ -105,7 +105,14 @@ export async function getStoresForStoresPage(db: Db) {
         },
       },
     ])
-    .project({ _id: 1, name: 1, openDate: 1, closeDate: 1, permanentlyOpen: 1 })
+    .project({
+      _id: 1,
+      name: 1,
+      openDate: 1,
+      closeDate: 1,
+      permanentlyOpen: 1,
+      showOnStoresPage: 1,
+    })
     .toArray();
   return await result;
 }
