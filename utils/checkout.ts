@@ -23,12 +23,14 @@ interface GetInitialValues {
   requireGroupSelection: boolean;
   hasPrimaryShipping: boolean;
   allowDirectShipping: boolean;
+  allowStorePickup: boolean;
 }
 
 export function getInitialValues({
   requireGroupSelection,
   hasPrimaryShipping,
   allowDirectShipping,
+  allowStorePickup,
 }: GetInitialValues) {
   return {
     customer: {
@@ -48,9 +50,11 @@ export function getInitialValues({
     group: '',
     shippingMethod: hasPrimaryShipping
       ? ('Primary' as const)
+      : allowStorePickup
+      ? ('Store Pickup' as const)
       : allowDirectShipping
       ? ('Direct' as const)
-      : ('None' as const),
+      : ('Primary' as const), // todo: come back to this when adding in-store and custom shipping
     cardholderName: '',
     note: '',
   };
