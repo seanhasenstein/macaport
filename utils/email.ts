@@ -441,7 +441,7 @@ function generateReceiptHtml(order: Order) {
                               class="item-title"
                               style="color: #1F2937; font-weight: 500"
                             >
-                              Order pickup
+                            Order Pickup
                             </td>
                           </tr>
                         </table>
@@ -453,13 +453,13 @@ function generateReceiptHtml(order: Order) {
                           role="presentation"
                         >
                           <tr>
-                            <td style="color: #6B7280; margin: 16px 0 0 0">
-                              You selected to pick up your order at our store. We'll let you know when your order is ready. Our address is:
+                            <td style="color: #6B7280">
+                              <div style="margin: 16px 0 0 0">You selected to pick up your order at our store. We'll let you know when your order is ready. Our address is:</div>
                             </td>
                           </tr>
                           <tr>
                             <td style="color: #6B7280; margin: 16px 0 0 0">
-                              1817 N Shawano St.
+                              <div style="margin: 16px 0 0 0">1817 N Shawano St.</div>
                             </td>
                           </tr>
                           <tr>
@@ -538,9 +538,9 @@ function generateReceiptHtml(order: Order) {
                         <tr>
                           <td
                             class="item-title"
-                            style="margin: 16px 0 0 0; color: #1F2937; font-weight: 500"
+                            style="color: #1F2937; font-weight: 500"
                           >
-                            Order Items
+                            <div style="margin: 16px 0 0 0">Order Items</div>
                           </td>
                         </tr>
                       </table>
