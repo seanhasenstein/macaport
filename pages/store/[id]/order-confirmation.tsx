@@ -185,6 +185,22 @@ export default function OrderConfirmation(props: Props) {
                       </p>
                     </div>
                   )}
+
+                  {props.order.shippingMethod === 'Store Pickup' && (
+                    <div className="section shipping-details">
+                      <h3>Order Pickup</h3>
+                      <p>
+                        You selected to pick up your order at our store. We'll
+                        let you know when your order is ready. Our address is:
+                      </p>
+                      <p className="store-address">
+                        1817 N Shawano St.
+                        <br />
+                        New London, WI 54961
+                      </p>
+                    </div>
+                  )}
+
                   {props.order.shippingMethod === 'Primary' && (
                     <div className="section shipping-details">
                       <h3>Order Pickup</h3>
@@ -387,7 +403,7 @@ const OrderConfirmationStyles = styled.div`
   .order-info,
   .shipping-details {
     h3 {
-      margin: 0 0 0.625rem;
+      margin: 0 0 1rem;
     }
 
     p {
@@ -398,6 +414,10 @@ const OrderConfirmationStyles = styled.div`
 
       &:last-of-type {
         margin: 0;
+      }
+
+      &.store-address {
+        margin: 1.25rem 0 0;
       }
     }
   }
@@ -589,6 +609,10 @@ const OrderConfirmationStyles = styled.div`
     .order-items {
       max-width: unset;
     }
+
+    .section {
+      margin: 0 0 3.5rem;
+    }
   }
 
   @media (max-width: 500px) {
@@ -596,32 +620,15 @@ const OrderConfirmationStyles = styled.div`
       gap: 1.5rem;
     }
 
-    .section {
-      margin: 0 0 2rem;
-
-      &:first-of-type {
-        margin: 0 0 3.5rem;
-      }
-    }
-
     .order-details {
       .detail-item {
-        margin: 0 0 2rem;
+        margin: 0 0 2.25rem;
 
         span {
           margin: 0 0 0.5rem;
           display: block;
           width: 100%;
         }
-      }
-    }
-
-    .order-info,
-    .shipping-details {
-      h3 {
-        margin: 0 0 0.5rem;
-        font-size: 1rem;
-        font-weight: 600;
       }
     }
 

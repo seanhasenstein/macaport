@@ -423,6 +423,57 @@ function generateReceiptHtml(order: Order) {
                         : ''
                     }
 
+                    <!-- Shipping Address (if shipping method is store pickup) -->
+                    ${
+                      order.shippingMethod === 'Store Pickup'
+                        ? `
+                    <tr>
+                      <td style="padding: 24px 0 0; font-size: 15px; line-height: 1.5">
+                        <table
+                          class="mobile-full-width"
+                          border="0"
+                          cellpadding="0"
+                          cellspacing="0"
+                          role="presentation"
+                        >
+                          <tr>
+                            <td
+                              class="item-title"
+                              style="color: #1F2937; font-weight: 500"
+                            >
+                              Shipping Address
+                            </td>
+                          </tr>
+                        </table>
+                        <table
+                          class="mobile-full-width"
+                          border="0"
+                          cellpadding="0"
+                          cellspacing="0"
+                          role="presentation"
+                        >
+                          <tr>
+                            <td style="color: #6B7280">
+                              You selected to pick up your order at our store. We'll let you know when your order is ready. Our address is:
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="color: #6B7280">
+                              1817 N Shawano St.
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="color: #6B7280">
+                              New London, WI 54961
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    `
+                        : ''
+                    }
+
                     <!-- Shipping Address (if shipping method is direct) -->
                     ${
                       order.shippingMethod === 'Direct'
