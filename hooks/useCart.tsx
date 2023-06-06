@@ -122,7 +122,7 @@ function reducer(state: CartProviderState, action: Actions) {
 const defaultShippingData: ShippingPayload = {
   price: 0,
   freeMinimum: 0,
-  shippingMethod: 'None',
+  shippingMethod: 'Primary', // todo: figure out what to do when adding in-store and custom shipping methods
 };
 
 const generateCartState = (

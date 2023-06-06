@@ -17,6 +17,7 @@ type Props = {
   storeId: string;
   storeName: string;
   allowDirectShipping: boolean;
+  allowStorePickup: boolean;
   hasPrimaryShipping: boolean;
   primaryShippingAddress: {
     name: string;
@@ -46,6 +47,7 @@ export default function CheckoutForm(props: Props) {
       requireGroupSelection: props.requireGroupSelection,
       hasPrimaryShipping: props.hasPrimaryShipping,
       allowDirectShipping: props.allowDirectShipping,
+      allowStorePickup: props.allowStorePickup,
     })
   );
 
@@ -132,6 +134,44 @@ export default function CheckoutForm(props: Props) {
                         </label>
                       </div>
                     )}
+
+                    {props.allowStorePickup && (
+                      <div
+                        className={`radio-shipping-item ${
+                          values.shippingMethod === 'Store Pickup'
+                            ? 'checked'
+                            : ''
+                        }`}
+                      >
+                        <label htmlFor="storePickup">
+                          <Field
+                            type="radio"
+                            name="shippingMethod"
+                            id="storePickup"
+                            value="Store Pickup"
+                            onChange={() => {
+                              const value = 'Store Pickup' as const;
+                              setFieldValue('shippingMethod', value);
+                              cart.updateShipping({
+                                price: props.shipping.price,
+                                freeMinimum: props.shipping.freeMinimum,
+                                shippingMethod: value,
+                              });
+                            }}
+                          />
+                          <div className="shipping-label">
+                            Pick up at Macaport{' '}
+                            <span>
+                              1817 N Shawano St.
+                              <br />
+                              New London, WI 54961
+                            </span>
+                          </div>
+                          <div className="shipping-price">Free</div>
+                        </label>
+                      </div>
+                    )}
+
                     {props.allowDirectShipping && (
                       <div
                         className={`radio-shipping-item ${
@@ -355,8 +395,11 @@ const CheckoutFormStyles = styled.div`
       border-top-right-radius: 0.375rem;
     }
 
-    &:last-of-type {
+    &:not(:first-of-type) {
       margin-top: -1px;
+    }
+
+    &:last-of-type {
       border-bottom-left-radius: 0.375rem;
       border-bottom-right-radius: 0.375rem;
     }
@@ -377,6 +420,12 @@ const CheckoutFormStyles = styled.div`
     .shipping-label {
       padding: 0 1.5rem 0 0;
       line-height: 1.5;
+
+      span {
+        margin: 0.25rem 0 0;
+        display: block;
+        font-size: 0.75rem;
+      }
     }
 
     .shipping-price {

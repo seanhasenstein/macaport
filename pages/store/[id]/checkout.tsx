@@ -77,6 +77,7 @@ export default function Checkout(props: Props) {
             storeId={props.store._id}
             storeName={props.store.name}
             allowDirectShipping={props.store.allowDirectShipping}
+            allowStorePickup={props.store.allowStorePickup}
             hasPrimaryShipping={props.store.hasPrimaryShippingLocation}
             primaryShippingAddress={props.store.primaryShippingLocation}
             requireGroupSelection={props.store.requireGroupSelection}
