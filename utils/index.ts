@@ -20,7 +20,7 @@ export function calculateShipping(
 ) {
   if (
     shippingMethod === 'Primary' ||
-    shippingMethod === 'None' ||
+    shippingMethod === 'Store Pickup' ||
     cartSubtotal >= freeMinimum
   ) {
     return 0;

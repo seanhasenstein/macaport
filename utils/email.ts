@@ -423,6 +423,57 @@ function generateReceiptHtml(order: Order) {
                         : ''
                     }
 
+                    <!-- Shipping Address (if shipping method is store pickup) -->
+                    ${
+                      order.shippingMethod === 'Store Pickup'
+                        ? `
+                    <tr>
+                      <td style="padding: 24px 0 0; font-size: 15px; line-height: 1.5">
+                        <table
+                          class="mobile-full-width"
+                          border="0"
+                          cellpadding="0"
+                          cellspacing="0"
+                          role="presentation"
+                        >
+                          <tr>
+                            <td
+                              class="item-title"
+                              style="color: #1F2937; font-weight: 500"
+                            >
+                            Order Pickup
+                            </td>
+                          </tr>
+                        </table>
+                        <table
+                          class="mobile-full-width"
+                          border="0"
+                          cellpadding="0"
+                          cellspacing="0"
+                          role="presentation"
+                        >
+                          <tr>
+                            <td style="color: #6B7280">
+                              <div style="margin: 10px 0 0 0">You selected to pick up your order at our store. We'll let you know when your order is ready. Our address is:</div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="color: #6B7280; margin: 16px 0 0 0">
+                              <div style="margin: 16px 0 0 0">1817 N Shawano St.</div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="color: #6B7280">
+                              New London, WI 54961
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    `
+                        : ''
+                    }
+
                     <!-- Shipping Address (if shipping method is direct) -->
                     ${
                       order.shippingMethod === 'Direct'
@@ -489,7 +540,7 @@ function generateReceiptHtml(order: Order) {
                             class="item-title"
                             style="color: #1F2937; font-weight: 500"
                           >
-                            Order Items
+                          Order Items
                           </td>
                         </tr>
                       </table>
@@ -502,13 +553,13 @@ function generateReceiptHtml(order: Order) {
                       >
                         <tr>
                           <td style="color: #6B7280">
-                          For all order details and order items please <a href="${
+                          <div style="margin: 10px 0 0 0">For all order details and order items please <a href="${
                             process.env.API_HOST
                           }/store/${
     order.store.id
   }/order-confirmation?orderId=${
     order.orderId
-  }" style="color: #4338CA; text-decoration: underline">click here</a>.
+  }" style="color: #4338CA; text-decoration: underline">click here</a>.</div>
                           </td>
                         </tr>
                       </table>

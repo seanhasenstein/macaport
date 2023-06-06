@@ -130,7 +130,7 @@ export interface OrderItem extends Omit<CartItem, 'sku'> {
   merchandiseCode: string;
 }
 
-export type ShippingMethod = 'Primary' | 'Direct' | 'None';
+export type ShippingMethod = 'Primary' | 'Direct' | 'Store Pickup';
 
 export interface Order {
   orderId: string;
@@ -183,6 +183,7 @@ export interface Store {
   hasPrimaryShippingLocation: boolean;
   primaryShippingLocation: PrimaryShippingAddress;
   allowDirectShipping: boolean;
+  allowStorePickup: boolean;
   contact?: {
     firstName: string;
     lastName: string;
