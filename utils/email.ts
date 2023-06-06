@@ -454,7 +454,7 @@ function generateReceiptHtml(order: Order) {
                         >
                           <tr>
                             <td style="color: #6B7280">
-                              <div style="margin: 16px 0 0 0">You selected to pick up your order at our store. We'll let you know when your order is ready. Our address is:</div>
+                              <div style="margin: 10px 0 0 0">You selected to pick up your order at our store. We'll let you know when your order is ready. Our address is:</div>
                             </td>
                           </tr>
                           <tr>
@@ -540,7 +540,7 @@ function generateReceiptHtml(order: Order) {
                             class="item-title"
                             style="color: #1F2937; font-weight: 500"
                           >
-                            <div style="margin: 16px 0 0 0">Order Items</div>
+                          Order Items
                           </td>
                         </tr>
                       </table>
@@ -553,13 +553,13 @@ function generateReceiptHtml(order: Order) {
                       >
                         <tr>
                           <td style="color: #6B7280">
-                          For all order details and order items please <a href="${
+                          <div style="margin: 10px 0 0 0">For all order details and order items please <a href="${
                             process.env.API_HOST
                           }/store/${
     order.store.id
   }/order-confirmation?orderId=${
     order.orderId
-  }" style="color: #4338CA; text-decoration: underline">click here</a>.
+  }" style="color: #4338CA; text-decoration: underline">click here</a>.</div>
                           </td>
                         </tr>
                       </table>
