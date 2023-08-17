@@ -15,9 +15,31 @@ export const getServerSideProps: GetServerSideProps = async () => {
     return isActive && s.showOnStoresPage;
   });
 
-  const res = activeStores || null;
+  const storesSortedByCloseDate = activeStores.sort((a, b) => {
+    // when both stores are permanently open, sort by name
+    if (!a.closeDate && !b.closeDate) {
+      if (a.name < b.name) return -1;
+      if (a.name > b.name) return 1;
+      return 0;
+    }
+    // when one store is permanently open, sort it last
+    if (!a.closeDate) return 1;
+    if (!b.closeDate) return -1;
 
-  return { props: { stores: res } };
+    const aDate = new Date(a.closeDate);
+    const bDate = new Date(b.closeDate);
+
+    // when store a closes before store b, sort it first
+    if (aDate < bDate) return -1;
+    // when store a closes after store b, sort it last
+    if (aDate > bDate) return 1;
+    // when both stores close on the same date, sort by name
+    if (a.name < b.name) return -1;
+    if (a.name > b.name) return 1;
+    return 0;
+  });
+
+  return { props: { stores: storesSortedByCloseDate } };
 };
 
 type Props = {
