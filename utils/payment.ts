@@ -176,7 +176,12 @@ export function verifyCartItems(
         itemTotal: conditionalItemPrice * currentItem.quantity!,
         status: {
           current: 'Unfulfilled',
-          meta: { user: 'system', updatedAt: new Date().toISOString() },
+          meta: {
+            Unfulfilled: {
+              user: 'system',
+              updatedAt: new Date().toISOString(),
+            },
+          },
         },
       };
 

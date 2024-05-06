@@ -130,7 +130,7 @@ export interface OrderItem extends Omit<CartItem, 'sku'> {
   merchandiseCode: string;
   status: {
     current: 'Unfulfilled';
-    meta: { user: 'system'; updatedAt: string };
+    meta: { Unfulfilled: { user: 'system'; updatedAt: string } };
   };
 }
 
