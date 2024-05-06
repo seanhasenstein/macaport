@@ -30,6 +30,7 @@ interface UseStoreProductAddToOrder {
   setSizeValidationError: React.Dispatch<
     React.SetStateAction<string | undefined>
   >;
+  eligibleForFreeShirt: boolean;
 }
 
 export default function useStoreProductAddToOrder(
@@ -92,7 +93,12 @@ export default function useStoreProductAddToOrder(
     );
 
     if (sku) {
-      const id = `${sku.id}${getPersonalizationAddonsId(formattedAddonItems)}`;
+      const id = `${sku.id}${getPersonalizationAddonsId(formattedAddonItems)}${
+        params.eligibleForFreeShirt ? '-ta2024-free' : ''
+      }`;
+
+      // Temp for teacher appreciation discount
+      const skuPrice = params.eligibleForFreeShirt ? 0 : sku.size.price;
 
       params.addItem({
         id,
@@ -100,7 +106,7 @@ export default function useStoreProductAddToOrder(
         quantity: 1,
         name: params.productName,
         image: params.primaryImage,
-        price: sku.size.price + params.personalization.total,
+        price: skuPrice + params.personalization.total,
         personalizationAddons: formattedAddonItems,
         personalizationTotal: params.personalization.total,
       });

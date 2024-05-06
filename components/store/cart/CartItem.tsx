@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
+import { CheckCircleIcon } from '@heroicons/react/20/solid';
 import {
   CartItem as CartItemInterface,
   ProductSku,
@@ -16,6 +17,10 @@ type Props = {
   skus: ProductSku[];
   sizes: ProductSize[];
   isDemo: boolean;
+  isTeacherAppreciationStore?: boolean;
+  teacherAppreciationEmail?: string;
+  cartHasFreeItem?: boolean;
+  eligibleForTeacherAppreciation?: boolean;
 };
 
 export default function CartItem(props: Props) {
@@ -27,6 +32,12 @@ export default function CartItem(props: Props) {
     updateItemQuantity,
     updateItemSize,
   });
+
+  const renderTeacherAppreciation =
+    props.eligibleForTeacherAppreciation &&
+    props.teacherAppreciationEmail &&
+    props.cartHasFreeItem &&
+    props.item.itemTotal === 0;
 
   return (
     <CartItemStyles personalized={props.item.personalizationAddons.length > 0}>
@@ -122,6 +133,9 @@ export default function CartItem(props: Props) {
               id="quantity"
               value={cartItem.quantity}
               onChange={cartItem.handleQuantityChange}
+              disabled={
+                props.isTeacherAppreciationStore && props.item.itemTotal === 0
+              }
             >
               {[...Array(11)].map((_v, i) => {
                 if (i === 0) return;
@@ -156,6 +170,12 @@ export default function CartItem(props: Props) {
             <span className="sr-only">Remove from cart</span>
           </button>
         </div>
+        {renderTeacherAppreciation && (
+          <div className="teacher-appreciation">
+            <CheckCircleIcon className="check-circle-icon" />
+            Free Staff Appreciation Item
+          </div>
+        )}
       </div>
     </CartItemStyles>
   );
@@ -173,9 +193,27 @@ const CartItemStyles = styled.div<{ personalized: boolean }>`
     display: grid;
     grid-template-areas:
       'image details total'
-      'image inputs button';
+      'image inputs button'
+      'space teacherAppreciation teacherAppreciation';
     grid-template-columns: 8rem 1fr 10rem;
     gap: 0 1.5rem;
+  }
+
+  .teacher-appreciation {
+    margin: 1.25rem 0 0;
+    grid-area: teacherAppreciation;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    color: #1f2937;
+    font-weight: 500;
+
+    .check-circle-icon {
+      margin-right: 0.375rem;
+      height: 1.0625rem;
+      width: 1.0625rem;
+      color: #047857;
+    }
   }
 
   .personalized-label {
@@ -292,6 +330,10 @@ const CartItemStyles = styled.div<{ personalized: boolean }>`
     label {
       font-size: 0.8125rem;
     }
+
+    select:disabled {
+      cursor: default;
+    }
   }
 
   .total {
@@ -348,9 +390,14 @@ const CartItemStyles = styled.div<{ personalized: boolean }>`
       grid-template-areas:
         'image details total'
         'image inputs inputs'
+        'teacherAppreciation teacherAppreciation teacherAppreciation'
         'button button button';
       grid-template-columns: 5rem 1fr 3rem;
       gap: 0 1rem;
+    }
+
+    .teacher-appreciation {
+      justify-content: center;
     }
 
     .item-image {

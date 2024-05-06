@@ -2,9 +2,10 @@ import React from 'react';
 import { GetServerSideProps } from 'next';
 import styled from 'styled-components';
 import { connectToDb, store as storeModel } from 'db';
+
 import { defaultSize, getStoreStatus } from 'utils/store';
-import { Store, StoreProduct } from '../../../interfaces';
 import { getUrlParameter } from '../../../utils';
+
 import { useCart } from '../../../hooks/useCart';
 import useHasMounted from '../../../hooks/useHasMounted';
 import useProductColor from 'hooks/useStoreProductColor';
@@ -12,6 +13,8 @@ import useProductImages from 'hooks/useStoreProductImages';
 import useProductSize from 'hooks/useStoreProductSize';
 import useStoreProductPersonalization from '../../../hooks/useStoreProductPersonalization';
 import useAddProductToOrder from 'hooks/useStoreProductAddToOrder';
+import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
+
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import ProductPersonalization from '../../../components/store/product/personalization';
 import ProductPageError from 'components/store/errors/ProductPageError';
@@ -25,6 +28,8 @@ import ProductDescription from 'components/store/product/ProductDescription';
 import ProductDetails from 'components/store/product/ProductDetails';
 import Sidebar from '../../../components/store/product/Sidebar';
 import Lightbox from '../../../components/store/product/Lightbox';
+
+import { Store, StoreProduct } from '../../../interfaces';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -88,6 +93,18 @@ export default function Product(props: Props) {
   const [showLightbox, setShowLightbox] = React.useState(false);
 
   const { addItem, items } = useCart();
+  const { email, isEligible, alreadyUsed } = useTeacherAppreciation();
+
+  const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
+
+  const alreadyHaveFreeShirtInCart =
+    isTeacherAppreciationStore && items.some(item => item.price === 0);
+  const eligibleForFreeShirt =
+    isTeacherAppreciationStore &&
+    !!email &&
+    isEligible &&
+    !alreadyUsed &&
+    !alreadyHaveFreeShirtInCart;
 
   const productPersonalization = useStoreProductPersonalization(
     props.product.personalization.addons,
@@ -105,6 +122,7 @@ export default function Product(props: Props) {
     cartItems: items,
     productSkus: props.product.productSkus,
     selectedColor: productColor.color,
+    eligibleForFreeShirt,
   });
 
   const productImages = useProductImages({
@@ -127,6 +145,7 @@ export default function Product(props: Props) {
     personalization: productPersonalization,
     setShowSidebar,
     setSizeValidationError: productSize.setSizeValidationError,
+    eligibleForFreeShirt,
   });
 
   const handleProductReset = () => {
@@ -150,6 +169,7 @@ export default function Product(props: Props) {
               productSizes={props.product.sizes}
               size={productSize.size}
               personalizationTotal={productPersonalization.total}
+              eligibleForFreeShirt={eligibleForFreeShirt}
             />
 
             <ProductImages
@@ -164,6 +184,7 @@ export default function Product(props: Props) {
                 productSizes={props.product.sizes}
                 size={productSize.size}
                 personalizationTotal={productPersonalization.total}
+                eligibleForFreeShirt={eligibleForFreeShirt}
               />
 
               <ProductColors

@@ -52,6 +52,7 @@ export default function Checkout(props: Props) {
     storeId: props.store._id,
     storeName: props.store.name,
     primaryShippingAddress: props.store.primaryShippingLocation,
+    cartTotal: cart.cartTotal,
   });
 
   return (

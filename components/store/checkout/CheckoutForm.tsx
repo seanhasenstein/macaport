@@ -48,8 +48,12 @@ export default function CheckoutForm(props: Props) {
       hasPrimaryShipping: props.hasPrimaryShipping,
       allowDirectShipping: props.allowDirectShipping,
       allowStorePickup: props.allowStorePickup,
+      cartTotal: cart.cartTotal,
     })
   );
+
+  const cartOnlyHasFreeItems =
+    !props.checkout.cartIsEmpty && cart.cartTotal === 0;
 
   // only run on first render
   // reset the shipping data in useCart when user leaves
@@ -262,16 +266,24 @@ export default function CheckoutForm(props: Props) {
 
             <div className="section">
               <h3 className="section-title">
-                <span>Billing Details</span>
+                <span>
+                  {cartOnlyHasFreeItems ? 'Checkout' : 'Billing Details'}
+                </span>
               </h3>
-              <FieldItem name="cardholderName" label="Cardholder's Name" />
-              <label htmlFor="stripeInput">Card Information</label>
-              <CardElement
-                options={cardStyle}
-                onChange={props.checkout.handleCardChange}
-              />
-              {props.checkout.stripeError && (
-                <div className="stripe-error">{props.checkout.stripeError}</div>
+              {!cartOnlyHasFreeItems && (
+                <>
+                  <FieldItem name="cardholderName" label="Cardholder's Name" />
+                  <label htmlFor="stripeInput">Card Information</label>
+                  <CardElement
+                    options={cardStyle}
+                    onChange={props.checkout.handleCardChange}
+                  />
+                  {props.checkout.stripeError && (
+                    <div className="stripe-error">
+                      {props.checkout.stripeError}
+                    </div>
+                  )}
+                </>
               )}
               <button
                 type="submit"
