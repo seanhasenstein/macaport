@@ -6,6 +6,7 @@ import {
   order as orderModel,
   store as storeModel,
   shipping as shippingModel,
+  teacherAppreciation as teacherAppreciationModel,
 } from '../../db';
 import {
   Address,
@@ -41,6 +42,7 @@ interface ExtendedRequest extends NextApiRequest {
     shippingMethod: ShippingMethod;
     shippingAddress: Address | PrimaryShippingAddress;
     note?: string;
+    teacherAppreciationEmail?: string;
   };
 }
 
@@ -75,8 +77,48 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       return res.json({ storeClosed: true });
     }
 
+    // teacher appreciation verification
+    const teacherAppreciationEmail = req.body.teacherAppreciationEmail ?? '';
+    const teacherAppreciationId = store.teacherAppreciationId;
+
+    let teacherAppreciation;
+
+    if (teacherAppreciationId) {
+      teacherAppreciation =
+        await teacherAppreciationModel.getTeacherAppreciationById(
+          db,
+          teacherAppreciationId
+        );
+    }
+
+    const isEligibleForTeacherAppreciation =
+      !!teacherAppreciation &&
+      teacherAppreciation.active &&
+      teacherAppreciation.eligibleEmails.includes(teacherAppreciationEmail) &&
+      !teacherAppreciation.usedEmails.includes(teacherAppreciationEmail);
+
+    // check if the cart has a teacher appreciation item
+    const cartHasTeacherAppreciationItem = req.body.items.some(item => {
+      return item.itemTotal === 0 && item.quantity === 1;
+    });
+
+    const orderIncludesTeacherAppreciation =
+      isEligibleForTeacherAppreciation && cartHasTeacherAppreciationItem;
+
+    if (cartHasTeacherAppreciationItem && !isEligibleForTeacherAppreciation) {
+      return res.json({
+        // error: 'Teacher Appreciation email is invalid or has already been used',
+        error:
+          'Your email is either ineligible or has already been used for the teacher appreciation discount.',
+      });
+    }
+
     // 3. verify order items and order subtotal
-    const verified = verifyCartItems(req.body.items, store.products);
+    const verified = verifyCartItems(
+      req.body.items,
+      store.products,
+      isEligibleForTeacherAppreciation
+    );
 
     // send response back if theres not enough inventory for all cartItems with this sku.id
     if (
@@ -109,24 +151,30 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
     // 5. create orderId
     const orderId = createReceiptNumber();
 
-    // 6. send request to Stripe to handle payment
-    const intent = await stripe.paymentIntents.create({
-      amount: verifiedTotal,
-      currency: 'usd',
-      payment_method: req.body.payment_method_id,
-      confirm: true,
-      error_on_requires_action: true,
-      metadata: {
-        orderId,
-        storeId: req.body.storeId,
-        store: req.body.storeName,
-      },
-    });
+    let stripeIntentId: string | undefined;
 
-    if (intent.status !== 'succeeded') {
-      return res
-        .status(500)
-        .json({ error: `Unexpected status ${intent.status}` });
+    if (verifiedTotal > 0) {
+      // 6. send request to Stripe to handle payment
+      const intent = await stripe.paymentIntents.create({
+        amount: verifiedTotal,
+        currency: 'usd',
+        payment_method: req.body.payment_method_id,
+        confirm: true,
+        error_on_requires_action: true,
+        metadata: {
+          orderId,
+          storeId: req.body.storeId,
+          store: req.body.storeName,
+        },
+      });
+
+      if (intent.status !== 'succeeded') {
+        return res
+          .status(500)
+          .json({ error: `Unexpected status ${intent.status}` });
+      }
+
+      stripeIntentId = intent.id;
     }
 
     // 7. format the order for the db
@@ -153,14 +201,24 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
         shipping: verifiedShipping,
         salesTax: verifiedSalesTax,
         total: verifiedTotal,
-        stripeFee: Math.round(verifiedTotal * 0.029 + 30),
+        stripeFee:
+          verifiedTotal > 0 ? Math.round(verifiedTotal * 0.029 + 30) : 0,
       },
       refund: {
         status: 'None',
         amount: 0,
       },
-      stripeId: intent.id,
+      stripeId: stripeIntentId,
       note: req.body.note?.trim() ?? '',
+      meta: {
+        receiptPrinted: false,
+      },
+      ...(orderIncludesTeacherAppreciation && {
+        teacherAppreciation: {
+          id: teacherAppreciationId,
+          email: teacherAppreciationEmail,
+        },
+      }),
       createdAt: timestamp,
       updatedAt: timestamp,
     };
@@ -182,7 +240,20 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       body: JSON.stringify(order.items),
     });
 
-    res.json({ success: true, orderId: order.orderId });
+    // 11. if teacher appreciation was used, add email to teacher appreciation usedEmails
+    if (orderIncludesTeacherAppreciation) {
+      await teacherAppreciationModel.addUsedEmailToTeacherAppreciation(
+        db,
+        teacherAppreciationId,
+        teacherAppreciationEmail
+      );
+    }
+
+    res.json({
+      success: true,
+      orderId: order.orderId,
+      resetTeacherAppreciation: !!teacherAppreciation,
+    });
   } catch (error: any) {
     if (error.type === 'StripeCardError') {
       return res.json({ error: error.message });

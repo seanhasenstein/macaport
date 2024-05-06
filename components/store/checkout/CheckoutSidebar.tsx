@@ -12,6 +12,10 @@ type Props = {
   items: CartItem[];
   salesTax: number;
   cartShipping: number;
+  isTeacherAppreciationStore?: boolean;
+  teacherAppreciationEmail?: string;
+  cartHasFreeItem?: boolean;
+  eligibleForTeacherAppreciation?: boolean;
 };
 
 export default function CheckoutSidebar(props: Props) {
@@ -40,7 +44,18 @@ export default function CheckoutSidebar(props: Props) {
               )}
               <div className="items">
                 {props.items.map(item => (
-                  <CheckoutItem key={item.id} item={item} />
+                  <CheckoutItem
+                    key={item.id}
+                    item={item}
+                    isTeacherAppreciationStore={
+                      props.isTeacherAppreciationStore
+                    }
+                    teacherAppreciationEmail={props.teacherAppreciationEmail}
+                    cartHasFreeItem={props.cartHasFreeItem}
+                    eligibleForTeacherAppreciation={
+                      props.eligibleForTeacherAppreciation
+                    }
+                  />
                 ))}
               </div>
             </div>

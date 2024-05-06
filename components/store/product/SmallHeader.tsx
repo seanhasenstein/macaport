@@ -7,6 +7,7 @@ type Props = {
   productSizes: ProductSize[];
   size: ProductSize;
   personalizationTotal: number;
+  eligibleForFreeShirt: boolean;
 };
 
 export default function SmallHeader(props: Props) {
@@ -14,10 +15,16 @@ export default function SmallHeader(props: Props) {
     <SmallHeaderStyles>
       <h2 className="name">{props.productName}</h2>
       <h3 className="price">
-        {formatToMoney(
-          (props.size.label === 'DEFAULT'
-            ? props.productSizes[0].price
-            : props.size.price) + props.personalizationTotal
+        {props.eligibleForFreeShirt ? (
+          'Free'
+        ) : (
+          <>
+            {formatToMoney(
+              (props.size.label === 'DEFAULT'
+                ? props.productSizes[0].price
+                : props.size.price) + props.personalizationTotal
+            )}
+          </>
         )}
       </h3>
     </SmallHeaderStyles>

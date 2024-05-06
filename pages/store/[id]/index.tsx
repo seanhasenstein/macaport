@@ -5,14 +5,17 @@ import { format } from 'date-fns';
 
 import { connectToDb, store as storeModel } from 'db';
 
-import { Store, StoreProduct } from '../../../interfaces';
-
 import { getUrlParameter } from 'utils';
 import { getStoreStatus } from 'utils/store';
+import { useCart } from 'hooks/useCart';
+import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
 
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import StoreItem from '../../../components/store/home/StoreItem';
 import StoreHomepageError from 'components/store/errors/StoreHomepageError';
+import TeacherAppreciation from 'components/store/home/TeacherAppreciation';
+
+import { Store, StoreProduct } from '../../../interfaces';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -59,15 +62,40 @@ type Props = {
 };
 
 export default function StoreHomepage(props: Props) {
+  const hasCloseDate = !!props.store.closeDate;
+
+  const cart = useCart();
+  const cartHasFreeItem = cart.items.some(
+    item => item.itemTotal === 0 && item.quantity === 1
+  );
+
+  const {
+    email: teacherAppreciationEmail,
+    isEligible,
+    alreadyUsed,
+  } = useTeacherAppreciation();
+
+  const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
+  const storeId = props.store._id;
+  const teacherAppreciationProductId = props.store.products[0].id;
+  const teacherAppreciationProductLink = `/store/${storeId}/product?productId=${teacherAppreciationProductId}`;
+  const eligibleForFreeItem =
+    isTeacherAppreciationStore &&
+    !cartHasFreeItem &&
+    isEligible &&
+    !alreadyUsed &&
+    teacherAppreciationEmail !== '';
+
   if (props.error) {
     return <StoreHomepageError />;
   }
 
-  const hasCloseDate = !!props.store.closeDate;
-
   return (
     <StoreLayout title={`${props.store.name}`}>
-      <StoreStyles hasCloseDate={hasCloseDate}>
+      <StoreStyles
+        hasCloseDate={hasCloseDate}
+        isTeacherAppreciation={isTeacherAppreciationStore}
+      >
         {props.store.closeDate && (
           <div className="close-date">
             <span>
@@ -105,12 +133,19 @@ export default function StoreHomepage(props: Props) {
           </div>
         ) : (
           <div className="items">
+            {props.store.teacherAppreciationId ? (
+              <TeacherAppreciation
+                teacherAppreciationId={props.store.teacherAppreciationId}
+                productLink={teacherAppreciationProductLink}
+              />
+            ) : null}
             {props.store.products.map((p: StoreProduct) => (
               <StoreItem
                 key={p.id}
                 item={p}
                 storeId={props.store._id}
                 isDemo={false}
+                eligibleForFreeItem={eligibleForFreeItem}
               />
             ))}
           </div>
@@ -120,7 +155,10 @@ export default function StoreHomepage(props: Props) {
   );
 }
 
-const StoreStyles = styled.div<{ hasCloseDate: boolean }>`
+const StoreStyles = styled.div<{
+  hasCloseDate: boolean;
+  isTeacherAppreciation: boolean;
+}>`
   .store-name,
   p {
     text-align: center;
@@ -201,7 +239,9 @@ const StoreStyles = styled.div<{ hasCloseDate: boolean }>`
   }
 
   .items {
-    margin: 4rem auto 3rem;
+    /* margin: 4rem auto 3rem; */
+    margin: ${props => (props.isTeacherAppreciation ? '3.5rem' : '4rem')} auto
+      3rem;
     padding: 0 1.5rem;
     max-width: 72rem;
     width: 100%;

@@ -86,6 +86,19 @@ export default function OrderConfirmation(props: Props) {
     return <OrderConfirmationPageError />;
   }
 
+  const headerCopy =
+    props.order.teacherAppreciation && props.order.summary.total === 0
+      ? 'Order'
+      : 'Payment';
+
+  const isTeacherAppreciationStore = !!props.order.teacherAppreciation?.id;
+  const teacherAppreciationEmail = props.order.teacherAppreciation?.email;
+  const orderHasFreeItem = props.order.items.some(
+    item => item.itemTotal === 0 && item.quantity === 1
+  );
+  const eligibleForTeacherAppreciation =
+    isTeacherAppreciationStore && teacherAppreciationEmail;
+
   return (
     <NoNavLayout
       title={`${props.order.store.name} Order #${props.order.orderId}`}
@@ -113,7 +126,7 @@ export default function OrderConfirmation(props: Props) {
               <div className="main-content">
                 <div className="order-information">
                   <div className="section ">
-                    <h5>Payment Successful</h5>
+                    <h5>{headerCopy} Successful</h5>
                     <h2>Thank you for your order!</h2>
                     <p>
                       We have received your order and are currently processing
@@ -129,10 +142,12 @@ export default function OrderConfirmation(props: Props) {
                     <div className="detail-item">
                       <span>Order Number:</span>#{props.order.orderId}
                     </div>
-                    <div className="detail-item">
-                      <span>Transaction ID:</span>
-                      {props.order.stripeId}
-                    </div>
+                    {props.order.stripeId ? (
+                      <div className="detail-item">
+                        <span>Transaction ID:</span>
+                        {props.order.stripeId}
+                      </div>
+                    ) : null}
                     <div className="detail-item">
                       <span>Order Date:</span>
                       {format(
@@ -214,66 +229,84 @@ export default function OrderConfirmation(props: Props) {
                 <div className="order-items">
                   <h3>Order Items</h3>
                   <div>
-                    {props.order.items.map(item => (
-                      <div key={item.id} className="order-item">
-                        <div className="item-img">
-                          <img
-                            src={item.sku.color.primaryImage}
-                            alt={`${item.sku.color.label} ${item.name}`}
-                          />
-                        </div>
-                        <div className="order-item-column">
-                          <div className="order-item-header">
-                            <div className="order-item-name">{item.name}</div>
-                            <div className="order-item-total">
-                              {formatToMoney(item.itemTotal!)}
-                            </div>
+                    {props.order.items.map(item => {
+                      const renderTeacherAppreciation =
+                        eligibleForTeacherAppreciation &&
+                        orderHasFreeItem &&
+                        item.itemTotal === 0;
+
+                      return (
+                        <div key={item.id} className="order-item">
+                          <div className="item-img">
+                            <img
+                              src={item.sku.color.primaryImage}
+                              alt={`${item.sku.color.label} ${item.name}`}
+                            />
                           </div>
-                          <div className="order-item-details">
-                            <div className="order-item-detail item-quantity">
-                              Qty:{' '}
-                              <span className="value">{item.quantity}</span>
+                          <div className="order-item-column">
+                            <div className="order-item-header">
+                              <div className="order-item-name">{item.name}</div>
+                              <div className="order-item-total">
+                                {formatToMoney(item.itemTotal!)}
+                              </div>
                             </div>
-                            <div className="order-item-detail item-color">
-                              Color:{' '}
-                              <span className="value">
-                                {item.sku.color.label}
-                              </span>
-                            </div>
-                            <div className="order-item-detail item-size">
-                              Size:{' '}
-                              <span className="value">
-                                {item.sku.size.label}
-                              </span>
-                            </div>
-                            {item.personalizationAddons.length > 0 ? (
-                              <div className="personalization">
-                                <div className="addon-label">Addons:</div>
-                                <div className="addon-items">
-                                  {item.personalizationAddons.map(addon => (
-                                    <div key={addon.id} className="addon-item">
-                                      {addon.value}
-                                      {addon.subItems.length > 0 ? (
-                                        <>
-                                          {addon.subItems.map(subItem => (
-                                            <div
-                                              key={subItem.id}
-                                              className="subitem"
-                                            >
-                                              {subItem.value}
-                                            </div>
-                                          ))}
-                                        </>
-                                      ) : null}
-                                    </div>
-                                  ))}
+                            {renderTeacherAppreciation && (
+                              <div className="teacher-appreciation">
+                                <div>Free Teacher Appreciation Item</div>
+                                <div className="email">
+                                  {teacherAppreciationEmail}
                                 </div>
                               </div>
-                            ) : null}
+                            )}
+                            <div className="order-item-details">
+                              <div className="order-item-detail item-quantity">
+                                Qty:{' '}
+                                <span className="value">{item.quantity}</span>
+                              </div>
+                              <div className="order-item-detail item-color">
+                                Color:{' '}
+                                <span className="value">
+                                  {item.sku.color.label}
+                                </span>
+                              </div>
+                              <div className="order-item-detail item-size">
+                                Size:{' '}
+                                <span className="value">
+                                  {item.sku.size.label}
+                                </span>
+                              </div>
+                              {item.personalizationAddons.length > 0 ? (
+                                <div className="personalization">
+                                  <div className="addon-label">Addons:</div>
+                                  <div className="addon-items">
+                                    {item.personalizationAddons.map(addon => (
+                                      <div
+                                        key={addon.id}
+                                        className="addon-item"
+                                      >
+                                        {addon.value}
+                                        {addon.subItems.length > 0 ? (
+                                          <>
+                                            {addon.subItems.map(subItem => (
+                                              <div
+                                                key={subItem.id}
+                                                className="subitem"
+                                              >
+                                                {subItem.value}
+                                              </div>
+                                            ))}
+                                          </>
+                                        ) : null}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : null}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   <div className="order-summary">
                     <h3>Order Summary</h3>
@@ -403,7 +436,7 @@ const OrderConfirmationStyles = styled.div`
   .order-info,
   .shipping-details {
     h3 {
-      margin: 0 0 1rem;
+      margin: 0 0 0.5rem;
     }
 
     p {
@@ -445,6 +478,24 @@ const OrderConfirmationStyles = styled.div`
 
     &:first-of-type {
       border-top: 1px solid #e5e7eb;
+    }
+
+    .teacher-appreciation {
+      margin: 0.25rem 0 0;
+      font-size: 0.875rem;
+      color: #1f2937;
+      font-weight: 500;
+      display: grid;
+      width: 100%;
+      overflow-x: hidden;
+      text-overflow: ellipsis;
+      .email {
+        margin: 0.125rem 0 0;
+        font-size: 0.75rem;
+        color: #6b7280;
+        overflow-x: hidden;
+        text-overflow: ellipsis;
+      }
     }
   }
 

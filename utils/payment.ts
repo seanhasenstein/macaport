@@ -1,5 +1,6 @@
 import {
   CartItem,
+  OrderItem,
   PersonalizationItem,
   StoreProduct,
   VerifyCartItemsAccumulator,
@@ -7,8 +8,10 @@ import {
 
 export function verifyCartItems(
   items: CartItem[],
-  verifiedStoreProducts: StoreProduct[]
+  verifiedStoreProducts: StoreProduct[],
+  eligibleForTeacherAppreciation: boolean
 ) {
+  const freeCartItem = items.find(item => item.itemTotal === 0);
   return items.reduce(
     (cartAccumulator: VerifyCartItemsAccumulator, currentItem: CartItem) => {
       const product = verifiedStoreProducts.find(
@@ -149,27 +152,42 @@ export function verifyCartItems(
       //   };
       // }
 
-      const itemPrice = productSku.size.price + verifiedPersonalizationTotal;
+      const haventIncludedFreeItem = !cartAccumulator.alreadyIncludedFreeItem;
+      const isFreeItem =
+        eligibleForTeacherAppreciation &&
+        freeCartItem?.id === currentItem.id &&
+        haventIncludedFreeItem;
+      const conditionalItemPrice = isFreeItem
+        ? 0
+        : productSku.size.price + verifiedPersonalizationTotal;
+
+      // todo from 5/1/24: when reverting back to oringinal code use itemPrice instead of conditionalItemPrice
+      // const itemPrice = productSku.size.price + verifiedPersonalizationTotal;
 
       // TODO
       // const { active, inventory, ...updatedSku } = currentItem.sku;
       // const {active, inventory, ...updatedProductSku} = productSku;
 
-      const verifiedItem = {
+      const verifiedItem: OrderItem = {
         ...currentItem,
         sku: productSku,
         merchandiseCode: product.merchandiseCode,
-        price: itemPrice,
-        itemTotal: itemPrice * currentItem.quantity!,
+        price: conditionalItemPrice,
+        itemTotal: conditionalItemPrice * currentItem.quantity!,
+        status: {
+          current: 'Unfulfilled',
+          meta: { user: 'system', updatedAt: new Date().toISOString() },
+        },
       };
 
       const verifiedSubtotal =
-        cartAccumulator.subtotal + verifiedItem.itemTotal;
+        cartAccumulator.subtotal + verifiedItem.itemTotal!;
 
       return {
         ...cartAccumulator,
         items: [...cartAccumulator.items, verifiedItem],
         subtotal: verifiedSubtotal,
+        alreadyIncludedFreeItem: isFreeItem,
       };
     },
     {
@@ -177,6 +195,7 @@ export function verifyCartItems(
       lowerInventoryItems: [],
       itemsOutOfStock: [],
       subtotal: 0,
+      alreadyIncludedFreeItem: false,
     }
   );
 }

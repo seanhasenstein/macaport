@@ -24,6 +24,7 @@ interface GetInitialValues {
   hasPrimaryShipping: boolean;
   allowDirectShipping: boolean;
   allowStorePickup: boolean;
+  cartTotal: number;
 }
 
 export function getInitialValues({
@@ -31,6 +32,7 @@ export function getInitialValues({
   hasPrimaryShipping,
   allowDirectShipping,
   allowStorePickup,
+  cartTotal,
 }: GetInitialValues) {
   return {
     customer: {
@@ -57,6 +59,7 @@ export function getInitialValues({
       : ('Primary' as const), // todo: come back to this when adding in-store and custom shipping
     cardholderName: '',
     note: '',
+    cartTotal,
   };
 }
 
@@ -91,6 +94,9 @@ export function getCheckoutSchema(groupTerm: string) {
         zipcode: Yup.string().required('Zipcode is required'),
       }),
     }),
-    cardholderName: Yup.string().required("Cardholder's name is required"),
+    cardholderName: Yup.string().when('cartTotal', {
+      is: (cartTotal: number) => cartTotal > 0,
+      then: Yup.string().required("Cardholder's name is required"),
+    }),
   });
 }

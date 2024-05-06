@@ -10,6 +10,7 @@ type Props = {
   item: StoreProduct;
   storeId: string;
   isDemo: boolean;
+  eligibleForFreeItem?: boolean;
 };
 
 export default function StoreItem(props: Props) {
@@ -37,7 +38,9 @@ export default function StoreItem(props: Props) {
           <h4 className="secondary">{props.item.tag}</h4>
           <div className="bottom-row">
             <h4 className="price">
-              {formatToMoney(props.item.sizes[0].price)}
+              {props.eligibleForFreeItem
+                ? formatToMoney(0)
+                : formatToMoney(props.item.sizes[0].price)}
             </h4>
             <div className="colors-row">
               <div className="colors">
@@ -71,10 +74,9 @@ const StoreItemStyles = styled.a`
   padding: 0 1rem 0.875rem 1rem;
   position: relative;
   background-color: #fff;
-  border-radius: 0.25rem;
-  border: 1px solid #e5e7eb;
-  box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-    rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+  border-radius: 0.1875rem;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 
   &:hover {
     border-color: #dadde2;
