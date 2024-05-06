@@ -31,7 +31,7 @@ export default function CheckoutItem(props: Props) {
       <div className="total">{formatToMoney(props.item.itemTotal!)}</div>
       {renderTeacherAppreciation && (
         <div className="teacher-appreciation">
-          <div>Free Teacher Appreciation Item</div>
+          <div>Free Staff Appreciation Item</div>
           <div className="email">{props.teacherAppreciationEmail}</div>
         </div>
       )}

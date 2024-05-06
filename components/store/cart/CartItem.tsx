@@ -173,7 +173,7 @@ export default function CartItem(props: Props) {
         {renderTeacherAppreciation && (
           <div className="teacher-appreciation">
             <CheckCircleIcon className="check-circle-icon" />
-            Free Teacher Appreciation Item
+            Free Staff Appreciation Item
           </div>
         )}
       </div>
