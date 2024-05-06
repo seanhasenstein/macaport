@@ -78,7 +78,8 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
     }
 
     // teacher appreciation verification
-    const teacherAppreciationEmail = req.body.teacherAppreciationEmail ?? '';
+    const teacherAppreciationEmail =
+      req.body.teacherAppreciationEmail?.toLowerCase() ?? '';
     const teacherAppreciationId = store.teacherAppreciationId;
 
     let teacherAppreciation;

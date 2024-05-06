@@ -25,10 +25,12 @@ export async function verifyTeacherAppreciationEmailEligibility(
     throw new Error('Teacher appreciation not found');
   }
 
+  const lowercaseEmail = email.toLowerCase();
+
   const isEligible =
-    teacherAppreciation?.eligibleEmails.includes(email) &&
-    !teacherAppreciation?.usedEmails.includes(email);
-  const alreadyUsed = teacherAppreciation?.usedEmails.includes(email);
+    teacherAppreciation?.eligibleEmails.includes(lowercaseEmail) &&
+    !teacherAppreciation?.usedEmails.includes(lowercaseEmail);
+  const alreadyUsed = teacherAppreciation?.usedEmails.includes(lowercaseEmail);
   return { isEligible, alreadyUsed };
 }
 
@@ -51,9 +53,14 @@ export async function addUsedEmailToTeacherAppreciation(
     throw new Error('Email has already been used');
   }
 
+  const lowercaseEmail = email.toLowerCase();
+
   const updateResult = await db
     .collection<OptionalId<TeacherAppreciation>>('teacherAppreciation')
-    .updateOne({ _id: new ObjectID(_id) }, { $push: { usedEmails: email } });
+    .updateOne(
+      { _id: new ObjectID(_id) },
+      { $push: { usedEmails: lowercaseEmail } }
+    );
   if (updateResult.result.ok === 0) {
     throw new Error('Failed to add teacher appreciation email to usedEmails');
   }
