@@ -34,7 +34,7 @@ export default function TeacherAppreciation({
           />
         </div>
         <h3 className="title">
-          New London teachers
+          New London staff
           <br />
           get a free shirt!
         </h3>
@@ -63,11 +63,11 @@ export default function TeacherAppreciation({
         ) : (
           <>
             <p className="instructions">
-              For teacher appreciation week,
+              For staff appreciation week,
               <br />
-              Macaport is giving a free shirt to all
+              the district is giving a free shirt to all
               <br />
-              New London teachers! Please enter your school email to redeem.
+              New London staff! Please enter your school email to redeem.
             </p>
             <Formik
               initialValues={{

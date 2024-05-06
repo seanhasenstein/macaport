@@ -252,7 +252,7 @@ export default function OrderConfirmation(props: Props) {
                             </div>
                             {renderTeacherAppreciation && (
                               <div className="teacher-appreciation">
-                                <div>Free Teacher Appreciation Item</div>
+                                <div>Free Staff Appreciation Item</div>
                                 <div className="email">
                                   {teacherAppreciationEmail}
                                 </div>
