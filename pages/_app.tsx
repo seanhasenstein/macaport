@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { CartProvider } from '../hooks/useCart';
+import { TeacherAppreciationProvider } from '../hooks/useTeacherAppreciation';
 
 const stripePromise = loadStripe(
   `${process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY}`
@@ -15,9 +16,11 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <Elements stripe={stripePromise}>
       {router.pathname.split('/').includes('store') ? (
-        <CartProvider cartId={`cart_${cartId}`}>
-          <Component {...pageProps} />
-        </CartProvider>
+        <TeacherAppreciationProvider>
+          <CartProvider cartId={`cart_${cartId}`}>
+            <Component {...pageProps} />
+          </CartProvider>
+        </TeacherAppreciationProvider>
       ) : (
         <Component {...pageProps} />
       )}

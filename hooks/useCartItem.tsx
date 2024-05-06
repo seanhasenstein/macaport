@@ -25,10 +25,13 @@ export default function useCartItem(params: Params) {
   const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const sku = params.skus.find(sku => sku.id === e.target.value);
 
+    const cartItemIsTeacherAppreciationDiscount =
+      params.cartItem.itemTotal === 0;
+
     if (sku) {
       const id = `${sku.id}${getPersonalizationAddonsId(
         params.cartItem.personalizationAddons
-      )}`;
+      )}${cartItemIsTeacherAppreciationDiscount ? '-ta2024-free' : ''}`;
 
       setSize(sku.size.label);
 
@@ -37,7 +40,9 @@ export default function useCartItem(params: Params) {
         id,
         sku,
         quantity,
-        price: sku.size.price + params.cartItem.personalizationTotal,
+        price: cartItemIsTeacherAppreciationDiscount
+          ? 0
+          : sku.size.price + params.cartItem.personalizationTotal,
       });
     }
   };

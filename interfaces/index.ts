@@ -128,6 +128,10 @@ export interface CartItem {
 export interface OrderItem extends Omit<CartItem, 'sku'> {
   sku: OrderSku;
   merchandiseCode: string;
+  status: {
+    current: 'Unfulfilled';
+    meta: { user: 'system'; updatedAt: string };
+  };
 }
 
 export type ShippingMethod = 'Primary' | 'Direct' | 'Store Pickup';
@@ -169,6 +173,13 @@ export interface Order {
     amount: number;
   };
   note?: string;
+  teacherAppreciation?: {
+    id: string;
+    email: string;
+  };
+  meta: {
+    receiptPrinted: boolean;
+  };
   createdAt?: string;
   updatedAt?: string;
 }
@@ -203,6 +214,7 @@ export interface Store {
   showOnStoresPage: boolean;
   createdAt: string;
   updatedAt: string;
+  teacherAppreciationId: string;
 }
 
 export interface StoreForStoresPage {
@@ -256,6 +268,7 @@ export interface VerifyCartItemsAccumulator {
   lowerInventoryItems: CartItem[];
   itemsOutOfStock: CartItem[];
   subtotal: number;
+  alreadyIncludedFreeItem: boolean;
 }
 
 export interface UseCheckoutSubmit {
@@ -286,4 +299,14 @@ export interface Request extends NextApiRequest {
   db: Db;
   dbClient: MongoClient;
   query: { id: string };
+}
+
+// Teacher Appreciation ********************************
+export interface TeacherAppreciation {
+  _id: string;
+  active: boolean;
+  year: number;
+  storeId: string;
+  eligibleEmails: string[];
+  usedEmails: string[];
 }

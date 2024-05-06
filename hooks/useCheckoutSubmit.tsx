@@ -4,6 +4,7 @@ import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import { StripeCardElementChangeEvent } from '@stripe/stripe-js';
 import { CartItem, CheckoutForm, UseCheckoutSubmit } from 'interfaces';
 import { useCart } from './useCart';
+import { useTeacherAppreciation } from './useTeacherAppreciation';
 
 type Props = {
   storeId: string;
@@ -16,6 +17,7 @@ type Props = {
     state: string;
     zipcode: string;
   };
+  cartTotal: number;
 };
 
 export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
@@ -36,6 +38,11 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
   const { items, cartSubtotal, salesTax, cartTotal, cartIsEmpty, setItems } =
     useCart();
 
+  const {
+    resetState: resetTeacherAppreciationState,
+    email: teacherAppreciationEmail,
+  } = useTeacherAppreciation();
+
   const handleCardChange = (e: StripeCardElementChangeEvent) => {
     if (e.error) {
       setStripeError(e.error.message);
@@ -46,93 +53,105 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
 
   const handleSubmit = async (data: CheckoutForm) => {
     setIsSubmitting(true);
-    const cardElement = elements?.getElement(CardElement);
 
-    if (!stripe || !cardElement) {
-      setStripeError(
-        'An error has occured loading the page. Please refresh and try again.'
-      );
-      setIsSubmitting(false);
-      return;
-    }
+    let stripePaymentMethodResult: any;
 
-    const stripePaymentMethodResult = await stripe.createPaymentMethod({
-      type: 'card',
-      card: cardElement,
-      billing_details: {
-        name: data.cardholderName.trim(),
-        email: data.customer.email.trim().toLowerCase(),
-        phone: data.customer.phone.trim(),
-      },
-    });
+    if (cartTotal > 0) {
+      const cardElement = elements?.getElement(CardElement);
 
-    if (stripePaymentMethodResult.error) {
-      setStripeError(stripePaymentMethodResult.error.message);
-      setIsSubmitting(false);
-      return;
-    } else {
-      const response = await fetch('/api/submit-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          storeId: props.storeId,
-          storeName: props.storeName,
-          payment_method_id: stripePaymentMethodResult.paymentMethod.id,
-          items,
-          customer: data.customer,
-          group: data.group,
-          shippingMethod: data.shippingMethod,
-          shippingAddress:
-            data.shippingMethod === 'Direct'
-              ? data.shippingAddress
-              : data.shippingMethod === 'Primary'
-              ? props.primaryShippingAddress
-              : data.shippingAddress,
-          summary: {
-            subtotal: cartSubtotal,
-            shipping: 0,
-            salesTax,
-            total: cartTotal,
-          },
-          note: data.note ?? '',
-        }),
+      if (!stripe || !cardElement) {
+        setStripeError(
+          'An error has occured loading the page. Please refresh and try again.'
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      stripePaymentMethodResult = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardElement,
+        billing_details: {
+          name: data.cardholderName.trim(),
+          email: data.customer.email.trim().toLowerCase(),
+          phone: data.customer.phone.trim(),
+        },
       });
 
-      const res = await response.json();
-
-      if (res.storeClosed === true) {
-        router.push('/store-closed');
-        return;
-      }
-
-      if (res.lowerInventory || res.outOfStock) {
-        if (res.outOfStockItems) {
-          setOutOfStockItems(res.outOfStockItems);
-        }
-        if (res.lowerInventoryItems) {
-          setLowerInventoryItems(res.lowerInventoryItems);
-        }
-        setVerifiedItems(res.verifiedItems);
-        setItems([...res.verifiedItems, ...(res.lowerInventoryItems || [])]);
-        setShowInventoryModal(true);
-        setIsSubmitting(false);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-
-      if (res.error) {
-        setServerResponseError(res.error);
-        console.error(res.error);
+      if (stripePaymentMethodResult.error) {
+        setStripeError(stripePaymentMethodResult.error.message);
         setIsSubmitting(false);
         return;
       }
-
-      setServerResponseError(undefined);
-
-      router.push(
-        `/store/${props.storeId}/order-confirmation?orderId=${res.orderId}&emptyCart=true`
-      );
     }
+
+    const response = await fetch('/api/submit-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        storeId: props.storeId,
+        storeName: props.storeName,
+        payment_method_id: stripePaymentMethodResult
+          ? stripePaymentMethodResult.paymentMethod.id
+          : '',
+        items,
+        customer: data.customer,
+        group: data.group,
+        shippingMethod: data.shippingMethod,
+        shippingAddress:
+          data.shippingMethod === 'Direct'
+            ? data.shippingAddress
+            : data.shippingMethod === 'Primary'
+            ? props.primaryShippingAddress
+            : data.shippingAddress,
+        summary: {
+          subtotal: cartSubtotal,
+          shipping: 0,
+          salesTax,
+          total: cartTotal,
+        },
+        note: data.note ?? '',
+        ...(teacherAppreciationEmail && { teacherAppreciationEmail }),
+      }),
+    });
+
+    const res = await response.json();
+
+    if (res.storeClosed === true) {
+      router.push('/store-closed');
+      return;
+    }
+
+    if (res.lowerInventory || res.outOfStock) {
+      if (res.outOfStockItems) {
+        setOutOfStockItems(res.outOfStockItems);
+      }
+      if (res.lowerInventoryItems) {
+        setLowerInventoryItems(res.lowerInventoryItems);
+      }
+      setVerifiedItems(res.verifiedItems);
+      setItems([...res.verifiedItems, ...(res.lowerInventoryItems || [])]);
+      setShowInventoryModal(true);
+      setIsSubmitting(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (res.error) {
+      setServerResponseError(res.error);
+      console.error(res.error);
+      setIsSubmitting(false);
+      return;
+    }
+
+    setServerResponseError(undefined);
+
+    if (res.resetTeacherAppreciation) {
+      resetTeacherAppreciationState();
+    }
+
+    router.push(
+      `/store/${props.storeId}/order-confirmation?orderId=${res.orderId}&emptyCart=true`
+    );
   };
 
   return {

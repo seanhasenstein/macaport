@@ -3,15 +3,20 @@ import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
+
 import { connectToDb, store as storeModel } from 'db';
+
 import { getStoreStatus } from 'utils/store';
-import { useCart } from '../../../hooks/useCart';
-import useHasMounted from '../../../hooks/useHasMounted';
-import { CartItem as CartItemInterface, Store } from '../../../interfaces';
 import { formatToMoney, getUrlParameter } from '../../../utils';
+import useHasMounted from '../../../hooks/useHasMounted';
+import { useCart } from '../../../hooks/useCart';
+import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
+
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import CartItem from '../../../components/store/cart/CartItem';
 import LinkButton from '../../../components/store/common/LinkButton';
+
+import { CartItem as CartItemInterface, Store } from '../../../interfaces';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -61,6 +66,18 @@ export default function Cart(props: Props) {
   const hasMounted = useHasMounted();
   const router = useRouter();
   const cart = useCart();
+  const {
+    email: teacherAppreciationEmail,
+    isEligible,
+    alreadyUsed,
+  } = useTeacherAppreciation();
+
+  const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
+  const cartHasFreeItem = cart.items.some(
+    item => item.itemTotal === 0 && item.quantity === 1
+  );
+  const eligibleForTeacherAppreciation =
+    isTeacherAppreciationStore && isEligible && !alreadyUsed;
 
   // if (props.error) {
   // TODO: add error component
@@ -116,6 +133,14 @@ export default function Cart(props: Props) {
                           skus={product.productSkus}
                           sizes={product.sizes}
                           isDemo={false}
+                          isTeacherAppreciationStore={
+                            isTeacherAppreciationStore
+                          }
+                          teacherAppreciationEmail={teacherAppreciationEmail}
+                          cartHasFreeItem={cartHasFreeItem}
+                          eligibleForTeacherAppreciation={
+                            eligibleForTeacherAppreciation
+                          }
                         />
                       );
                     })
