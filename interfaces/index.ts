@@ -23,6 +23,17 @@ export interface InventorySku {
   active: boolean;
 }
 
+export interface SizeChartCategory {
+  name: string; // 'Chest', 'Hip', 'Length', etc.
+  unit: string; // e.g. 'in', 'cm', etc.
+  sizes: {
+    label: string;
+    value: string;
+  }[];
+}
+
+export type SizeChart = SizeChartCategory[];
+
 export interface InventoryProduct {
   _id: string;
   inventoryProductId: string;
@@ -33,6 +44,7 @@ export interface InventoryProduct {
   sizes: InventorySize[];
   colors: InventoryColor[];
   skus: InventorySku[];
+  sizeChart?: SizeChart;
   createdAt: string;
   updatedAt: string;
 }
@@ -96,6 +108,7 @@ export interface StoreProduct {
   sizes: ProductSize[];
   colors: ProductColor[];
   personalization: Personalization;
+  sizeChart?: SizeChart;
 }
 
 export interface PersonalizationAddon {
