@@ -203,6 +203,10 @@ export default function Product(props: Props) {
                   lowInventory={productSize.lowInventory}
                   handleSizeChange={productSize.handleSizeChange}
                   hasMounted={hasMounted}
+                  productName={props.product.name}
+                  productPrimaryImage={productImages.primaryImage}
+                  productSizes={props.product.sizes}
+                  sizeChart={props.product.sizeChart}
                 />
               </div>
 
