@@ -45,6 +45,7 @@ export async function getStoreById(db: Db, id: string) {
     const storeProduct = {
       ...store.products[i],
       productSkus: activeProductSkus,
+      sizeChart: inventoryProduct.sizeChart ?? [],
     };
 
     const includedColors = storeProduct.colors.reduce(
