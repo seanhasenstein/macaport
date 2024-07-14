@@ -1,7 +1,17 @@
-import { CartItem, ProductColor, ProductSize, ProductSku } from 'interfaces';
+import React from 'react';
 import styled from 'styled-components';
+
+import SizeChartModal from 'components/modals/SizeChartModal';
+
 import { isOutOfStock } from 'utils';
-import HeadingTitle from './HeadingTitle';
+
+import {
+  CartItem,
+  ProductColor,
+  ProductSize,
+  ProductSku,
+  SizeChart,
+} from 'interfaces';
 
 type Props = {
   cartItems: CartItem[];
@@ -12,9 +22,23 @@ type Props = {
   lowInventory: boolean;
   handleSizeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   hasMounted: boolean;
+  productName: string;
+  productPrimaryImage: string | undefined;
+  productSizes: ProductSize[];
+  sizeChart: SizeChart | undefined;
 };
 
 export default function ProductSizes(props: Props) {
+  const [sizeChartModalIsOpen, setIsSizeChartModalOpen] = React.useState(false);
+
+  const openSizeChartModal = () => {
+    setIsSizeChartModalOpen(true);
+  };
+
+  const closeSizeChartModal = () => {
+    setIsSizeChartModalOpen(false);
+  };
+
   return (
     <ProductSizesStyles>
       {props.colorOutOfStock && (
@@ -49,7 +73,33 @@ export default function ProductSizes(props: Props) {
           <p>Hurry! Only a few left.</p>
         </div>
       )}
-      <HeadingTitle>Sizes</HeadingTitle>
+      <div className="sizes-header">
+        <h3 className="custom-size-title">Sizes</h3>
+        {props.sizeChart?.length ? (
+          <button
+            type="button"
+            className="size-chart-button"
+            onClick={openSizeChartModal}
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="ruler-icon"
+            >
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M22.5 7.5h-21v9h21v-9Zm-20 8v-7H5v4h1v-4h2.25v3h1v-3h2.25v4h1v-4h2.25v3h1v-3H18v4h1v-4h2.5v7h-19Z"
+                fill="currentColor"
+              ></path>
+            </svg>
+            Size chart
+          </button>
+        ) : null}
+      </div>
       {props.hasMounted && (
         <div className="grid">
           {props.productSkus.map(sku => {
@@ -85,6 +135,14 @@ export default function ProductSizes(props: Props) {
           })}
         </div>
       )}
+      <SizeChartModal
+        isOpen={sizeChartModalIsOpen}
+        closeModal={closeSizeChartModal}
+        sizeChart={props.sizeChart}
+        productSizes={props.productSizes}
+        productName={props.productName}
+        productPrimaryImage={props.productPrimaryImage}
+      />
     </ProductSizesStyles>
   );
 }
@@ -94,6 +152,44 @@ const ProductSizesStyles = styled.div`
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(4rem, 1fr));
     gap: 0.875rem;
+  }
+
+  .sizes-header {
+    margin: 0 0 1.125rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .custom-size-title {
+      margin: 0;
+      font-weight: 500;
+      font-size: 1rem;
+      color: #111827;
+      line-height: 100%;
+    }
+
+    .size-chart-button {
+      margin: 0;
+      padding: 0.5rem 0 0.5rem 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0 0.5rem;
+      background-color: transparent;
+      border: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #1f2937;
+      text-decoration: underline;
+      line-height: 100%;
+      cursor: pointer;
+      &:hover {
+        color: #000;
+      }
+      .ruler-icon {
+        margin-top: 0.0625rem;
+        vertical-align: middle;
+      }
+    }
   }
 
   .size {
