@@ -316,6 +316,15 @@ export default function OrderConfirmation(props: Props) {
                         {formatToMoney(props.order.summary.subtotal, true)}
                       </div>
                     </div>
+                    {props.order.switchFitnessDiscount &&
+                    props.order.summary.discount ? (
+                      <div className="order-summary-item">
+                        <div className="label">Switch Fitness Discount</div>
+                        <div className="value">
+                          -{formatToMoney(props.order.summary.discount, true)}
+                        </div>
+                      </div>
+                    ) : null}
                     <div className="order-summary-item">
                       <div className="label">Sales Tax</div>
                       <div className="value">

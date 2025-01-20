@@ -5,6 +5,7 @@ import { StripeCardElementChangeEvent } from '@stripe/stripe-js';
 import { CartItem, CheckoutForm, UseCheckoutSubmit } from 'interfaces';
 import { useCart } from './useCart';
 import { useTeacherAppreciation } from './useTeacherAppreciation';
+import { useSwitchFitnessDiscount } from './useSwitchFitness';
 
 type Props = {
   storeId: string;
@@ -18,6 +19,7 @@ type Props = {
     zipcode: string;
   };
   cartTotal: number;
+  isSwitchFitnessStore: boolean;
 };
 
 export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
@@ -42,6 +44,17 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
     resetState: resetTeacherAppreciationState,
     email: teacherAppreciationEmail,
   } = useTeacherAppreciation();
+
+  const {
+    alreadyUsed: switchEmailAlreadyUsed,
+    isEligible: switchEmailIsEligible,
+    email: switchFitnessDiscountEmail,
+    resetState: resetSwitchFitnessDiscountState,
+  } = useSwitchFitnessDiscount();
+  const isEligibleForSwitchDiscountFromClient =
+    props.isSwitchFitnessStore &&
+    switchEmailIsEligible &&
+    !switchEmailAlreadyUsed;
 
   const handleCardChange = (e: StripeCardElementChangeEvent) => {
     if (e.error) {
@@ -111,6 +124,10 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
         },
         note: data.note ?? '',
         ...(teacherAppreciationEmail && { teacherAppreciationEmail }),
+        ...(switchFitnessDiscountEmail && { switchFitnessDiscountEmail }),
+        ...(isEligibleForSwitchDiscountFromClient && {
+          isEligibleForSwitchDiscountFromClient,
+        }),
       }),
     });
 
@@ -147,6 +164,10 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
 
     if (res.resetTeacherAppreciation) {
       resetTeacherAppreciationState();
+    }
+
+    if (res.resetSwitchFitnessDiscount) {
+      resetSwitchFitnessDiscountState();
     }
 
     router.push(

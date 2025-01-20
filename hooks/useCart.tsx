@@ -25,6 +25,8 @@ type InitialState = {
   shipping: number;
   cartTotalWithoutShipping: number;
   cartTotal: number;
+  isSwitchFitnessStore: boolean;
+  applySwitchFitnessDiscount: boolean;
 };
 
 interface CartProviderState extends InitialState {
@@ -40,6 +42,10 @@ interface CartProviderState extends InitialState {
   emptyCart: () => void;
   setItems: (items: CartItem[]) => void;
   updateShipping: (payload: ShippingPayload) => void;
+  updateStoreSettings: (settings: {
+    isSwitchFitnessStore?: boolean;
+    applySwitchFitnessDiscount?: boolean;
+  }) => void;
 }
 
 type Actions =
@@ -52,7 +58,14 @@ type Actions =
     }
   | { type: 'REMOVE_ITEM'; id: string }
   | { type: 'EMPTY_CART' }
-  | { type: 'UPDATE_SHIPPING'; payload: ShippingPayload };
+  | { type: 'UPDATE_SHIPPING'; payload: ShippingPayload }
+  | {
+      type: 'UPDATE_STORE_SETTINGS';
+      payload: {
+        isSwitchFitnessStore?: boolean;
+        applySwitchFitnessDiscount?: boolean;
+      };
+    };
 
 const initialState: any = {
   id: '',
@@ -65,6 +78,8 @@ const initialState: any = {
   cartTotalWithoutShipping: 0,
   cartTotal: 0,
   shipping: 0,
+  isSwitchFitnessStore: false,
+  applySwitchFitnessDiscount: false,
 };
 
 const CartContext = React.createContext<CartProviderState | undefined>(
@@ -114,6 +129,11 @@ function reducer(state: CartProviderState, action: Actions) {
         shippingMethod,
       });
     }
+    case 'UPDATE_STORE_SETTINGS':
+      return {
+        ...state,
+        ...action.payload,
+      };
     default:
       throw new Error('No action specified');
   }
@@ -130,10 +150,15 @@ const generateCartState = (
   items: CartItem[],
   shippingData = defaultShippingData
 ) => {
+  const applySwitchFitnessDiscount =
+    state.isSwitchFitnessStore && state.applySwitchFitnessDiscount;
   const totalUniqueItems = calculateUniqueItems(items);
   const cartIsEmpty = totalUniqueItems === 0;
   const cartItems = calculateItemTotals(items);
-  const cartSubtotal = calculateCartSubtotal(cartItems);
+  const { cartSubtotal, rawCartSubtotal } = calculateCartSubtotal({
+    cartItems,
+    applySwitchFitnessDiscount,
+  });
   const salesTax = calculateSalesTax(cartSubtotal);
   const shipping = calculateShipping(
     shippingData.price,
@@ -149,12 +174,12 @@ const generateCartState = (
   const cartTotal = calculateCartTotal(cartSubtotal, salesTax, shipping);
 
   return {
-    ...initialState,
+    // ...initialState,
     ...state,
     items: cartItems,
     totalItems: calculateTotalItems(items),
     totalUniqueItems,
-    cartSubtotal,
+    cartSubtotal: rawCartSubtotal,
     salesTax,
     shipping,
     cartTotalWithoutShipping,
@@ -192,123 +217,159 @@ export function CartProvider({ children, cartId }: CartProviderType) {
     saveCart(JSON.stringify(state));
   }, [state, saveCart]);
 
-  const setItems = (items: CartItem[]) => {
+  const updateStoreSettings = React.useCallback(
+    (settings: {
+      isSwitchFitnessStore?: boolean;
+      applySwitchFitnessDiscount?: boolean;
+    }) => {
+      dispatch({ type: 'UPDATE_STORE_SETTINGS', payload: settings });
+    },
+    []
+  );
+
+  const setItems = React.useCallback((items: CartItem[]) => {
     dispatch({
       type: 'SET_ITEMS',
       payload: items,
     });
-  };
+  }, []);
 
-  const addItem = (item: CartItem) => {
-    if (!item.id) throw new Error('You must provide an `id` for items');
-    if (item.quantity <= 0) return;
+  const addItem = React.useCallback(
+    (item: CartItem) => {
+      if (!item.id) throw new Error('You must provide an `id` for items');
+      if (item.quantity <= 0) return;
 
-    const currentItem = state.items.find((i: CartItem) => i.id === item.id);
+      const currentItem = state.items.find((i: CartItem) => i.id === item.id);
 
-    if (!currentItem) {
-      dispatch({ type: 'ADD_ITEM', payload: item });
-      return;
-    }
-
-    const payload = { ...item, quantity: currentItem.quantity + item.quantity };
-    dispatch({ type: 'UPDATE_ITEM', id: item.id, payload });
-    return;
-  };
-
-  const updateItemSize = (
-    prevId: string,
-    prevSkuId: string,
-    payload: Record<string, any>
-  ) => {
-    if (!prevId || !payload) return;
-
-    const existingCartItem = state.items.find(
-      (item: CartItem) => item.id === payload.id
-    );
-
-    if (existingCartItem) {
-      // same item (user opened select and kept the same size)
-      if (prevSkuId === payload.sku.id) {
+      if (!currentItem) {
+        dispatch({ type: 'ADD_ITEM', payload: item });
         return;
       }
 
-      let updatedQuantity = existingCartItem.quantity + payload.quantity;
-
-      if (updatedQuantity > payload.sku.inventory) {
-        updatedQuantity = payload.sku.inventory;
-      }
-
-      dispatch({
-        type: 'UPDATE_ITEM',
-        id: `${payload.id}`,
-        payload: {
-          quantity: updatedQuantity,
-        },
-      });
-
-      removeItem(prevId);
-    } else {
-      let updatedQuantity = payload.quantity;
-
-      if (updatedQuantity > payload.sku.inventory) {
-        updatedQuantity = payload.sku.inventory;
-      }
-
-      dispatch({
-        type: 'UPDATE_ITEM',
-        id: prevId,
-        payload: {
-          ...payload,
-          quantity: updatedQuantity,
-        },
-      });
-    }
-  };
-
-  const updateItemQuantity = (id: string, quantity: number) => {
-    if (quantity <= 0) {
-      dispatch({ type: 'REMOVE_ITEM', id });
+      const payload = {
+        ...item,
+        quantity: currentItem.quantity + item.quantity,
+      };
+      dispatch({ type: 'UPDATE_ITEM', id: item.id, payload });
       return;
-    }
+    },
+    [state.items]
+  );
 
-    const currentItem = state.items.find((item: CartItem) => item.id === id);
-
-    if (!currentItem) throw new Error('No item found to update');
-
-    const payload = { ...currentItem, quantity };
-
-    dispatch({
-      type: 'UPDATE_ITEM',
-      id,
-      payload,
-    });
-  };
-
-  const removeItem = (id: string) => {
+  const removeItem = React.useCallback((id: string) => {
     if (!id) return;
 
     dispatch({ type: 'REMOVE_ITEM', id });
-  };
+  }, []);
 
-  const emptyCart = () => dispatch({ type: 'EMPTY_CART' });
+  const updateItemSize = React.useCallback(
+    (prevId: string, prevSkuId: string, payload: Record<string, any>) => {
+      if (!prevId || !payload) return;
 
-  const updateShipping = (payload: ShippingPayload) =>
-    dispatch({ type: 'UPDATE_SHIPPING', payload });
+      const existingCartItem = state.items.find(
+        (item: CartItem) => item.id === payload.id
+      );
+
+      if (existingCartItem) {
+        // same item (user opened select and kept the same size)
+        if (prevSkuId === payload.sku.id) {
+          return;
+        }
+
+        let updatedQuantity = existingCartItem.quantity + payload.quantity;
+
+        if (updatedQuantity > payload.sku.inventory) {
+          updatedQuantity = payload.sku.inventory;
+        }
+
+        dispatch({
+          type: 'UPDATE_ITEM',
+          id: `${payload.id}`,
+          payload: {
+            quantity: updatedQuantity,
+          },
+        });
+
+        removeItem(prevId);
+      } else {
+        let updatedQuantity = payload.quantity;
+
+        if (updatedQuantity > payload.sku.inventory) {
+          updatedQuantity = payload.sku.inventory;
+        }
+
+        dispatch({
+          type: 'UPDATE_ITEM',
+          id: prevId,
+          payload: {
+            ...payload,
+            quantity: updatedQuantity,
+          },
+        });
+      }
+    },
+    [removeItem, state.items]
+  );
+
+  const updateItemQuantity = React.useCallback(
+    (id: string, quantity: number) => {
+      if (quantity <= 0) {
+        dispatch({ type: 'REMOVE_ITEM', id });
+        return;
+      }
+
+      const currentItem = state.items.find((item: CartItem) => item.id === id);
+
+      if (!currentItem) throw new Error('No item found to update');
+
+      const payload = { ...currentItem, quantity };
+
+      dispatch({
+        type: 'UPDATE_ITEM',
+        id,
+        payload,
+      });
+    },
+    [state.items]
+  );
+
+  const emptyCart = React.useCallback(
+    () => dispatch({ type: 'EMPTY_CART' }),
+    []
+  );
+
+  const updateShipping = React.useCallback(
+    (payload: ShippingPayload) =>
+      dispatch({ type: 'UPDATE_SHIPPING', payload }),
+    []
+  );
+
+  const contextValue = React.useMemo(
+    () => ({
+      ...state,
+      setItems,
+      addItem,
+      updateItemSize,
+      updateItemQuantity,
+      removeItem,
+      emptyCart,
+      updateShipping,
+      updateStoreSettings,
+    }),
+    [
+      state,
+      setItems,
+      addItem,
+      updateItemSize,
+      updateItemQuantity,
+      removeItem,
+      emptyCart,
+      updateShipping,
+      updateStoreSettings,
+    ]
+  );
 
   return (
-    <CartContext.Provider
-      value={{
-        ...state,
-        setItems,
-        addItem,
-        updateItemSize,
-        updateItemQuantity,
-        removeItem,
-        emptyCart,
-        updateShipping,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
+    <CartContext.Provider value={contextValue}>{children}</CartContext.Provider>
   );
 }

@@ -9,6 +9,7 @@ import { useCart } from '../../../hooks/useCart';
 import { getUrlParameter } from '../../../utils';
 import useCheckoutSubmit from 'hooks/useCheckoutSubmit';
 import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
+import { useSwitchFitnessDiscount } from 'hooks/useSwitchFitness';
 
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import CheckoutForm from '../../../components/store/checkout/CheckoutForm';
@@ -72,6 +73,9 @@ export default function Checkout(props: Props) {
     storeName: props.store.name,
     primaryShippingAddress: props.store.primaryShippingLocation,
     cartTotal: cart.cartTotal,
+    isSwitchFitnessStore:
+      !!props.store.meta?.isSwitchFitness &&
+      !!props.store.meta?.switchFitnessDiscountId,
   });
 
   const {
@@ -79,6 +83,19 @@ export default function Checkout(props: Props) {
     isEligible,
     alreadyUsed,
   } = useTeacherAppreciation();
+
+  const {
+    isEligible: isEligibleForSwitchFitnessDiscount,
+    alreadyUsed: alreadyUsedForSwitchFitnessDiscount,
+  } = useSwitchFitnessDiscount();
+
+  const isSwitchFitnessStore =
+    !!props.store.meta?.isSwitchFitness &&
+    !!props.store.meta?.switchFitnessDiscountId;
+  const applySwitchFitnessDiscount =
+    isSwitchFitnessStore &&
+    isEligibleForSwitchFitnessDiscount &&
+    !alreadyUsedForSwitchFitnessDiscount;
 
   const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
   const cartHasFreeItem = cart.items.some(
@@ -115,10 +132,13 @@ export default function Checkout(props: Props) {
             cartTotal={cart.cartTotal}
             items={cart.items}
             salesTax={cart.salesTax}
-            isTeacherAppreciationStore={isTeacherAppreciationStore}
-            teacherAppreciationEmail={teacherAppreciationEmail}
-            cartHasFreeItem={cartHasFreeItem}
-            eligibleForTeacherAppreciation={eligibleForTeacherAppreciation}
+            {...{
+              cartHasFreeItem,
+              isTeacherAppreciationStore,
+              teacherAppreciationEmail,
+              eligibleForTeacherAppreciation,
+              applySwitchFitnessDiscount,
+            }}
           />
         </div>
         <OutOfStockModal
