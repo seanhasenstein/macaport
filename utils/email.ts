@@ -590,6 +590,19 @@ function generateReceiptHtml(order: Order) {
                               ${formatToMoney(order.summary.subtotal, true)}
                             </td>
                           </tr>
+                          ${
+                            order.switchFitnessDiscount
+                              ? `<tr>
+                            <td style="padding: 0 0 2px">Discount:</td>
+                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
+                              -${formatToMoney(
+                                order.summary.discount || 0,
+                                true
+                              )}
+                            </td>
+                          </tr>`
+                              : ``
+                          }
                           <tr>
                             <td style="padding: 0 0 2px">Sales Tax:</td>
                             <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
@@ -682,7 +695,7 @@ function generateReceiptHtml(order: Order) {
   }" style="color: #4338CA; text-decoration: none">Click here</a> to view your order in the web browser.
                         </p>
                         <p style="margin: 0">
-                          Macaport LLC, E8644 Casey Rd, New London, WI 54961
+                          Macaport LLC, 1817 N Shawano St, New London, WI 54961
                         </p>
                       </td>
                     </tr>

@@ -1,16 +1,22 @@
 import React from 'react';
 import { GetServerSideProps } from 'next';
 import styled from 'styled-components';
+
 import { connectToDb, shipping, store } from 'db';
+
 import { useCart } from '../../../../hooks/useCart';
-import { ShippingData, Store } from '../../../../interfaces';
 import { getUrlParameter } from '../../../../utils';
 import useCheckoutSubmit from 'hooks/useCheckoutSubmit';
+import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
+import { useSwitchFitnessDiscount } from 'hooks/useSwitchFitness';
+
 import StoreLayout from '../../../../components/store/layouts/StoreLayout';
 import CheckoutForm from '../../../../components/store/checkout/CheckoutForm';
 import OutOfStockModal from '../../../../components/store/checkout/OutOfStockModal';
 import CheckoutSidebar from 'components/store/checkout/CheckoutSidebar';
 import DemoBanner from 'components/store/demo/banner';
+
+import { ShippingData, Store } from '../../../../interfaces';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -53,48 +59,86 @@ export default function Checkout(props: Props) {
     storeName: props.store.name,
     primaryShippingAddress: props.store.primaryShippingLocation,
     cartTotal: cart.cartTotal,
+    isSwitchFitnessStore:
+      !!props.store.meta?.isSwitchFitness &&
+      !!props.store.meta?.switchFitnessDiscountId,
   });
 
+  const {
+    email: teacherAppreciationEmail,
+    isEligible,
+    alreadyUsed,
+  } = useTeacherAppreciation();
+
+  const {
+    isEligible: isEligibleForSwitchFitnessDiscount,
+    alreadyUsed: alreadyUsedForSwitchFitnessDiscount,
+  } = useSwitchFitnessDiscount();
+
+  const isSwitchFitnessStore =
+    !!props.store.meta?.isSwitchFitness &&
+    !!props.store.meta?.switchFitnessDiscountId;
+  const applySwitchFitnessDiscount =
+    isSwitchFitnessStore &&
+    isEligibleForSwitchFitnessDiscount &&
+    !alreadyUsedForSwitchFitnessDiscount;
+
+  const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
+  const cartHasFreeItem = cart.items.some(
+    item => item.itemTotal === 0 && item.quantity === 1
+  );
+  const eligibleForTeacherAppreciation =
+    isTeacherAppreciationStore && isEligible && !alreadyUsed;
+
   return (
-    <StoreLayout title={`Checkout | ${props.store.name}`}>
-      <DemoCheckoutStyles>
-        <h2>Order Checkout</h2>
-        <div className="wrapper">
-          <CheckoutForm
-            storeId={props.store._id}
-            storeName={props.store.name}
-            allowDirectShipping={props.store.allowDirectShipping}
-            allowStorePickup={props.store.allowStorePickup}
-            hasPrimaryShipping={props.store.hasPrimaryShippingLocation}
-            primaryShippingAddress={props.store.primaryShippingLocation}
-            requireGroupSelection={props.store.requireGroupSelection}
-            groupTerm={props.store.groupTerm}
-            groups={props.store.groups}
-            shipping={props.shipping}
-            setVerifiedItems={checkout.setVerifiedItems}
-            setLowerInventoryItems={checkout.setLowerInventoryItems}
-            setOutOfStockItems={checkout.setOutOfStockItems}
-            setShowInventoryModal={checkout.setShowInventoryModal}
-            checkout={checkout}
-          />
-          <CheckoutSidebar
-            cartSubtotal={cart.cartSubtotal}
-            cartShipping={cart.shipping}
-            cartTotal={cart.cartTotal}
-            items={cart.items}
-            salesTax={cart.salesTax}
-          />
-        </div>
-        <OutOfStockModal
-          verifiedItems={checkout.verifiedItems}
-          lowerInventoryItems={checkout.lowerInventoryItems}
-          outOfStockItems={checkout.outOfStockItems}
-          showModal={checkout.showInventoryModal}
-          setShowModal={checkout.setShowInventoryModal}
-        />
-      </DemoCheckoutStyles>
+    <>
       <DemoBanner />
-    </StoreLayout>
+      <StoreLayout title={`Checkout | ${props.store.name}`}>
+        <DemoCheckoutStyles>
+          <h2>Order Checkout</h2>
+          <div className="wrapper">
+            <CheckoutForm
+              storeId={props.store._id}
+              storeName={props.store.name}
+              allowDirectShipping={props.store.allowDirectShipping}
+              allowStorePickup={props.store.allowStorePickup}
+              hasPrimaryShipping={props.store.hasPrimaryShippingLocation}
+              primaryShippingAddress={props.store.primaryShippingLocation}
+              requireGroupSelection={props.store.requireGroupSelection}
+              groupTerm={props.store.groupTerm}
+              groups={props.store.groups}
+              shipping={props.shipping}
+              setVerifiedItems={checkout.setVerifiedItems}
+              setLowerInventoryItems={checkout.setLowerInventoryItems}
+              setOutOfStockItems={checkout.setOutOfStockItems}
+              setShowInventoryModal={checkout.setShowInventoryModal}
+              checkout={checkout}
+            />
+            <CheckoutSidebar
+              cartSubtotal={cart.cartSubtotal}
+              cartShipping={cart.shipping}
+              cartTotal={cart.cartTotal}
+              items={cart.items}
+              salesTax={cart.salesTax}
+              {...{
+                cartHasFreeItem,
+                isTeacherAppreciationStore,
+                teacherAppreciationEmail,
+                eligibleForTeacherAppreciation,
+                applySwitchFitnessDiscount,
+              }}
+            />
+          </div>
+          <OutOfStockModal
+            verifiedItems={checkout.verifiedItems}
+            lowerInventoryItems={checkout.lowerInventoryItems}
+            outOfStockItems={checkout.outOfStockItems}
+            showModal={checkout.showInventoryModal}
+            setShowModal={checkout.setShowInventoryModal}
+          />
+        </DemoCheckoutStyles>
+      </StoreLayout>
+    </>
   );
 }
 

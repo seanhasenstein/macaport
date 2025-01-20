@@ -14,6 +14,7 @@ import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import StoreItem from '../../../components/store/home/StoreItem';
 import StoreHomepageError from 'components/store/errors/StoreHomepageError';
 import TeacherAppreciation from 'components/store/home/TeacherAppreciation';
+import SwitchFitness from 'components/store/home/SwitchFitness';
 
 import { Store, StoreProduct } from '../../../interfaces';
 
@@ -65,18 +66,20 @@ export default function StoreHomepage(props: Props) {
   const hasCloseDate = !!props.store.closeDate;
 
   const cart = useCart();
+
   const cartHasFreeItem = cart.items.some(
     item => item.itemTotal === 0 && item.quantity === 1
   );
 
+  const storeId = props.store._id;
+
+  // teacher appreciation
   const {
     email: teacherAppreciationEmail,
     isEligible,
     alreadyUsed,
   } = useTeacherAppreciation();
-
   const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
-  const storeId = props.store._id;
   const teacherAppreciationProductId = props.store.products[0].id;
   const teacherAppreciationProductLink = `/store/${storeId}/product?productId=${teacherAppreciationProductId}`;
   const eligibleForFreeItem =
@@ -85,6 +88,10 @@ export default function StoreHomepage(props: Props) {
     isEligible &&
     !alreadyUsed &&
     teacherAppreciationEmail !== '';
+
+  // switch fitness
+  const isSwitchFitness = !!props.store.meta?.isSwitchFitness;
+  const switchFitnessDiscountId = props.store.meta?.switchFitnessDiscountId;
 
   if (props.error) {
     return <StoreHomepageError />;
@@ -138,6 +145,9 @@ export default function StoreHomepage(props: Props) {
                 teacherAppreciationId={props.store.teacherAppreciationId}
                 productLink={teacherAppreciationProductLink}
               />
+            ) : null}
+            {isSwitchFitness && switchFitnessDiscountId ? (
+              <SwitchFitness switchFitnessId={switchFitnessDiscountId} />
             ) : null}
             {props.store.products.map((p: StoreProduct) => (
               <StoreItem

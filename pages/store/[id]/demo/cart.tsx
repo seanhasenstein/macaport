@@ -3,15 +3,21 @@ import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
+
 import { connectToDb, store as storeModel } from 'db';
-import { useCart } from '../../../../hooks/useCart';
-import useHasMounted from '../../../../hooks/useHasMounted';
-import { CartItem as CartItemInterface, Store } from '../../../../interfaces';
+
 import { formatToMoney, getUrlParameter } from '../../../../utils';
+import useHasMounted from '../../../../hooks/useHasMounted';
+import { useCart } from '../../../../hooks/useCart';
+import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
+import { useSwitchFitnessDiscount } from 'hooks/useSwitchFitness';
+
 import StoreLayout from '../../../../components/store/layouts/StoreLayout';
 import CartItem from '../../../../components/store/cart/CartItem';
 import LinkButton from '../../../../components/store/common/LinkButton';
 import DemoBanner from 'components/store/demo/banner';
+
+import { CartItem as CartItemInterface, Store } from '../../../../interfaces';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -47,117 +53,171 @@ type Props = {
 };
 
 export default function DemoCart(props: Props) {
-  const router = useRouter();
   const hasMounted = useHasMounted();
+  const router = useRouter();
+
+  const { store } = props;
+  const {
+    _id: storeId,
+    meta,
+    name: storeName,
+    products,
+    teacherAppreciationId,
+  } = store;
+
+  const {
+    isEligible: isEligibleForSwitchFitnessDiscount,
+    alreadyUsed: alreadyUsedForSwitchFitnessDiscount,
+  } = useSwitchFitnessDiscount();
+
+  const isSwitchFitnessStore =
+    !!meta?.isSwitchFitness && !!meta?.switchFitnessDiscountId;
+  const applySwitchFitnessDiscount =
+    isSwitchFitnessStore &&
+    isEligibleForSwitchFitnessDiscount &&
+    !alreadyUsedForSwitchFitnessDiscount;
+
   const cart = useCart();
+
+  const {
+    email: teacherAppreciationEmail,
+    isEligible: isEligibleForTeacherAppreciation,
+    alreadyUsed: alreadyUsedForTeacherAppreciation,
+  } = useTeacherAppreciation();
+
+  const isTeacherAppreciationStore = !!teacherAppreciationId;
+  const cartHasFreeItem = cart.items.some(
+    item => item.itemTotal === 0 && item.quantity === 1
+  );
+  const eligibleForTeacherAppreciation =
+    isTeacherAppreciationStore &&
+    isEligibleForTeacherAppreciation &&
+    !alreadyUsedForTeacherAppreciation;
 
   // if (props.error) {
   // TODO: add error component
   // }
 
   // TODO: add this check in getServerSideProps
-  if (
-    hasMounted &&
-    (!props.store.products || props.store.products.length < 1)
-  ) {
+  if (hasMounted && (!products || products.length < 1)) {
     router.push(`/store/${router.query.id}/demo`);
     return <div />;
   }
 
   return (
-    <StoreLayout title={`Cart | ${props.store.name}`}>
-      <DemoCartStyles>
-        <div className="wrapper">
-          <h2>Your Cart</h2>
-          {hasMounted ? (
-            <>
-              <div className="order-details">
-                ({cart.totalItems} Item
-                {cart.totalItems > 1 ? 's' : cart.totalItems === 0 ? 's' : null}
-                )
-              </div>
-              <div className="grid">
-                <div className="items">
-                  {cart.cartIsEmpty ? (
-                    <div className="empty-cart">
-                      Your cart is empty.{' '}
-                      <Link
-                        href={`/store/${props.store._id}${
-                          router.pathname.split('/').includes('demo')
-                            ? '/demo'
-                            : ''
-                        }`}
-                      >
-                        <a>Continue Shopping</a>
-                      </Link>
-                      .
-                    </div>
-                  ) : (
-                    cart.items.map((item: CartItemInterface) => {
-                      const product = props.store.products.find(
-                        p => p.id === item.sku.storeProductId
-                      );
-
-                      if (!product) {
-                        cart.removeItem(item.sku.id);
-                        return;
-                      }
-
-                      return (
-                        <CartItem
-                          key={item.id}
-                          item={item}
-                          storeId={props.store._id}
-                          skus={product.productSkus}
-                          sizes={product.sizes}
-                          isDemo={router.pathname.split('/').includes('demo')}
-                        />
-                      );
-                    })
-                  )}
+    <>
+      <DemoBanner />
+      <StoreLayout title={`Cart | ${storeName}`}>
+        <DemoCartStyles>
+          <div className="wrapper">
+            <h2>Your Cart</h2>
+            {hasMounted ? (
+              <>
+                <div className="order-details">
+                  ({cart.totalItems} Item
+                  {cart.totalItems > 1
+                    ? 's'
+                    : cart.totalItems === 0
+                    ? 's'
+                    : null}
+                  )
                 </div>
-                <div>
-                  <div className="order-summary">
-                    <h3>Order Summary</h3>
-                    <div className="item">
-                      <div className="key">Subtotal</div>
-                      <div className="value">
-                        {formatToMoney(cart.cartSubtotal, true)}
+                <div className="grid">
+                  <div className="items">
+                    {cart.cartIsEmpty ? (
+                      <div className="empty-cart">
+                        Your cart is empty.{' '}
+                        <Link
+                          href={`/store/${storeId}${
+                            router.pathname.split('/').includes('demo')
+                              ? '/demo'
+                              : ''
+                          }`}
+                        >
+                          <a>Continue Shopping</a>
+                        </Link>
+                        .
                       </div>
-                    </div>
-                    <div className="item">
-                      <div className="key">Sales Tax</div>
-                      <div className="value">
-                        {formatToMoney(cart.salesTax, true)}
+                    ) : (
+                      cart.items.map((item: CartItemInterface) => {
+                        const product = products.find(
+                          p => p.id === item.sku.storeProductId
+                        );
+
+                        if (!product) {
+                          cart.removeItem(item.sku.id);
+                          return;
+                        }
+
+                        return (
+                          <CartItem
+                            key={item.id}
+                            {...{
+                              storeId,
+                              item,
+                              skus: product.productSkus,
+                              sizes: product.sizes,
+                              cartHasFreeItem,
+                              isTeacherAppreciationStore,
+                              teacherAppreciationEmail,
+                              eligibleForTeacherAppreciation,
+                              isDemo: router.pathname
+                                .split('/')
+                                .includes('demo'),
+                            }}
+                          />
+                        );
+                      })
+                    )}
+                  </div>
+                  <div>
+                    <div className="order-summary">
+                      <h3>Order Summary</h3>
+                      <div className="item">
+                        <div className="key">Subtotal</div>
+                        <div className="value">
+                          {formatToMoney(cart.cartSubtotal, true)}
+                        </div>
                       </div>
-                    </div>
-                    <div className="item">
-                      <div className="key">Shipping</div>
-                      <div className="value">Calculated next</div>
-                    </div>
-                    <div className="item total">
-                      <div className="key">Order Total</div>
-                      <div className="value">
-                        {formatToMoney(cart.cartTotalWithoutShipping, true)}
+                      {applySwitchFitnessDiscount && cart.cartSubtotal > 0 ? (
+                        <div className="item">
+                          <div className="key">Switch Fitness Promo</div>
+                          <div className="value">-$25.00</div>
+                        </div>
+                      ) : null}
+                      <div className="item">
+                        <div className="key">Sales Tax</div>
+                        <div className="value">
+                          {formatToMoney(cart.salesTax, true)}
+                        </div>
                       </div>
+                      <div className="item">
+                        <div className="key">Shipping</div>
+                        <div className="value">Calculated next</div>
+                      </div>
+                      <div className="item total">
+                        <div className="key">Order Total</div>
+                        <div className="value">
+                          {formatToMoney(cart.cartTotalWithoutShipping, true)}
+                        </div>
+                      </div>
+                      <LinkButton
+                        href={`/store/${storeId}/${
+                          router.pathname.split('/').includes('demo')
+                            ? 'demo/'
+                            : ''
+                        }checkout`}
+                        label="Checkout"
+                      />
                     </div>
-                    <LinkButton
-                      href={`/store/${props.store._id}/${
-                        router.pathname.split('/').includes('demo')
-                          ? 'demo/'
-                          : ''
-                      }checkout`}
-                      label="Checkout"
-                    />
                   </div>
                 </div>
-              </div>
-            </>
-          ) : null}
-        </div>
-      </DemoCartStyles>
-      <DemoBanner />
-    </StoreLayout>
+              </>
+            ) : null}
+          </div>
+        </DemoCartStyles>
+      </StoreLayout>
+    </>
   );
 }
 

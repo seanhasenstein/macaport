@@ -74,7 +74,7 @@ const StoreItemStyles = styled.a`
   padding: 0 1rem 0.875rem 1rem;
   position: relative;
   background-color: #fff;
-  border-radius: 0.1875rem;
+  border-radius: 0.375rem;
   border: 1px solid #d1d5db;
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 

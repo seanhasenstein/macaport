@@ -128,7 +128,7 @@ const TeacherAppreciationStyles = styled.div`
   justify-content: space-around;
   background-color: #fff;
   border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
+  border-radius: 0.375rem;
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   text-align: center;
 

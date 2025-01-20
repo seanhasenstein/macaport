@@ -14,6 +14,7 @@ import useProductSize from 'hooks/useStoreProductSize';
 import useStoreProductPersonalization from '../../../../hooks/useStoreProductPersonalization';
 import useAddProductToOrder from 'hooks/useStoreProductAddToOrder';
 import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
+import { useSwitchFitnessDiscount } from 'hooks/useSwitchFitness';
 
 import StoreLayout from '../../../../components/store/layouts/StoreLayout';
 import ProductPersonalization from '../../../../components/store/product/personalization';
@@ -83,8 +84,20 @@ export default function DemoProduct(props: Props) {
   const [showSidebar, setShowSidebar] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
 
-  const { addItem, items } = useCart();
+  const { addItem, items, updateStoreSettings } = useCart();
   const { email, isEligible, alreadyUsed } = useTeacherAppreciation();
+  const {
+    isEligible: isEligibleForSwitchFitnessDiscount,
+    alreadyUsed: alreadyUsedForSwitchFitnessDiscount,
+  } = useSwitchFitnessDiscount();
+
+  const isSwitchFitnessStore =
+    !!props.store.meta?.isSwitchFitness &&
+    !!props.store.meta?.switchFitnessDiscountId;
+  const applySwitchFitnessDiscount =
+    isSwitchFitnessStore &&
+    isEligibleForSwitchFitnessDiscount &&
+    !alreadyUsedForSwitchFitnessDiscount;
 
   const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
 
@@ -146,12 +159,20 @@ export default function DemoProduct(props: Props) {
     productSize.setLowInventory(false);
   };
 
+  React.useEffect(() => {
+    updateStoreSettings({
+      applySwitchFitnessDiscount,
+      isSwitchFitnessStore,
+    });
+  }, [applySwitchFitnessDiscount, isSwitchFitnessStore, updateStoreSettings]);
+
   if (props.error) {
     return <ProductPageError error={props.error} storeId={props.store._id} />;
   }
 
   return (
     <>
+      <DemoBanner />
       <StoreLayout title={`${props.product.name} | ${props.store.name}`}>
         <DemoProductStyles>
           <div className="wrapper">
@@ -245,7 +266,6 @@ export default function DemoProduct(props: Props) {
           clickedImage={productImages.clickedImage}
         />
       ) : null}
-      <DemoBanner />
     </>
   );
 }

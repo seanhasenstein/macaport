@@ -11,6 +11,7 @@ import { formatToMoney, getUrlParameter } from '../../../utils';
 import useHasMounted from '../../../hooks/useHasMounted';
 import { useCart } from '../../../hooks/useCart';
 import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
+import { useSwitchFitnessDiscount } from 'hooks/useSwitchFitness';
 
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import CartItem from '../../../components/store/cart/CartItem';
@@ -65,35 +66,57 @@ type Props = {
 export default function Cart(props: Props) {
   const hasMounted = useHasMounted();
   const router = useRouter();
+
+  const { store } = props;
+  const {
+    _id: storeId,
+    meta,
+    name: storeName,
+    products,
+    teacherAppreciationId,
+  } = store;
+
+  const {
+    isEligible: isEligibleForSwitchFitnessDiscount,
+    alreadyUsed: alreadyUsedForSwitchFitnessDiscount,
+  } = useSwitchFitnessDiscount();
+
+  const isSwitchFitnessStore =
+    !!meta?.isSwitchFitness && !!meta?.switchFitnessDiscountId;
+  const applySwitchFitnessDiscount =
+    isSwitchFitnessStore &&
+    isEligibleForSwitchFitnessDiscount &&
+    !alreadyUsedForSwitchFitnessDiscount;
+
   const cart = useCart();
+
   const {
     email: teacherAppreciationEmail,
-    isEligible,
-    alreadyUsed,
+    isEligible: isEligibleForTeacherAppreciation,
+    alreadyUsed: alreadyUsedForTeacherAppreciation,
   } = useTeacherAppreciation();
 
-  const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
+  const isTeacherAppreciationStore = !!teacherAppreciationId;
   const cartHasFreeItem = cart.items.some(
     item => item.itemTotal === 0 && item.quantity === 1
   );
   const eligibleForTeacherAppreciation =
-    isTeacherAppreciationStore && isEligible && !alreadyUsed;
+    isTeacherAppreciationStore &&
+    isEligibleForTeacherAppreciation &&
+    !alreadyUsedForTeacherAppreciation;
 
   // if (props.error) {
   // TODO: add error component
   // }
 
   // TODO: add this check in getServerSideProps
-  if (
-    hasMounted &&
-    (!props.store.products || props.store.products.length < 1)
-  ) {
+  if (hasMounted && (!products || products.length < 1)) {
     router.push(`/store/${router.query.id}`);
     return <div />;
   }
 
   return (
-    <StoreLayout title={`Cart | ${props.store.name}`}>
+    <StoreLayout title={`Cart | ${storeName}`}>
       <CartStyles>
         <div className="wrapper">
           <h2>Your Cart</h2>
@@ -109,14 +132,14 @@ export default function Cart(props: Props) {
                   {cart.cartIsEmpty ? (
                     <div className="empty-cart">
                       Your cart is empty.{' '}
-                      <Link href={`/store/${props.store._id}`}>
+                      <Link href={`/store/${storeId}`}>
                         <a>Continue Shopping</a>
                       </Link>
                       .
                     </div>
                   ) : (
                     cart.items.map((item: CartItemInterface) => {
-                      const product = props.store.products.find(
+                      const product = products.find(
                         p => p.id === item.sku.storeProductId
                       );
 
@@ -128,19 +151,17 @@ export default function Cart(props: Props) {
                       return (
                         <CartItem
                           key={item.id}
-                          item={item}
-                          storeId={props.store._id}
-                          skus={product.productSkus}
-                          sizes={product.sizes}
-                          isDemo={false}
-                          isTeacherAppreciationStore={
-                            isTeacherAppreciationStore
-                          }
-                          teacherAppreciationEmail={teacherAppreciationEmail}
-                          cartHasFreeItem={cartHasFreeItem}
-                          eligibleForTeacherAppreciation={
-                            eligibleForTeacherAppreciation
-                          }
+                          {...{
+                            storeId,
+                            item,
+                            skus: product.productSkus,
+                            sizes: product.sizes,
+                            cartHasFreeItem,
+                            isTeacherAppreciationStore,
+                            teacherAppreciationEmail,
+                            eligibleForTeacherAppreciation,
+                            isDemo: false,
+                          }}
                         />
                       );
                     })
@@ -155,6 +176,12 @@ export default function Cart(props: Props) {
                         {formatToMoney(cart.cartSubtotal, true)}
                       </div>
                     </div>
+                    {applySwitchFitnessDiscount && cart.cartSubtotal > 0 ? (
+                      <div className="item">
+                        <div className="key">Switch Fitness Promo</div>
+                        <div className="value">-$25.00</div>
+                      </div>
+                    ) : null}
                     <div className="item">
                       <div className="key">Sales Tax</div>
                       <div className="value">
@@ -172,7 +199,7 @@ export default function Cart(props: Props) {
                       </div>
                     </div>
                     <LinkButton
-                      href={`/store/${props.store._id}/checkout`}
+                      href={`/store/${storeId}/checkout`}
                       label="Checkout"
                     />
                   </div>

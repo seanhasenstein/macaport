@@ -7,6 +7,7 @@ import {
   store as storeModel,
   shipping as shippingModel,
   teacherAppreciation as teacherAppreciationModel,
+  switchFitness as switchFitnessModel,
 } from '../../db';
 import {
   Address,
@@ -15,6 +16,7 @@ import {
   PrimaryShippingAddress,
   ShippingMethod,
   Store,
+  SwitchFitnessDiscount,
 } from '../../interfaces';
 import {
   calculateSalesTax,
@@ -22,6 +24,7 @@ import {
   createReceiptNumber,
   calculateShipping,
   removeNonDigits,
+  calculateSubtotalWithSwitchDiscount,
 } from '../../utils';
 import { getStoreStatus } from '../../utils/store';
 import { verifyCartItems } from 'utils/payment';
@@ -43,6 +46,8 @@ interface ExtendedRequest extends NextApiRequest {
     shippingAddress: Address | PrimaryShippingAddress;
     note?: string;
     teacherAppreciationEmail?: string;
+    switchFitnessDiscountEmail?: string;
+    isEligibleForSwitchDiscountFromClient?: boolean; // used to send message back to user if they request the discount but after we check here on the server they are not eligible
   };
 }
 
@@ -114,6 +119,37 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       });
     }
 
+    // Switch Fitness Discount
+    const switchFitnessDiscountEmail =
+      req.body.switchFitnessDiscountEmail?.toLowerCase() ?? '';
+
+    let switchFitnessDiscount: SwitchFitnessDiscount | null = null;
+    if (store.meta?.switchFitnessDiscountId) {
+      switchFitnessDiscount =
+        await switchFitnessModel.getSwitchFitnessDiscountById(
+          db,
+          store.meta.switchFitnessDiscountId
+        );
+    }
+
+    const isEligibleForSwitchFitnessDiscount =
+      !!switchFitnessDiscount &&
+      switchFitnessDiscount.active &&
+      switchFitnessDiscount.eligibleEmails.includes(
+        switchFitnessDiscountEmail
+      ) &&
+      !switchFitnessDiscount.usedEmails.includes(switchFitnessDiscountEmail);
+
+    if (
+      req.body.isEligibleForSwitchDiscountFromClient &&
+      !isEligibleForSwitchFitnessDiscount
+    ) {
+      return res.json({
+        error:
+          'Your email is either ineligible or has already been used for the Switch Fitness discount.',
+      });
+    }
+
     // 3. verify order items and order subtotal
     const verified = verifyCartItems(
       req.body.items,
@@ -135,16 +171,23 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       });
     }
 
+    // calculate subtotal with switch fitness discount check
+    const verifiedSubtotal = calculateSubtotalWithSwitchDiscount({
+      initialSubtotal: verified.subtotal,
+      switchFitnessDiscount,
+      isEligibleForSwitchFitnessDiscount,
+    });
+
     // 4. calculate order salesTax and total from verified items and subtotal
-    const verifiedSalesTax = calculateSalesTax(verified.subtotal);
+    const verifiedSalesTax = calculateSalesTax(verifiedSubtotal);
     const verifiedShipping = calculateShipping(
       shipping.price,
       shipping.freeMinimum,
-      verified.subtotal,
+      verifiedSubtotal, // todo: ask Nick about this (should it be the original subtotal or the subtotal with the discount applied?)
       req.body.shippingMethod
     );
     const verifiedTotal = calculateCartTotal(
-      verified.subtotal,
+      verifiedSubtotal,
       verifiedSalesTax,
       verifiedShipping
     );
@@ -180,6 +223,9 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
 
     // 7. format the order for the db
     const timestamp = new Date().toISOString();
+    const switchFitnessDiscountValue = isEligibleForSwitchFitnessDiscount
+      ? switchFitnessDiscount?.discount
+      : 0;
     const order: Order = {
       orderId,
       store: {
@@ -198,7 +244,8 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       shippingMethod: req.body.shippingMethod,
       shippingAddress: req.body.shippingAddress,
       summary: {
-        subtotal: verified.subtotal,
+        subtotal: verified.subtotal, // this should be the subtotal before any discounts
+        discount: switchFitnessDiscountValue ? switchFitnessDiscountValue : 0, // eventually this calculation will be done with more than just the switch fitness discount
         shipping: verifiedShipping,
         salesTax: verifiedSalesTax,
         total: verifiedTotal,
@@ -218,6 +265,12 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
         teacherAppreciation: {
           id: teacherAppreciationId,
           email: teacherAppreciationEmail,
+        },
+      }),
+      ...(isEligibleForSwitchFitnessDiscount && {
+        switchFitnessDiscount: {
+          id: switchFitnessDiscount?._id.toString() as string,
+          email: switchFitnessDiscountEmail,
         },
       }),
       createdAt: timestamp,
@@ -250,10 +303,20 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       );
     }
 
+    // 12. if switch fitness discount was used, add email to switch fitness discount usedEmails
+    if (isEligibleForSwitchFitnessDiscount) {
+      await switchFitnessModel.addUsedEmailToSwitchFitness(
+        db,
+        switchFitnessDiscount?._id as string,
+        switchFitnessDiscountEmail
+      );
+    }
+
     res.json({
       success: true,
       orderId: order.orderId,
       resetTeacherAppreciation: !!teacherAppreciation,
+      resetSwitchFitnessDiscount: !!switchFitnessDiscount,
     });
   } catch (error: any) {
     if (error.type === 'StripeCardError') {

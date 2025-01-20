@@ -176,6 +176,7 @@ export interface Order {
   };
   summary: {
     subtotal: number;
+    discount?: number;
     shipping: number;
     salesTax: number;
     total: number;
@@ -187,6 +188,10 @@ export interface Order {
   };
   note?: string;
   teacherAppreciation?: {
+    id: string;
+    email: string;
+  };
+  switchFitnessDiscount?: {
     id: string;
     email: string;
   };
@@ -228,6 +233,10 @@ export interface Store {
   createdAt: string;
   updatedAt: string;
   teacherAppreciationId: string;
+  meta: {
+    isSwitchFitness?: boolean;
+    switchFitnessDiscountId?: string;
+  };
 }
 
 export interface StoreForStoresPage {
@@ -320,6 +329,16 @@ export interface TeacherAppreciation {
   active: boolean;
   year: number;
   storeId: string;
+  eligibleEmails: string[];
+  usedEmails: string[];
+}
+
+// Switch Fitness Discount ********************************
+export interface SwitchFitnessDiscount {
+  _id: string;
+  active: boolean;
+  storeId: string;
+  discount: number;
   eligibleEmails: string[];
   usedEmails: string[];
 }

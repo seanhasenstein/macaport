@@ -1,14 +1,22 @@
 import React from 'react';
-import { useRouter } from 'next/router';
-import styled from 'styled-components';
 import { GetServerSideProps } from 'next';
+import styled from 'styled-components';
+import { useRouter } from 'next/router';
+
 import { connectToDb, store as storeModel } from 'db';
-import { Store, StoreProduct } from '../../../../interfaces';
+
 import { getUrlParameter } from 'utils';
+import { useCart } from 'hooks/useCart';
+import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
+
 import StoreLayout from '../../../../components/store/layouts/StoreLayout';
 import StoreItem from '../../../../components/store/home/StoreItem';
 import StoreHomepageError from 'components/store/errors/StoreHomepageError';
+import TeacherAppreciation from 'components/store/home/TeacherAppreciation';
+import SwitchFitness from 'components/store/home/SwitchFitness';
 import DemoBanner from 'components/store/demo/banner';
+
+import { Store, StoreProduct } from '../../../../interfaces';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -46,58 +54,100 @@ type Props = {
 export default function StoreDemoHomepage(props: Props) {
   const router = useRouter();
 
+  const cart = useCart();
+
+  const cartHasFreeItem = cart.items.some(
+    item => item.itemTotal === 0 && item.quantity === 1
+  );
+
+  const storeId = props.store._id;
+
+  // teacher appreciation
+  const {
+    email: teacherAppreciationEmail,
+    isEligible,
+    alreadyUsed,
+  } = useTeacherAppreciation();
+  const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
+  const teacherAppreciationProductId = props.store.products[0].id;
+  // todo: update link to demo
+  const teacherAppreciationProductLink = `/store/${storeId}/demo/product?productId=${teacherAppreciationProductId}`;
+  const eligibleForFreeItem =
+    isTeacherAppreciationStore &&
+    !cartHasFreeItem &&
+    isEligible &&
+    !alreadyUsed &&
+    teacherAppreciationEmail !== '';
+
+  // switch fitness
+  const isSwitchFitness = !!props.store.meta?.isSwitchFitness;
+  const switchFitnessDiscountId = props.store.meta?.switchFitnessDiscountId;
+
   if (props.error) {
     return <StoreHomepageError />;
   }
 
   return (
-    <StoreLayout title={`${props.store.name}`}>
-      <StoreDemoStyles>
-        <div className="store-header">
-          <h2 className="store-name">
-            <span>{props.store.name}</span>
-          </h2>
-        </div>
-        {!props.store.products || props.store.products.length < 1 ? (
-          <div className="no-products">
-            <div className="wrapper">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <p>
-                This store currently has no products available. Contact us with
-                any questions at{' '}
-                <a href="mailto:support@macaport.com">support@macaport.com</a>.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="items">
-            {props.store.products.map((p: StoreProduct) => (
-              <StoreItem
-                key={p.id}
-                item={p}
-                storeId={props.store._id}
-                isDemo={router.pathname.split('/').includes('demo')}
-              />
-            ))}
-          </div>
-        )}
-      </StoreDemoStyles>
+    <>
       <DemoBanner />
-    </StoreLayout>
+      <StoreLayout title={`${props.store.name}`}>
+        <StoreDemoStyles isTeacherAppreciation={isTeacherAppreciationStore}>
+          <div className="store-header">
+            <h2 className="store-name">
+              <span>{props.store.name}</span>
+            </h2>
+          </div>
+          {!props.store.products || props.store.products.length < 1 ? (
+            <div className="no-products">
+              <div className="wrapper">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <p>
+                  This store currently has no products available. Contact us
+                  with any questions at{' '}
+                  <a href="mailto:support@macaport.com">support@macaport.com</a>
+                  .
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="items">
+              {props.store.teacherAppreciationId ? (
+                <TeacherAppreciation
+                  teacherAppreciationId={props.store.teacherAppreciationId}
+                  productLink={teacherAppreciationProductLink}
+                />
+              ) : null}
+              {isSwitchFitness && switchFitnessDiscountId ? (
+                <SwitchFitness switchFitnessId={switchFitnessDiscountId} />
+              ) : null}
+              {props.store.products.map((p: StoreProduct) => (
+                <StoreItem
+                  key={p.id}
+                  item={p}
+                  storeId={props.store._id}
+                  isDemo={router.pathname.split('/').includes('demo')}
+                  eligibleForFreeItem={eligibleForFreeItem}
+                />
+              ))}
+            </div>
+          )}
+        </StoreDemoStyles>
+      </StoreLayout>
+    </>
   );
 }
 
-const StoreDemoStyles = styled.div`
+const StoreDemoStyles = styled.div<{ isTeacherAppreciation: boolean }>`
   position: relative;
   margin: 4rem 0 0;
 
@@ -160,7 +210,9 @@ const StoreDemoStyles = styled.div`
   }
 
   .items {
-    margin: 3.5rem auto 3rem;
+    /* margin: 4rem auto 3rem; */
+    margin: ${props => (props.isTeacherAppreciation ? '3.5rem' : '4rem')} auto
+      3rem;
     padding: 0 1.5rem;
     max-width: 72rem;
     width: 100%;
