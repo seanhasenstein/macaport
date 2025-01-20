@@ -5,6 +5,7 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { CheckCircleIcon } from '@heroicons/react/20/solid';
 
+import { useCart } from 'hooks/useCart';
 import { useSwitchFitnessDiscount } from 'hooks/useSwitchFitness';
 
 const validationSchema = Yup.object().shape({
@@ -17,11 +18,17 @@ type Props = { switchFitnessId: string };
 
 export default function SwitchFitness({ switchFitnessId }: Props) {
   const [isLoading, setIsLoading] = React.useState(false);
+
+  const { items, setItems, updateStoreSettings } = useCart();
   const { alreadyUsed, email, isEligible, resetState, verifyEmail } =
     useSwitchFitnessDiscount();
 
   const notEligibleNotAlreadyUsed = email && !isEligible && !alreadyUsed;
   const notEligibleAlreadyUsed = email && !isEligible && alreadyUsed;
+
+  const resetCartWithUpdatedStoreSettings = () => {
+    setItems(items);
+  };
 
   return (
     <SwitchFitnessStyles>
@@ -50,7 +57,14 @@ export default function SwitchFitness({ switchFitnessId }: Props) {
             <button
               type="button"
               className="reset-discount-button"
-              onClick={resetState}
+              onClick={() => {
+                resetState();
+                updateStoreSettings({
+                  isSwitchFitnessStore: true,
+                  applySwitchFitnessDiscount: false,
+                });
+                resetCartWithUpdatedStoreSettings();
+              }}
             >
               Remove this discount
             </button>
@@ -68,12 +82,20 @@ export default function SwitchFitness({ switchFitnessId }: Props) {
               }}
               onSubmit={async (values, { resetForm }) => {
                 setIsLoading(true);
-                const { isEligible } = await verifyEmail({
+                const {
+                  isEligible: isEligibleResponse,
+                  alreadyUsed: alreadyUsedResponse,
+                } = await verifyEmail({
                   email: values.email,
                   switchFitnessId,
                 });
-                if (isEligible) {
+                if (isEligibleResponse && !alreadyUsedResponse) {
                   resetForm();
+                  updateStoreSettings({
+                    isSwitchFitnessStore: true,
+                    applySwitchFitnessDiscount: true,
+                  });
+                  resetCartWithUpdatedStoreSettings();
                 }
                 setIsLoading(false);
               }}
