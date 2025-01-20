@@ -16,6 +16,7 @@ type Props = {
   teacherAppreciationEmail?: string;
   cartHasFreeItem?: boolean;
   eligibleForTeacherAppreciation?: boolean;
+  applySwitchFitnessDiscount?: boolean;
 };
 
 export default function CheckoutSidebar(props: Props) {
@@ -67,6 +68,12 @@ export default function CheckoutSidebar(props: Props) {
                   {formatToMoney(props.cartSubtotal, true)}
                 </div>
               </div>
+              {props.applySwitchFitnessDiscount ? (
+                <div className="item">
+                  <div className="key">Switch Fitness Promo</div>
+                  <div className="value">-$25.00</div>
+                </div>
+              ) : null}
               <div className="item">
                 <div className="key">Sales Tax</div>
                 <div className="value">

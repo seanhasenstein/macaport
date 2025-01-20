@@ -1,11 +1,53 @@
 import * as crypto from 'crypto';
 import { FormikErrors, FormikTouched } from 'formik';
-import { CartItem, ProductSku, ShippingMethod } from '../interfaces';
+import {
+  CartItem,
+  ProductSku,
+  ShippingMethod,
+  SwitchFitnessDiscount,
+} from '../interfaces';
 
-export function calculateCartSubtotal(cartItems: CartItem[]) {
-  return cartItems.reduce((total, item) => {
+type CalculateCartSubtotal = {
+  cartItems: CartItem[];
+  applySwitchFitnessDiscount?: boolean;
+};
+
+export function calculateCartSubtotal({
+  cartItems,
+  applySwitchFitnessDiscount = false,
+}: CalculateCartSubtotal) {
+  const rawCartSubtotal = cartItems.reduce((total, item) => {
     return total + item.quantity * item.price;
   }, 0);
+
+  let cartSubtotal = rawCartSubtotal;
+  if (applySwitchFitnessDiscount) {
+    const cartSubtotalCheckingDiscount =
+      rawCartSubtotal - 2500 > 0 ? rawCartSubtotal - 2500 : 0;
+    cartSubtotal = cartSubtotalCheckingDiscount;
+  }
+
+  return {
+    cartSubtotal,
+    rawCartSubtotal,
+  };
+}
+
+export function calculateSubtotalWithSwitchDiscount({
+  switchFitnessDiscount,
+  isEligibleForSwitchFitnessDiscount,
+  initialSubtotal,
+}: {
+  switchFitnessDiscount: SwitchFitnessDiscount | null;
+  isEligibleForSwitchFitnessDiscount: boolean;
+  initialSubtotal: number;
+}) {
+  if (switchFitnessDiscount && isEligibleForSwitchFitnessDiscount) {
+    return initialSubtotal - switchFitnessDiscount.discount > 0
+      ? initialSubtotal - switchFitnessDiscount.discount
+      : 0;
+  }
+  return initialSubtotal;
 }
 
 export function calculateSalesTax(subtotal: number) {
