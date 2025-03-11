@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 import FormData from 'form-data';
 
 type SendEmailParams = {
-  to: string;
+  to: string | string[];
   from: string;
   subject: string;
   text: string;
@@ -27,7 +27,14 @@ export async function sendEmail({
   const form = new FormData();
   const endpoint = `https://api.mailgun.net/v3/${process.env.MAILGUN_DOMAIN}/messages`;
 
-  form.append('to', to);
+  if (typeof to === 'string') {
+    form.append('to', to);
+  } else {
+    for (const email of to) {
+      form.append('to', email);
+    }
+  }
+
   form.append('from', from);
   form.append('subject', subject);
   form.append('text', text);
