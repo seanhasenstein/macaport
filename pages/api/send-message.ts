@@ -28,8 +28,17 @@ export default async function handler(
 
     const { text, html } = generateContactFormEmail(req.body, id, timestamp);
 
+    const toField = process.env.CONTACT_FORM_TO;
+    let formattedToField;
+
+    if (toField.includes(',')) {
+      formattedToField = toField.split(',').map(email => email.trim());
+    } else {
+      formattedToField = toField;
+    }
+
     const result = await sendEmail({
-      to: process.env.CONTACT_FORM_TO,
+      to: formattedToField,
       from: `Macaport Contact Form <${process.env.CONTACT_FORM_FROM}>`,
       subject: `Contact Form Message [#${id}]`,
       replyTo: req.body.email,
@@ -39,6 +48,7 @@ export default async function handler(
 
     res.status(200).json(result);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Internal server error' });
   }
 }
