@@ -799,7 +799,7 @@ export default function TermsAndConditions() {
           <p>
             Macaport LLC
             <br />
-            E8644 Casey Rd.
+            1817 N Shawno St.
             <br />
             New London, WI 54961
           </p>

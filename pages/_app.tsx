@@ -4,6 +4,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { CartProvider } from '../hooks/useCart';
 import { TeacherAppreciationProvider } from '../hooks/useTeacherAppreciation';
+import { SheboyganLutheranStaffProvider } from 'hooks/useSheboyganLutheranStaff';
 import { SwitchFitnessDiscountProvider } from 'hooks/useSwitchFitness';
 
 const stripePromise = loadStripe(
@@ -18,11 +19,13 @@ function MyApp({ Component, pageProps }: AppProps) {
     <Elements stripe={stripePromise}>
       {router.pathname.split('/').includes('store') ? (
         <TeacherAppreciationProvider>
-          <SwitchFitnessDiscountProvider>
-            <CartProvider cartId={`cart_${cartId}`}>
-              <Component {...pageProps} />
-            </CartProvider>
-          </SwitchFitnessDiscountProvider>
+          <SheboyganLutheranStaffProvider>
+            <SwitchFitnessDiscountProvider>
+              <CartProvider cartId={`cart_${cartId}`}>
+                <Component {...pageProps} />
+              </CartProvider>
+            </SwitchFitnessDiscountProvider>
+          </SheboyganLutheranStaffProvider>
         </TeacherAppreciationProvider>
       ) : (
         <Component {...pageProps} />

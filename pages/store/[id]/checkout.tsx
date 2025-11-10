@@ -9,6 +9,7 @@ import { useCart } from '../../../hooks/useCart';
 import { getUrlParameter } from '../../../utils';
 import useCheckoutSubmit from 'hooks/useCheckoutSubmit';
 import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
+import { useSheboyganLutheranStaff } from 'hooks/useSheboyganLutheranStaff';
 import { useSwitchFitnessDiscount } from 'hooks/useSwitchFitness';
 
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
@@ -29,6 +30,13 @@ export const getServerSideProps: GetServerSideProps = async context => {
     const db = await connectToDb();
     const storeResult = await store.getStoreById(db, id);
     const shippingResult = await shipping.getShippingDetails(db);
+
+    const hasPrimaryShipping = storeResult?.hasPrimaryShippingLocation;
+    const hasInStorePickup = storeResult?.allowStorePickup;
+    const hasDirectShipping = storeResult?.allowDirectShipping;
+
+    const onlyDirectShipping =
+      !!hasDirectShipping && !hasInStorePickup && !hasPrimaryShipping;
 
     if (!storeResult) {
       return {
@@ -53,7 +61,13 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    return { props: { store: storeResult, shipping: shippingResult } };
+    return {
+      props: {
+        store: storeResult,
+        shipping: shippingResult,
+        onlyDirectShipping,
+      },
+    };
   } catch (error) {
     return {
       props: { error },
@@ -64,10 +78,20 @@ export const getServerSideProps: GetServerSideProps = async context => {
 type Props = {
   store: Store;
   shipping: ShippingData;
+  onlyDirectShipping: boolean;
 };
 
 export default function Checkout(props: Props) {
-  const cart = useCart();
+  const {
+    alreadyUsed: alreadyUsedForSheboyganLutheranStaff,
+    isEligible: isEligibleForSheboyganLutheranStaff,
+  } = useSheboyganLutheranStaff();
+
+  const cart = useCart({
+    sheboyganLutheranStaffEligible:
+      isEligibleForSheboyganLutheranStaff &&
+      !alreadyUsedForSheboyganLutheranStaff,
+  });
   const checkout = useCheckoutSubmit({
     storeId: props.store._id,
     storeName: props.store.name,
@@ -76,6 +100,9 @@ export default function Checkout(props: Props) {
     isSwitchFitnessStore:
       !!props.store.meta?.isSwitchFitness &&
       !!props.store.meta?.switchFitnessDiscountId,
+    isEligibleForSheboyganLutheranStaffFromClient:
+      isEligibleForSheboyganLutheranStaff &&
+      !alreadyUsedForSheboyganLutheranStaff,
   });
 
   const {
@@ -104,6 +131,12 @@ export default function Checkout(props: Props) {
   const eligibleForTeacherAppreciation =
     isTeacherAppreciationStore && isEligible && !alreadyUsed;
 
+  const isSheboyganLutheranStaffStore = !!props.store.sheboyganLutheranStaffId;
+  const applySheboyganLutheranStaffDiscount =
+    isSheboyganLutheranStaffStore &&
+    isEligibleForSheboyganLutheranStaff &&
+    !alreadyUsedForSheboyganLutheranStaff;
+
   return (
     <StoreLayout title={`Checkout | ${props.store.name}`}>
       <CheckoutStyles>
@@ -125,6 +158,12 @@ export default function Checkout(props: Props) {
             setOutOfStockItems={checkout.setOutOfStockItems}
             setShowInventoryModal={checkout.setShowInventoryModal}
             checkout={checkout}
+            applySheboyganLutheranStaffDiscount={
+              applySheboyganLutheranStaffDiscount
+            }
+            onlyDirectShipping={props.onlyDirectShipping}
+            shippingPrice={props.shipping.price}
+            shippingFreeMinimum={props.shipping.freeMinimum}
           />
           <CheckoutSidebar
             cartSubtotal={cart.cartSubtotal}
@@ -138,6 +177,10 @@ export default function Checkout(props: Props) {
               teacherAppreciationEmail,
               eligibleForTeacherAppreciation,
               applySwitchFitnessDiscount,
+              applySheboyganLutheranStaffDiscount,
+              onlyDirectShipping: props.onlyDirectShipping,
+              shippingPrice: props.shipping.price,
+              shippingFreeMinimum: props.shipping.freeMinimum,
             }}
           />
         </div>

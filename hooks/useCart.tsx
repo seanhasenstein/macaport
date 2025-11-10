@@ -23,6 +23,9 @@ type InitialState = {
   cartSubtotal: number;
   salesTax: number;
   shipping: number;
+  shippingMethod: ShippingMethod;
+  shippingPrice: number;
+  shippingFreeMinimum: number;
   cartTotalWithoutShipping: number;
   cartTotal: number;
   isSwitchFitnessStore: boolean;
@@ -86,10 +89,52 @@ const CartContext = React.createContext<CartProviderState | undefined>(
   initialState
 );
 
-export const useCart = () => {
+interface UseCartParams {
+  sheboyganLutheranStaffEligible?: boolean;
+}
+
+export const useCart = (optionalParams?: UseCartParams) => {
   const context = React.useContext(CartContext);
   if (!context) throw new Error('Expected to be wrapped in a CartProvider');
-  return context;
+
+  const recalculateState = React.useMemo(() => {
+    if (!optionalParams?.sheboyganLutheranStaffEligible) {
+      return context;
+    }
+
+    // TODO: use dynamic discount value from the database
+    const sheboyganLutheranStaffDiscount = 7500;
+    const cartIsLessThanOrEqualToDiscount =
+      context.cartSubtotal <= sheboyganLutheranStaffDiscount;
+    const realCartSubtotal =
+      context.cartSubtotal <= sheboyganLutheranStaffDiscount
+        ? 0
+        : context.cartSubtotal - sheboyganLutheranStaffDiscount;
+    const salesTax = cartIsLessThanOrEqualToDiscount
+      ? 0
+      : calculateSalesTax(
+          context.cartSubtotal - sheboyganLutheranStaffDiscount
+        );
+    const cartTotalWithoutShipping = calculateCartTotal(
+      realCartSubtotal,
+      salesTax,
+      0
+    );
+    const cartTotal = calculateCartTotal(
+      realCartSubtotal,
+      salesTax,
+      context.shipping
+    );
+
+    return {
+      ...context,
+      salesTax,
+      cartTotalWithoutShipping,
+      cartTotal,
+    };
+  }, [context, optionalParams]);
+
+  return recalculateState;
 };
 
 function reducer(state: CartProviderState, action: Actions) {

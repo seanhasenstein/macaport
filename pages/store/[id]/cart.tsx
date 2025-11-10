@@ -11,6 +11,7 @@ import { formatToMoney, getUrlParameter } from '../../../utils';
 import useHasMounted from '../../../hooks/useHasMounted';
 import { useCart } from '../../../hooks/useCart';
 import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
+import { useSheboyganLutheranStaff } from 'hooks/useSheboyganLutheranStaff';
 import { useSwitchFitnessDiscount } from 'hooks/useSwitchFitness';
 
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
@@ -88,7 +89,22 @@ export default function Cart(props: Props) {
     isEligibleForSwitchFitnessDiscount &&
     !alreadyUsedForSwitchFitnessDiscount;
 
-  const cart = useCart();
+  const {
+    alreadyUsed: alreadyUsedForSheboyganLutheranStaff,
+    isEligible: isEligibleForSheboyganLutheranStaff,
+  } = useSheboyganLutheranStaff();
+
+  const isSheboyganLutheranStaffStore = !!store.sheboyganLutheranStaffId;
+  const applySheboyganLutheranStaffDiscount =
+    isSheboyganLutheranStaffStore &&
+    isEligibleForSheboyganLutheranStaff &&
+    !alreadyUsedForSheboyganLutheranStaff;
+
+  const cart = useCart({
+    sheboyganLutheranStaffEligible:
+      isEligibleForSheboyganLutheranStaff &&
+      !alreadyUsedForSheboyganLutheranStaff,
+  });
 
   const {
     email: teacherAppreciationEmail,
@@ -180,6 +196,14 @@ export default function Cart(props: Props) {
                       <div className="item">
                         <div className="key">Switch Fitness Promo</div>
                         <div className="value">-$25.00</div>
+                      </div>
+                    ) : null}
+                    {applySheboyganLutheranStaffDiscount &&
+                    cart.cartSubtotal > 0 ? (
+                      <div className="item">
+                        <div className="key">Sheboygan Lutheran Staff</div>
+                        {/* TODO: add dyanmic value from database */}
+                        <div className="value">-$75.00</div>
                       </div>
                     ) : null}
                     <div className="item">
