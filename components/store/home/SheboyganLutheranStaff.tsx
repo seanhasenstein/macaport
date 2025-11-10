@@ -20,6 +20,7 @@ export default function SheboyganLutheranStaff({
     verifyEmail,
     notEligibleAlreadyUsed,
     notEligibleNotAlreadyUsed,
+    isSubmitting,
   } = useSheboyganLutheranStaff();
 
   return (
@@ -84,8 +85,12 @@ export default function SheboyganLutheranStaff({
                       // placeholder="Enter your email"
                     />
                   </div>
-                  <button type="submit" className="redeem-button">
-                    Activate Your Credit
+                  <button
+                    type="submit"
+                    className="redeem-button"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? <LoadingSpinner /> : 'Activate $75 Credit'}
                   </button>
                   {/* Message for not eligible but not used */}
                   {notEligibleNotAlreadyUsed ? (
@@ -258,5 +263,29 @@ const SheboyganLutheranStaffStyles = styled.div`
 
   @media (min-width: 768px) {
     padding-top: 1.125rem;
+  }
+`;
+
+const LoadingSpinner = styled.span`
+  @keyframes spinner {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  &:before {
+    content: '';
+    box-sizing: border-box;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin-top: -10px;
+    margin-left: -10px;
+    border-radius: 50%;
+    border-top: 2px solid #fff;
+    border-right: 2px solid transparent;
+    animation: spinner 0.6s linear infinite;
   }
 `;

@@ -25,6 +25,9 @@ interface GetInitialValues {
   allowDirectShipping: boolean;
   allowStorePickup: boolean;
   cartTotal: number;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
 }
 
 export function getInitialValues({
@@ -33,12 +36,15 @@ export function getInitialValues({
   allowDirectShipping,
   allowStorePickup,
   cartTotal,
+  firstName,
+  lastName,
+  email,
 }: GetInitialValues) {
   return {
     customer: {
-      firstName: '',
-      lastName: '',
-      email: '',
+      firstName: firstName || '',
+      lastName: lastName || '',
+      email: email || '',
       phone: '',
     },
     shippingAddress: {

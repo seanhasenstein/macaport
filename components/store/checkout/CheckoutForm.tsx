@@ -55,6 +55,9 @@ export default function CheckoutForm(props: Props) {
   const {
     alreadyUsed: alreadyUsedForSheboyganLutheranStaff,
     isEligible: isEligibleForSheboyganLutheranStaff,
+    firstName: firstNameForSheboyganLutheranStaff,
+    lastName: lastNameForSheboyganLutheranStaff,
+    email: emailForSheboyganLutheranStaff,
   } = useSheboyganLutheranStaff();
   // TODO: should I clean this up and bring in as a prop from the parent component?
   const cart = useCart({
@@ -71,6 +74,17 @@ export default function CheckoutForm(props: Props) {
       allowDirectShipping: props.allowDirectShipping,
       allowStorePickup: props.allowStorePickup,
       cartTotal: cart.cartTotal,
+      ...(firstNameForSheboyganLutheranStaff && {
+        firstName: firstNameForSheboyganLutheranStaff,
+      }),
+      ...(lastNameForSheboyganLutheranStaff && {
+        lastName: lastNameForSheboyganLutheranStaff,
+      }),
+      ...(emailForSheboyganLutheranStaff &&
+        isEligibleForSheboyganLutheranStaff &&
+        !alreadyUsedForSheboyganLutheranStaff && {
+          email: emailForSheboyganLutheranStaff,
+        }),
     })
   );
 

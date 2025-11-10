@@ -22,14 +22,14 @@ const handler = nc<ExtendedRequest, NextApiResponse>()
       return res.status(400).json({ error: 'Missing id or email' });
     }
 
-    const { isEligible, alreadyUsed } =
+    const { isEligible, alreadyUsed, firstName, lastName } =
       await sheboyganLutheranStaff.verifySheboyganLutheranStaffEligibility(
         req.db,
         id,
         email
       );
 
-    res.json({ isEligible, alreadyUsed });
+    res.json({ isEligible, alreadyUsed, firstName, lastName });
   });
 
 export default handler;

@@ -2,22 +2,23 @@ import React from 'react';
 
 import useLocalStorage from './useLocalStorage';
 
-import { SheboyganLutheranStaff } from 'interfaces';
-
 type SheboyganLutheranStaffState = {
   email: string | undefined;
   isEligible: boolean;
   alreadyUsed: boolean;
+  firstName: string;
+  lastName: string;
 };
 
 const initialState: SheboyganLutheranStaffState = {
   email: undefined,
   isEligible: false,
   alreadyUsed: false,
+  firstName: '',
+  lastName: '',
 };
 
 type SheboyganLutheranStaffContextType = SheboyganLutheranStaffState & {
-  addEmailToUsedEmails: (email: string) => Promise<SheboyganLutheranStaff>;
   verifyEmail: ({
     email,
     sheboyganLutheranStaffId,
@@ -31,6 +32,7 @@ type SheboyganLutheranStaffContextType = SheboyganLutheranStaffState & {
   resetState: () => void;
   notEligibleNotAlreadyUsed: boolean;
   notEligibleAlreadyUsed: boolean;
+  isSubmitting: boolean;
 };
 
 const SheboyganLutheranStaffContext =
@@ -55,6 +57,7 @@ type SheboyganLutheranStaffProviderType = {
 function SheboyganLutheranStaffProvider({
   children,
 }: SheboyganLutheranStaffProviderType) {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [localStorageState, saveLocalStorageState] = useLocalStorage(
     'sheb-luth-staff-25',
     JSON.stringify(initialState)
@@ -75,6 +78,7 @@ function SheboyganLutheranStaffProvider({
     email: string;
     sheboyganLutheranStaffId: string;
   }) => {
+    setIsSubmitting(true);
     const response = await fetch(
       `/api/sheboygan-lutheran-staff/verify-email?id=${sheboyganLutheranStaffId}&email=${encodeURIComponent(
         email
@@ -85,34 +89,24 @@ function SheboyganLutheranStaffProvider({
     );
 
     if (!response.ok) {
+      setIsSubmitting(false);
       throw new Error('Failed to verify email');
     }
 
     const {
       isEligible,
       alreadyUsed,
-    }: { isEligible: boolean; alreadyUsed: boolean } = await response.json();
-    saveState({ email, isEligible, alreadyUsed });
+      firstName,
+      lastName,
+    }: {
+      isEligible: boolean;
+      alreadyUsed: boolean;
+      firstName: string;
+      lastName: string;
+    } = await response.json();
+    saveState({ email, isEligible, alreadyUsed, firstName, lastName });
+    setIsSubmitting(false);
     return { isEligible, alreadyUsed };
-  };
-
-  const addEmailToUsedEmails = async (email: string) => {
-    const response = await fetch(
-      `/api/sheboygan-lutheran-staff/add-used-email`,
-      {
-        method: 'POST',
-        body: JSON.stringify({ email }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to add email to used emails');
-    }
-
-    const updatedShebLutheranStaff: SheboyganLutheranStaff =
-      await response.json();
-    saveState({ email, isEligible: false, alreadyUsed: true });
-    return updatedShebLutheranStaff;
   };
 
   const resetState = () => {
@@ -128,11 +122,11 @@ function SheboyganLutheranStaffProvider({
     <SheboyganLutheranStaffContext.Provider
       value={{
         ...state,
-        addEmailToUsedEmails,
         verifyEmail,
         resetState,
         notEligibleNotAlreadyUsed,
         notEligibleAlreadyUsed,
+        isSubmitting,
       }}
     >
       {children}

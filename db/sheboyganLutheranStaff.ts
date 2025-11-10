@@ -33,7 +33,19 @@ export async function verifySheboyganLutheranStaffEligibility(
       account => account.email.toLowerCase() === lowercaseEmail
     ) && !alreadyUsed;
 
-  return { isEligible, alreadyUsed };
+  let firstName = '';
+  let lastName = '';
+
+  const eligibleAccount = sheboyganLutheranStaff.eligibleAccounts.find(
+    account => account.email.toLowerCase() === lowercaseEmail
+  );
+
+  if (eligibleAccount && isEligible && !alreadyUsed) {
+    firstName = eligibleAccount.firstName;
+    lastName = eligibleAccount.lastName;
+  }
+
+  return { isEligible, alreadyUsed, firstName, lastName };
 }
 
 // ****************************************************
