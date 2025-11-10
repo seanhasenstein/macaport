@@ -6,6 +6,7 @@ import {
   order as orderModel,
   store as storeModel,
   shipping as shippingModel,
+  sheboyganLutheranStaff as sheboyganLutheranStaffModel,
   teacherAppreciation as teacherAppreciationModel,
   switchFitness as switchFitnessModel,
 } from '../../db';
@@ -46,8 +47,10 @@ interface ExtendedRequest extends NextApiRequest {
     shippingAddress: Address | PrimaryShippingAddress;
     note?: string;
     teacherAppreciationEmail?: string;
+    sheboyganLutheranStaffEmail?: string;
     switchFitnessDiscountEmail?: string;
     isEligibleForSwitchDiscountFromClient?: boolean; // used to send message back to user if they request the discount but after we check here on the server they are not eligible
+    isEligibleForSheboyganLutheranStaffFromClient?: boolean; // used to send message back to user if they request the discount but after we check here on the server they are not eligible
   };
 }
 
@@ -80,6 +83,50 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
 
     if (isStoreOpen === false) {
       return res.json({ storeClosed: true });
+    }
+
+    // sheboygan Lutheran staff verification
+    const sheboyganLutheranStaffEmail =
+      req.body.sheboyganLutheranStaffEmail?.toLowerCase() ?? '';
+    const sheboyganLutheranStaffId = store.sheboyganLutheranStaffId;
+
+    let sheboyganLutheranStaff;
+    let sheboyganLutheranStaffDiscountTotal: number | undefined;
+
+    if (sheboyganLutheranStaffId) {
+      sheboyganLutheranStaff =
+        await sheboyganLutheranStaffModel.getSheboyganLutheranStaffById(
+          db,
+          sheboyganLutheranStaffId
+        );
+      sheboyganLutheranStaffDiscountTotal = sheboyganLutheranStaff?.discount;
+    }
+
+    const isEligibleForSheboyganLutheranStaffDiscount =
+      !!sheboyganLutheranStaff &&
+      sheboyganLutheranStaff.active &&
+      sheboyganLutheranStaff.eligibleAccounts.some(
+        account => account.email.toLowerCase() === sheboyganLutheranStaffEmail
+      ) &&
+      !sheboyganLutheranStaff.usedEmails.includes(sheboyganLutheranStaffEmail);
+
+    console.log({
+      isEligibleForSheboyganLutheranStaffFromClient:
+        req.body.isEligibleForSheboyganLutheranStaffFromClient,
+      shebLuthStaffId: sheboyganLutheranStaffId,
+      shebLuthStaffEmail: sheboyganLutheranStaffEmail,
+      isEligibleForSheboyganLutheranStaffDiscount:
+        isEligibleForSheboyganLutheranStaffDiscount,
+    });
+
+    if (
+      req.body.isEligibleForSheboyganLutheranStaffFromClient &&
+      !isEligibleForSheboyganLutheranStaffDiscount
+    ) {
+      return res.json({
+        error:
+          'Your email is either ineligible or has already been used for the Sheboygan Lutheran Staff discount.',
+      });
     }
 
     // teacher appreciation verification
@@ -179,17 +226,42 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
     });
 
     // 4. calculate order salesTax and total from verified items and subtotal
-    const verifiedSalesTax = calculateSalesTax(verifiedSubtotal);
+    // TODO: 11/10/25 clean this up to work with any combination of discounts, sales tax, and shipping scenarios
+    const skipSalesTax =
+      isEligibleForSheboyganLutheranStaffDiscount &&
+      sheboyganLutheranStaffDiscountTotal &&
+      verifiedSubtotal <= sheboyganLutheranStaffDiscountTotal;
+    const verifiedSalesTax =
+      verifiedSubtotal -
+        (isEligibleForSheboyganLutheranStaffDiscount
+          ? sheboyganLutheranStaffDiscountTotal ?? 0
+          : 0) >
+      0
+        ? calculateSalesTax(
+            verifiedSubtotal -
+              (isEligibleForSheboyganLutheranStaffDiscount
+                ? sheboyganLutheranStaffDiscountTotal ?? 0
+                : 0)
+          )
+        : 0;
+
     const verifiedShipping = calculateShipping(
       shipping.price,
       shipping.freeMinimum,
       verifiedSubtotal, // todo: ask Nick about this (should it be the original subtotal or the subtotal with the discount applied?)
       req.body.shippingMethod
     );
+
     const verifiedTotal = calculateCartTotal(
-      verifiedSubtotal,
-      verifiedSalesTax,
-      verifiedShipping
+      Math.max(
+        0,
+        verifiedSubtotal -
+          (isEligibleForSheboyganLutheranStaffDiscount
+            ? sheboyganLutheranStaffDiscountTotal ?? 0
+            : 0)
+      ),
+      skipSalesTax ? 0 : verifiedSalesTax,
+      isEligibleForSheboyganLutheranStaffDiscount ? 0 : verifiedShipping
     );
 
     // 5. create orderId
@@ -245,9 +317,17 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       shippingAddress: req.body.shippingAddress,
       summary: {
         subtotal: verified.subtotal, // this should be the subtotal before any discounts
-        discount: switchFitnessDiscountValue ? switchFitnessDiscountValue : 0, // eventually this calculation will be done with more than just the switch fitness discount
-        shipping: verifiedShipping,
-        salesTax: verifiedSalesTax,
+        // TODO: 11/10/25 clean this up to work with any combination of discounts
+        discount: isEligibleForSheboyganLutheranStaffDiscount
+          ? sheboyganLutheranStaffDiscountTotal
+          : switchFitnessDiscountValue
+          ? switchFitnessDiscountValue
+          : 0,
+        // TODO: 11/10/25 clean this up
+        shipping: isEligibleForSheboyganLutheranStaffDiscount
+          ? 0
+          : verifiedShipping,
+        salesTax: skipSalesTax ? 0 : verifiedSalesTax,
         total: verifiedTotal,
         stripeFee:
           verifiedTotal > 0 ? Math.round(verifiedTotal * 0.029 + 30) : 0,
@@ -271,6 +351,13 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
         switchFitnessDiscount: {
           id: switchFitnessDiscount?._id.toString() as string,
           email: switchFitnessDiscountEmail,
+        },
+      }),
+      ...(isEligibleForSheboyganLutheranStaffDiscount && {
+        sheboyganLutheranStaffDiscount: {
+          id: sheboyganLutheranStaffId as string,
+          email: sheboyganLutheranStaffEmail,
+          discount: sheboyganLutheranStaff?.discount as number,
         },
       }),
       createdAt: timestamp,
@@ -303,6 +390,15 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       );
     }
 
+    // if sheboyganLutheranStaff discount was used, add email to sheboyganLutheranStaff usedEmails
+    if (isEligibleForSheboyganLutheranStaffDiscount) {
+      await sheboyganLutheranStaffModel.addUsedEmailToSheboyganLutheranStaff(
+        db,
+        sheboyganLutheranStaffId as string,
+        sheboyganLutheranStaffEmail
+      );
+    }
+
     // 12. if switch fitness discount was used, add email to switch fitness discount usedEmails
     if (isEligibleForSwitchFitnessDiscount) {
       await switchFitnessModel.addUsedEmailToSwitchFitness(
@@ -317,6 +413,7 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       orderId: order.orderId,
       resetTeacherAppreciation: !!teacherAppreciation,
       resetSwitchFitnessDiscount: !!switchFitnessDiscount,
+      resetSheboyganLutheranStaffDiscount: !!sheboyganLutheranStaff,
     });
   } catch (error: any) {
     if (error.type === 'StripeCardError') {

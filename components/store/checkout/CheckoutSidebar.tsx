@@ -17,11 +17,47 @@ type Props = {
   cartHasFreeItem?: boolean;
   eligibleForTeacherAppreciation?: boolean;
   applySwitchFitnessDiscount?: boolean;
+  applySheboyganLutheranStaffDiscount?: boolean;
+  onlyDirectShipping: boolean;
+  shippingPrice: number;
+  shippingFreeMinimum: number;
 };
 
 export default function CheckoutSidebar(props: Props) {
   const router = useRouter();
   const hasMounted = useHasMounted();
+
+  // TODO: move this to the useCart logic (if possible)
+  // if applySheboyganLutheranStaffDiscount is true, shipping is 0 (because staff orders are being shipped to the school)
+  // if onlyDirectShipping is true and cartSubtotal is less than shippingFreeMinimum, show shippingPrice
+  // if onlyDirectShipping is true and cartSubtotal is greater than or equal to shippingFreeMinimum the shipping is 0
+  // if onlyDirectShipping is false, show cartShipping
+  function getShippingCost() {
+    if (props.applySheboyganLutheranStaffDiscount) {
+      return 0;
+    }
+    if (props.onlyDirectShipping) {
+      if (props.cartSubtotal < props.shippingFreeMinimum) {
+        return props.shippingPrice;
+      }
+      return 0;
+    }
+    return props.cartShipping;
+  }
+
+  // TODO: move this to the useCart logic (if possible)
+  // NOTE: this function is also used in CheckoutForm.tsx and should be kept in sync
+  // need to add to cart total if onlyDirectShipping is true and cartSubtotal is less than shippingFreeMinimum and applySheboyganLutheranStaffDiscount is false
+  function getOrderTotal() {
+    if (
+      props.onlyDirectShipping &&
+      props.cartSubtotal < props.shippingFreeMinimum &&
+      !props.applySheboyganLutheranStaffDiscount
+    ) {
+      return props.cartTotal + props.shippingPrice;
+    }
+    return props.cartTotal;
+  }
 
   return (
     <CheckoutSidebarStyles>
@@ -62,34 +98,46 @@ export default function CheckoutSidebar(props: Props) {
             </div>
             <div className="order-summary">
               <h3>Order Summary</h3>
+              {/* SUBTOTAL */}
               <div className="item">
                 <div className="key">Subtotal</div>
                 <div className="value">
                   {formatToMoney(props.cartSubtotal, true)}
                 </div>
               </div>
+              {/* SWITCH FITNESS DISCOUNT */}
               {props.applySwitchFitnessDiscount ? (
                 <div className="item">
                   <div className="key">Switch Fitness Promo</div>
                   <div className="value">-$25.00</div>
                 </div>
               ) : null}
+              {/* SHEBOYGAN LUTHERAN STAFF DISCOUNT */}
+              {props.applySheboyganLutheranStaffDiscount ? (
+                <div className="item">
+                  <div className="key">Sheboygan Lutheran Staff</div>
+                  <div className="value">-$75.00</div>
+                </div>
+              ) : null}
+              {/* SALES TAX */}
               <div className="item">
                 <div className="key">Sales Tax</div>
                 <div className="value">
                   {formatToMoney(props.salesTax, true)}
                 </div>
               </div>
+              {/* SHIPPING */}
               <div className="item">
                 <div className="key">Shipping</div>
                 <div className="value">
-                  {formatToMoney(props.cartShipping, true)}
+                  {formatToMoney(getShippingCost(), true)}
                 </div>
               </div>
+              {/* ORDER TOTAL */}
               <div className="item total">
                 <div className="key">Order Total</div>
                 <div className="value">
-                  {formatToMoney(props.cartTotal, true)}
+                  {formatToMoney(getOrderTotal(), true)}
                 </div>
               </div>
             </div>

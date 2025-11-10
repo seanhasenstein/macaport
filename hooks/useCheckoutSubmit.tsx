@@ -6,6 +6,7 @@ import { CartItem, CheckoutForm, UseCheckoutSubmit } from 'interfaces';
 import { useCart } from './useCart';
 import { useTeacherAppreciation } from './useTeacherAppreciation';
 import { useSwitchFitnessDiscount } from './useSwitchFitness';
+import { useSheboyganLutheranStaff } from './useSheboyganLutheranStaff';
 
 type Props = {
   storeId: string;
@@ -20,6 +21,7 @@ type Props = {
   };
   cartTotal: number;
   isSwitchFitnessStore: boolean;
+  isEligibleForSheboyganLutheranStaffFromClient: boolean;
 };
 
 export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
@@ -37,8 +39,22 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
   const [outOfStockItems, setOutOfStockItems] = React.useState<CartItem[]>([]);
   const [showInventoryModal, setShowInventoryModal] = React.useState(false);
 
+  // TODO: should I clean this up and bring in as a prop from the parent component?
+  const {
+    email: sheboyganLutheranStaffEmail,
+    alreadyUsed: alreadyUsedForSheboyganLutheranStaff,
+    isEligible: isEligibleForSheboyganLutheranStaff,
+  } = useSheboyganLutheranStaff();
+  // TODO: should I clean this up and bring in as a prop from the parent component?
   const { items, cartSubtotal, salesTax, cartTotal, cartIsEmpty, setItems } =
-    useCart();
+    useCart({
+      sheboyganLutheranStaffEligible:
+        isEligibleForSheboyganLutheranStaff &&
+        !alreadyUsedForSheboyganLutheranStaff,
+    });
+
+  const { resetState: resetSheboyganLutheranStaffDiscountState } =
+    useSheboyganLutheranStaff();
 
   const {
     resetState: resetTeacherAppreciationState,
@@ -73,6 +89,7 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
       const cardElement = elements?.getElement(CardElement);
 
       if (!stripe || !cardElement) {
+        console.log('Stripe.js has not yet loaded.');
         setStripeError(
           'An error has occured loading the page. Please refresh and try again.'
         );
@@ -91,6 +108,10 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
       });
 
       if (stripePaymentMethodResult.error) {
+        console.log(
+          'Stripe payment method error:',
+          stripePaymentMethodResult.error
+        );
         setStripeError(stripePaymentMethodResult.error.message);
         setIsSubmitting(false);
         return;
@@ -127,6 +148,11 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
         ...(switchFitnessDiscountEmail && { switchFitnessDiscountEmail }),
         ...(isEligibleForSwitchDiscountFromClient && {
           isEligibleForSwitchDiscountFromClient,
+        }),
+        ...(sheboyganLutheranStaffEmail && { sheboyganLutheranStaffEmail }),
+        ...(props.isEligibleForSheboyganLutheranStaffFromClient && {
+          isEligibleForSheboyganLutheranStaffFromClient:
+            props.isEligibleForSheboyganLutheranStaffFromClient,
         }),
       }),
     });
@@ -168,6 +194,10 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
 
     if (res.resetSwitchFitnessDiscount) {
       resetSwitchFitnessDiscountState();
+    }
+
+    if (res.resetSheboyganLutheranStaffDiscount) {
+      resetSheboyganLutheranStaffDiscountState();
     }
 
     router.push(
