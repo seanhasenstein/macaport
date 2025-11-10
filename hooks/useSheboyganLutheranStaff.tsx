@@ -76,7 +76,9 @@ function SheboyganLutheranStaffProvider({
     sheboyganLutheranStaffId: string;
   }) => {
     const response = await fetch(
-      `/api/sheboygan-lutheran-staff/verify-email?id=${sheboyganLutheranStaffId}&email=${email}`,
+      `/api/sheboygan-lutheran-staff/verify-email?id=${sheboyganLutheranStaffId}&email=${encodeURIComponent(
+        email
+      )}`,
       {
         method: 'GET',
       }
