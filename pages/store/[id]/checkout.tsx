@@ -92,6 +92,7 @@ export default function Checkout(props: Props) {
       isEligibleForSheboyganLutheranStaff &&
       !alreadyUsedForSheboyganLutheranStaff,
   });
+
   const checkout = useCheckoutSubmit({
     storeId: props.store._id,
     storeName: props.store.name,
