@@ -36,8 +36,9 @@ export default function SheboyganLutheranStaff({
         </div>
         {!isEligible && !email ? (
           <h3 className="title">
-            Are you a Sheboygan <br />
-            Lutheran staff member?
+            Sheboygan Lutheran
+            <br />
+            staff members
           </h3>
         ) : null}
         {isEligible && email ? (
