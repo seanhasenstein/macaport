@@ -91,6 +91,17 @@ export default function OrderConfirmation(props: Props) {
       ? 'Order'
       : 'Payment';
 
+  const isSheboyganLutheranStaffStore =
+    !!props.order.sheboyganLutheranStaffDiscount?.id;
+  const sheboyganLutheranStaffEmail =
+    props.order.sheboyganLutheranStaffDiscount?.email;
+  const sheboyganLutheranStaffDiscount =
+    props.order.sheboyganLutheranStaffDiscount?.discount;
+  const hasSheboyganLutheranStaffDiscount =
+    !!isSheboyganLutheranStaffStore &&
+    !!sheboyganLutheranStaffEmail &&
+    !!sheboyganLutheranStaffDiscount;
+
   const isTeacherAppreciationStore = !!props.order.teacherAppreciation?.id;
   const teacherAppreciationEmail = props.order.teacherAppreciation?.email;
   const orderHasFreeItem = props.order.items.some(
@@ -316,6 +327,15 @@ export default function OrderConfirmation(props: Props) {
                         {formatToMoney(props.order.summary.subtotal, true)}
                       </div>
                     </div>
+                    {/* SHEBOYGAN LUTHERAN STAFF DISCOUNT */}
+                    {hasSheboyganLutheranStaffDiscount ? (
+                      <div className="order-summary-item">
+                        <div className="label">Sheboygan Lutheran Staff</div>
+                        <div className="value">
+                          -{formatToMoney(sheboyganLutheranStaffDiscount, true)}
+                        </div>
+                      </div>
+                    ) : null}
                     {props.order.switchFitnessDiscount &&
                     props.order.summary.discount ? (
                       <div className="order-summary-item">

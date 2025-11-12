@@ -591,6 +591,19 @@ function generateReceiptHtml(order: Order) {
                             </td>
                           </tr>
                           ${
+                            order.sheboyganLutheranStaffDiscount
+                              ? `<tr>
+                            <td style="padding: 0 0 2px">Discount:</td>
+                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
+                              -${formatToMoney(
+                                order.summary.discount || 0,
+                                true
+                              )}
+                            </td>
+                          </tr>`
+                              : ``
+                          }
+                          ${
                             order.switchFitnessDiscount
                               ? `<tr>
                             <td style="padding: 0 0 2px">Discount:</td>

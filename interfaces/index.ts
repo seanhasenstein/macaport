@@ -187,6 +187,11 @@ export interface Order {
     amount: number;
   };
   note?: string;
+  sheboyganLutheranStaffDiscount?: {
+    id: string;
+    email: string;
+    discount: number;
+  };
   teacherAppreciation?: {
     id: string;
     email: string;
@@ -233,6 +238,7 @@ export interface Store {
   createdAt: string;
   updatedAt: string;
   teacherAppreciationId: string;
+  sheboyganLutheranStaffId?: string;
   meta: {
     isSwitchFitness?: boolean;
     switchFitnessDiscountId?: string;
@@ -331,6 +337,17 @@ export interface TeacherAppreciation {
   storeId: string;
   eligibleEmails: string[];
   usedEmails: string[];
+}
+
+// Sheboygan Lutheran Staff **************************
+export interface SheboyganLutheranStaff {
+  _id: string;
+  active: boolean;
+  year: number;
+  storeId: string;
+  eligibleAccounts: { firstName: string; lastName: string; email: string }[];
+  usedEmails: string[];
+  discount: number;
 }
 
 // Switch Fitness Discount ********************************

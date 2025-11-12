@@ -14,9 +14,11 @@ import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import StoreItem from '../../../components/store/home/StoreItem';
 import StoreHomepageError from 'components/store/errors/StoreHomepageError';
 import TeacherAppreciation from 'components/store/home/TeacherAppreciation';
+import SheboyganLutheranStaff from 'components/store/home/SheboyganLutheranStaff';
 import SwitchFitness from 'components/store/home/SwitchFitness';
 
 import { Store, StoreProduct } from '../../../interfaces';
+import { useSheboyganLutheranStaff } from 'hooks/useSheboyganLutheranStaff';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -65,7 +67,16 @@ type Props = {
 export default function StoreHomepage(props: Props) {
   const hasCloseDate = !!props.store.closeDate;
 
-  const cart = useCart();
+  const {
+    alreadyUsed: alreadyUsedForSheboyganLutheranStaff,
+    isEligible: isEligibleForSheboyganLutheranStaff,
+  } = useSheboyganLutheranStaff();
+
+  const cart = useCart({
+    sheboyganLutheranStaffEligible:
+      isEligibleForSheboyganLutheranStaff &&
+      !alreadyUsedForSheboyganLutheranStaff,
+  });
 
   const cartHasFreeItem = cart.items.some(
     item => item.itemTotal === 0 && item.quantity === 1
@@ -76,8 +87,8 @@ export default function StoreHomepage(props: Props) {
   // teacher appreciation
   const {
     email: teacherAppreciationEmail,
-    isEligible,
-    alreadyUsed,
+    isEligible: isEligibleForTeacherAppreciation,
+    alreadyUsed: alreadyUsedForTeacherAppreciation,
   } = useTeacherAppreciation();
   const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
   const teacherAppreciationProductId = props.store.products[0].id;
@@ -85,8 +96,8 @@ export default function StoreHomepage(props: Props) {
   const eligibleForFreeItem =
     isTeacherAppreciationStore &&
     !cartHasFreeItem &&
-    isEligible &&
-    !alreadyUsed &&
+    isEligibleForTeacherAppreciation &&
+    !alreadyUsedForTeacherAppreciation &&
     teacherAppreciationEmail !== '';
 
   // switch fitness
@@ -144,6 +155,11 @@ export default function StoreHomepage(props: Props) {
               <TeacherAppreciation
                 teacherAppreciationId={props.store.teacherAppreciationId}
                 productLink={teacherAppreciationProductLink}
+              />
+            ) : null}
+            {props.store.sheboyganLutheranStaffId ? (
+              <SheboyganLutheranStaff
+                sheboyganLutheranStaffId={props.store.sheboyganLutheranStaffId}
               />
             ) : null}
             {isSwitchFitness && switchFitnessDiscountId ? (
