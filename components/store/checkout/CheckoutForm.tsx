@@ -21,6 +21,9 @@ import { CartItem, ShippingData, UseCheckoutSubmit } from 'interfaces';
 type Props = {
   storeId: string;
   storeName: string;
+  cartSubtotal: number;
+  cartTotal: number;
+  cartShipping: number;
   allowDirectShipping: boolean;
   allowStorePickup: boolean;
   hasPrimaryShipping: boolean;
@@ -80,7 +83,8 @@ export default function CheckoutForm(props: Props) {
       ...(lastNameForSheboyganLutheranStaff && {
         lastName: lastNameForSheboyganLutheranStaff,
       }),
-      ...(emailForSheboyganLutheranStaff &&
+      ...(props.applySheboyganLutheranStaffDiscount &&
+        emailForSheboyganLutheranStaff &&
         isEligibleForSheboyganLutheranStaff &&
         !alreadyUsedForSheboyganLutheranStaff && {
           email: emailForSheboyganLutheranStaff,
@@ -97,12 +101,12 @@ export default function CheckoutForm(props: Props) {
   function getOrderTotal() {
     if (
       props.onlyDirectShipping &&
-      cart.cartSubtotal < props.shippingFreeMinimum &&
+      props.cartSubtotal < props.shippingFreeMinimum &&
       !props.applySheboyganLutheranStaffDiscount
     ) {
-      return cart.cartTotal + props.shippingPrice;
+      return props.cartTotal + props.shippingPrice;
     }
-    return cart.cartTotal;
+    return props.cartTotal;
   }
 
   // only run on first render
@@ -264,7 +268,7 @@ export default function CheckoutForm(props: Props) {
                                 ? ` (free with orders over ${formatToMoney(
                                     props.shipping.freeMinimum,
                                     true
-                                  )}`
+                                  )})`
                                 : ''}
                             </div>
                             <div className="shipping-price">

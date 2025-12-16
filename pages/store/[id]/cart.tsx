@@ -75,6 +75,7 @@ export default function Cart(props: Props) {
     name: storeName,
     products,
     teacherAppreciationId,
+    sheboyganLutheranStaffId,
   } = store;
 
   const {
@@ -102,6 +103,7 @@ export default function Cart(props: Props) {
 
   const cart = useCart({
     sheboyganLutheranStaffEligible:
+      !!sheboyganLutheranStaffId &&
       isEligibleForSheboyganLutheranStaff &&
       !alreadyUsedForSheboyganLutheranStaff,
   });

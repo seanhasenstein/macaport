@@ -89,6 +89,7 @@ export default function Checkout(props: Props) {
 
   const cart = useCart({
     sheboyganLutheranStaffEligible:
+      !!props.store.sheboyganLutheranStaffId &&
       isEligibleForSheboyganLutheranStaff &&
       !alreadyUsedForSheboyganLutheranStaff,
   });
@@ -137,6 +138,10 @@ export default function Checkout(props: Props) {
     isSheboyganLutheranStaffStore &&
     isEligibleForSheboyganLutheranStaff &&
     !alreadyUsedForSheboyganLutheranStaff;
+  console.log({
+    isSheboyganLutheranStaffStore,
+    applySheboyganLutheranStaffDiscount,
+  });
 
   return (
     <StoreLayout title={`Checkout | ${props.store.name}`}>
@@ -159,9 +164,10 @@ export default function Checkout(props: Props) {
             setOutOfStockItems={checkout.setOutOfStockItems}
             setShowInventoryModal={checkout.setShowInventoryModal}
             checkout={checkout}
-            applySheboyganLutheranStaffDiscount={
-              applySheboyganLutheranStaffDiscount
-            }
+            cartSubtotal={cart.cartSubtotal}
+            cartShipping={cart.shipping}
+            cartTotal={cart.cartTotal}
+            {...{ applySheboyganLutheranStaffDiscount }}
             onlyDirectShipping={props.onlyDirectShipping}
             shippingPrice={props.shipping.price}
             shippingFreeMinimum={props.shipping.freeMinimum}

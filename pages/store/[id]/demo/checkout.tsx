@@ -147,6 +147,9 @@ export default function Checkout(props: Props) {
               setOutOfStockItems={checkout.setOutOfStockItems}
               setShowInventoryModal={checkout.setShowInventoryModal}
               checkout={checkout}
+              cartSubtotal={cart.cartSubtotal}
+              cartShipping={cart.shipping}
+              cartTotal={cart.cartTotal}
               applySheboyganLutheranStaffDiscount={
                 applySheboyganLutheranStaffDiscount
               }
