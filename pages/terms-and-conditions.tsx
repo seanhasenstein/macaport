@@ -799,7 +799,7 @@ export default function TermsAndConditions() {
           <p>
             Macaport LLC
             <br />
-            1817 N Shawno St.
+            3080 Fredrick Farm Ln.
             <br />
             New London, WI 54961
           </p>

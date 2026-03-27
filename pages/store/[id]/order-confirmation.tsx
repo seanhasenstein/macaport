@@ -220,7 +220,7 @@ export default function OrderConfirmation(props: Props) {
                         let you know when your order is ready. Our address is:
                       </p>
                       <p className="store-address">
-                        1817 N Shawano St.
+                        3080 Fredrick Farm Ln.
                         <br />
                         New London, WI 54961
                       </p>

@@ -495,7 +495,7 @@ export default function PrivacyPolicy() {
           <p>
             Macaport LLC
             <br />
-            1817 N Shawno St.
+            3080 Fredrick Farm Ln.
             <br />
             New London, WI 54961
             <br />

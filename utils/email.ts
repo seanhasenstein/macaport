@@ -459,7 +459,7 @@ function generateReceiptHtml(order: Order) {
                           </tr>
                           <tr>
                             <td style="color: #6B7280; margin: 16px 0 0 0">
-                              <div style="margin: 16px 0 0 0">1817 N Shawano St.</div>
+                              <div style="margin: 16px 0 0 0">3080 Fredrick Farm Ln.</div>
                             </td>
                           </tr>
                           <tr>
@@ -708,7 +708,7 @@ function generateReceiptHtml(order: Order) {
   }" style="color: #4338CA; text-decoration: none">Click here</a> to view your order in the web browser.
                         </p>
                         <p style="margin: 0">
-                          Macaport LLC, 1817 N Shawano St, New London, WI 54961
+                          Macaport LLC, 3080 Fredrick Farm Ln, New London, WI 54961
                         </p>
                       </td>
                     </tr>

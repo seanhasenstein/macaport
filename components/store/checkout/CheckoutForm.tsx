@@ -225,7 +225,7 @@ export default function CheckoutForm(props: Props) {
                           <div className="shipping-label">
                             Pick up at Macaport{' '}
                             <span>
-                              1817 N Shawano St.
+                              3080 Fredrick Farm Ln.
                               <br />
                               New London, WI 54961
                             </span>
