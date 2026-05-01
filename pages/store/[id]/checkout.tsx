@@ -138,10 +138,6 @@ export default function Checkout(props: Props) {
     isSheboyganLutheranStaffStore &&
     isEligibleForSheboyganLutheranStaff &&
     !alreadyUsedForSheboyganLutheranStaff;
-  console.log({
-    isSheboyganLutheranStaffStore,
-    applySheboyganLutheranStaffDiscount,
-  });
 
   return (
     <StoreLayout title={`Checkout | ${props.store.name}`}>
