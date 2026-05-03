@@ -83,11 +83,12 @@ export default function Checkout(props: Props) {
     storeId: props.store._id,
     storeName: props.store.name,
     primaryShippingAddress: props.store.primaryShippingLocation,
-    cartTotal: cart.cartTotal,
+    sheboyganLutheranStaffId: props.store.sheboyganLutheranStaffId,
     isSwitchFitnessStore:
       !!props.store.meta?.isSwitchFitness &&
       !!props.store.meta?.switchFitnessDiscountId,
     isEligibleForSheboyganLutheranStaffFromClient:
+      !!props.store.sheboyganLutheranStaffId &&
       isEligibleForSheboyganLutheranStaff &&
       !alreadyUsedForSheboyganLutheranStaff,
   });
@@ -148,7 +149,6 @@ export default function Checkout(props: Props) {
               setShowInventoryModal={checkout.setShowInventoryModal}
               checkout={checkout}
               cartSubtotal={cart.cartSubtotal}
-              cartShipping={cart.shipping}
               cartTotal={cart.cartTotal}
               applySheboyganLutheranStaffDiscount={
                 applySheboyganLutheranStaffDiscount

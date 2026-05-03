@@ -23,7 +23,6 @@ type Props = {
   storeName: string;
   cartSubtotal: number;
   cartTotal: number;
-  cartShipping: number;
   allowDirectShipping: boolean;
   allowStorePickup: boolean;
   hasPrimaryShipping: boolean;
@@ -54,7 +53,6 @@ export default function CheckoutForm(props: Props) {
   const router = useRouter();
   const hasMounted = useHasMounted();
 
-  // TODO: should I clean this up and bring in as a prop from the parent component?
   const {
     alreadyUsed: alreadyUsedForSheboyganLutheranStaff,
     isEligible: isEligibleForSheboyganLutheranStaff,
@@ -62,12 +60,7 @@ export default function CheckoutForm(props: Props) {
     lastName: lastNameForSheboyganLutheranStaff,
     email: emailForSheboyganLutheranStaff,
   } = useSheboyganLutheranStaff();
-  // TODO: should I clean this up and bring in as a prop from the parent component?
-  const cart = useCart({
-    sheboyganLutheranStaffEligible:
-      isEligibleForSheboyganLutheranStaff &&
-      !alreadyUsedForSheboyganLutheranStaff,
-  });
+  const cart = useCart();
 
   const [initialValues] = React.useState(() =>
     getInitialValues({
@@ -76,7 +69,7 @@ export default function CheckoutForm(props: Props) {
         props.hasPrimaryShipping || !!props.applySheboyganLutheranStaffDiscount,
       allowDirectShipping: props.allowDirectShipping,
       allowStorePickup: props.allowStorePickup,
-      cartTotal: cart.cartTotal,
+      cartTotal: props.cartTotal,
       ...(firstNameForSheboyganLutheranStaff && {
         firstName: firstNameForSheboyganLutheranStaff,
       }),
@@ -93,7 +86,7 @@ export default function CheckoutForm(props: Props) {
   );
 
   const cartOnlyHasFreeItems =
-    !props.checkout.cartIsEmpty && cart.cartTotal === 0;
+    !props.checkout.cartIsEmpty && props.cartTotal === 0;
 
   // TODO: move this to the useCart logic (if possible)
   // NOTE: this function is also used in CheckoutForm.tsx and should be kept in sync
@@ -264,7 +257,7 @@ export default function CheckoutForm(props: Props) {
                             />
                             <div className="shipping-label">
                               Ship directly to you
-                              {cart.cartSubtotal >= props.shipping.freeMinimum
+                              {props.cartSubtotal >= props.shipping.freeMinimum
                                 ? ` (free with orders over ${formatToMoney(
                                     props.shipping.freeMinimum,
                                     true
@@ -272,7 +265,7 @@ export default function CheckoutForm(props: Props) {
                                 : ''}
                             </div>
                             <div className="shipping-price">
-                              {cart.cartSubtotal >= props.shipping.freeMinimum
+                              {props.cartSubtotal >= props.shipping.freeMinimum
                                 ? 'Free'
                                 : formatToMoney(props.shipping.price, true)}
                             </div>
