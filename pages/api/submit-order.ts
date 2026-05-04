@@ -150,7 +150,11 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
     const orderIncludesTeacherAppreciation =
       isEligibleForTeacherAppreciation && cartHasTeacherAppreciationItem;
 
-    if (cartHasTeacherAppreciationItem && !isEligibleForTeacherAppreciation) {
+    if (
+      !!teacherAppreciationId &&
+      cartHasTeacherAppreciationItem &&
+      !isEligibleForTeacherAppreciation
+    ) {
       return res.json({
         // error: 'Teacher Appreciation email is invalid or has already been used',
         error:

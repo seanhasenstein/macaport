@@ -91,7 +91,7 @@ export default function StoreHomepage(props: Props) {
     alreadyUsed: alreadyUsedForTeacherAppreciation,
   } = useTeacherAppreciation();
   const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
-  const teacherAppreciationProductId = props.store.products[0].id;
+  const teacherAppreciationProductId = props.store.products[0]?.id;
   const teacherAppreciationProductLink = `/store/${storeId}/product?productId=${teacherAppreciationProductId}`;
   const eligibleForFreeItem =
     isTeacherAppreciationStore &&
