@@ -110,16 +110,8 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       ) &&
       !sheboyganLutheranStaff.usedEmails.includes(sheboyganLutheranStaffEmail);
 
-    console.log({
-      isEligibleForSheboyganLutheranStaffFromClient:
-        req.body.isEligibleForSheboyganLutheranStaffFromClient,
-      shebLuthStaffId: sheboyganLutheranStaffId,
-      shebLuthStaffEmail: sheboyganLutheranStaffEmail,
-      isEligibleForSheboyganLutheranStaffDiscount:
-        isEligibleForSheboyganLutheranStaffDiscount,
-    });
-
     if (
+      !!sheboyganLutheranStaffId &&
       req.body.isEligibleForSheboyganLutheranStaffFromClient &&
       !isEligibleForSheboyganLutheranStaffDiscount
     ) {

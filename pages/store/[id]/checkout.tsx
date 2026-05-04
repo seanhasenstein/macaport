@@ -89,6 +89,7 @@ export default function Checkout(props: Props) {
 
   const cart = useCart({
     sheboyganLutheranStaffEligible:
+      !!props.store.sheboyganLutheranStaffId &&
       isEligibleForSheboyganLutheranStaff &&
       !alreadyUsedForSheboyganLutheranStaff,
   });
@@ -97,11 +98,12 @@ export default function Checkout(props: Props) {
     storeId: props.store._id,
     storeName: props.store.name,
     primaryShippingAddress: props.store.primaryShippingLocation,
-    cartTotal: cart.cartTotal,
+    sheboyganLutheranStaffId: props.store.sheboyganLutheranStaffId,
     isSwitchFitnessStore:
       !!props.store.meta?.isSwitchFitness &&
       !!props.store.meta?.switchFitnessDiscountId,
     isEligibleForSheboyganLutheranStaffFromClient:
+      !!props.store.sheboyganLutheranStaffId &&
       isEligibleForSheboyganLutheranStaff &&
       !alreadyUsedForSheboyganLutheranStaff,
   });
@@ -159,9 +161,9 @@ export default function Checkout(props: Props) {
             setOutOfStockItems={checkout.setOutOfStockItems}
             setShowInventoryModal={checkout.setShowInventoryModal}
             checkout={checkout}
-            applySheboyganLutheranStaffDiscount={
-              applySheboyganLutheranStaffDiscount
-            }
+            cartSubtotal={cart.cartSubtotal}
+            cartTotal={cart.cartTotal}
+            {...{ applySheboyganLutheranStaffDiscount }}
             onlyDirectShipping={props.onlyDirectShipping}
             shippingPrice={props.shipping.price}
             shippingFreeMinimum={props.shipping.freeMinimum}
