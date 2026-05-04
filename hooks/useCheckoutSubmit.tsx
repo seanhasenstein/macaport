@@ -20,6 +20,7 @@ type Props = {
     zipcode: string;
   };
   sheboyganLutheranStaffId?: string;
+  teacherAppreciationId?: string;
   isSwitchFitnessStore: boolean;
   isEligibleForSheboyganLutheranStaffFromClient: boolean;
 };
@@ -145,7 +146,8 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
           total: cartTotal,
         },
         note: data.note ?? '',
-        ...(teacherAppreciationEmail && { teacherAppreciationEmail }),
+        ...(props.teacherAppreciationId &&
+          teacherAppreciationEmail && { teacherAppreciationEmail }),
         ...(switchFitnessDiscountEmail && { switchFitnessDiscountEmail }),
         ...(isEligibleForSwitchDiscountFromClient && {
           isEligibleForSwitchDiscountFromClient,

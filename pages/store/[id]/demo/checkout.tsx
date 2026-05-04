@@ -84,6 +84,7 @@ export default function Checkout(props: Props) {
     storeName: props.store.name,
     primaryShippingAddress: props.store.primaryShippingLocation,
     sheboyganLutheranStaffId: props.store.sheboyganLutheranStaffId,
+    teacherAppreciationId: props.store.teacherAppreciationId,
     isSwitchFitnessStore:
       !!props.store.meta?.isSwitchFitness &&
       !!props.store.meta?.switchFitnessDiscountId,

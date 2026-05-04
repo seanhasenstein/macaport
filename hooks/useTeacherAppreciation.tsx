@@ -1,6 +1,5 @@
 import React from 'react';
 import useLocalStorage from './useLocalStorage';
-import { TeacherAppreciation } from 'interfaces';
 
 type TeacherAppreciationState = {
   email: string | undefined;
@@ -15,7 +14,6 @@ const initialState: TeacherAppreciationState = {
 };
 
 type TeacherAppreciationContextType = TeacherAppreciationState & {
-  addEmailToUsedEmails: (email: string) => Promise<TeacherAppreciation>;
   verifyEmail: ({
     email,
     teacherAppreciationId,
@@ -52,7 +50,7 @@ function TeacherAppreciationProvider({
   children,
 }: TeacherAppreciationProviderType) {
   const [localStorageState, saveLocalStorageState] = useLocalStorage(
-    'ta-24',
+    'ta-26',
     JSON.stringify(initialState)
   );
 
@@ -91,29 +89,13 @@ function TeacherAppreciationProvider({
     return { isEligible, alreadyUsed };
   };
 
-  const addEmailToUsedEmails = async (email: string) => {
-    const response = await fetch(`/api/teacher-appreciation/add-used-email`, {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to add email to used emails');
-    }
-
-    const updatedTeacherAppreciation: TeacherAppreciation =
-      await response.json();
-    saveState({ email, isEligible: false, alreadyUsed: true });
-    return updatedTeacherAppreciation;
-  };
-
   const resetState = () => {
     saveState(initialState);
   };
 
   return (
     <TeacherAppreciationContext.Provider
-      value={{ ...state, addEmailToUsedEmails, verifyEmail, resetState }}
+      value={{ ...state, verifyEmail, resetState }}
     >
       {children}
     </TeacherAppreciationContext.Provider>
