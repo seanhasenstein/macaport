@@ -15,13 +15,13 @@ const handler = nc<ExtendedRequest, NextApiResponse>()
   .use(database)
   .post(async (req, res) => {
     const { id, email } = req.body;
-    const { isEligible, alreadyUsed } =
+    const { isEligible, alreadyUsed, paused } =
       await teacherAppreciation.verifyTeacherAppreciationEmailEligibility(
         req.db,
         id,
         email
       );
-    res.json({ isEligible, alreadyUsed });
+    res.json({ isEligible, alreadyUsed, paused });
   });
 
 export default handler;

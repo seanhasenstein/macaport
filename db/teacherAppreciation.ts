@@ -27,11 +27,13 @@ export async function verifyTeacherAppreciationEmailEligibility(
 
   const lowercaseEmail = email.toLowerCase();
 
+  const paused = !teacherAppreciation.active;
+  const alreadyUsed = teacherAppreciation.usedEmails.includes(lowercaseEmail);
   const isEligible =
-    teacherAppreciation?.eligibleEmails.includes(lowercaseEmail) &&
-    !teacherAppreciation?.usedEmails.includes(lowercaseEmail);
-  const alreadyUsed = teacherAppreciation?.usedEmails.includes(lowercaseEmail);
-  return { isEligible, alreadyUsed };
+    !paused &&
+    teacherAppreciation.eligibleEmails.includes(lowercaseEmail) &&
+    !alreadyUsed;
+  return { isEligible, alreadyUsed, paused };
 }
 
 // ****************************************************

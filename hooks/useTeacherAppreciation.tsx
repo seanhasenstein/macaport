@@ -5,12 +5,14 @@ type TeacherAppreciationState = {
   email: string | undefined;
   isEligible: boolean;
   alreadyUsed: boolean;
+  paused: boolean;
 };
 
 const initialState: TeacherAppreciationState = {
   email: undefined,
   isEligible: false,
   alreadyUsed: false,
+  paused: false,
 };
 
 type TeacherAppreciationContextType = TeacherAppreciationState & {
@@ -23,6 +25,7 @@ type TeacherAppreciationContextType = TeacherAppreciationState & {
   }) => Promise<{
     isEligible: boolean;
     alreadyUsed: boolean;
+    paused: boolean;
   }>;
   resetState: () => void;
 };
@@ -84,9 +87,11 @@ function TeacherAppreciationProvider({
     const {
       isEligible,
       alreadyUsed,
-    }: { isEligible: boolean; alreadyUsed: boolean } = await response.json();
-    saveState({ email, isEligible, alreadyUsed });
-    return { isEligible, alreadyUsed };
+      paused,
+    }: { isEligible: boolean; alreadyUsed: boolean; paused: boolean } =
+      await response.json();
+    saveState({ email, isEligible, alreadyUsed, paused });
+    return { isEligible, alreadyUsed, paused };
   };
 
   const resetState = () => {

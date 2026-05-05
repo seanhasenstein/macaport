@@ -136,6 +136,9 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
         );
     }
 
+    const teacherAppreciationProgramPaused =
+      !!teacherAppreciation && !teacherAppreciation.active;
+
     const isEligibleForTeacherAppreciation =
       !!teacherAppreciation &&
       teacherAppreciation.active &&
@@ -156,9 +159,9 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       !isEligibleForTeacherAppreciation
     ) {
       return res.json({
-        // error: 'Teacher Appreciation email is invalid or has already been used',
-        error:
-          'Your email is either ineligible or has already been used for the teacher appreciation discount.',
+        error: teacherAppreciationProgramPaused
+          ? 'The teacher appreciation discount is currently paused. Please try again later.'
+          : 'Your email is either ineligible or has already been used for the teacher appreciation discount.',
       });
     }
 
