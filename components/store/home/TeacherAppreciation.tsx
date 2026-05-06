@@ -16,10 +16,12 @@ export default function TeacherAppreciation({
   teacherAppreciationId,
   productLink,
 }: Props) {
-  const { alreadyUsed, email, isEligible, resetState, verifyEmail } =
+  const { alreadyUsed, email, isEligible, paused, resetState, verifyEmail } =
     useTeacherAppreciation();
 
-  const notEligibleNotAlreadyUsed = email && !isEligible && !alreadyUsed;
+  const programPaused = email && paused;
+  const notEligibleNotAlreadyUsed =
+    email && !isEligible && !alreadyUsed && !paused;
   const notEligibleAlreadyUsed = email && !isEligible && alreadyUsed;
 
   return (
@@ -106,6 +108,13 @@ export default function TeacherAppreciation({
                   {notEligibleAlreadyUsed ? (
                     <div className="validation-error">
                       This email already used the discount.
+                    </div>
+                  ) : null}
+                  {/* Message for program paused */}
+                  {programPaused ? (
+                    <div className="validation-error">
+                      The teacher appreciation discount is currently paused.
+                      Please try again later.
                     </div>
                   ) : null}
                 </Form>
