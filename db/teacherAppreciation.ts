@@ -25,15 +25,19 @@ export async function verifyTeacherAppreciationEmailEligibility(
     throw new Error('Teacher appreciation not found');
   }
 
-  const lowercaseEmail = email.toLowerCase();
+  const normalizedEmail = email.trim().toLowerCase();
+  const eligibleEmails = teacherAppreciation.eligibleEmails.map(e =>
+    e.trim().toLowerCase()
+  );
+  const usedEmails = teacherAppreciation.usedEmails.map(e =>
+    e.trim().toLowerCase()
+  );
 
   const paused = !teacherAppreciation.active;
-  const alreadyUsed = teacherAppreciation.usedEmails.includes(lowercaseEmail);
+  const alreadyUsed = usedEmails.includes(normalizedEmail);
   const isEligible =
-    !paused &&
-    teacherAppreciation.eligibleEmails.includes(lowercaseEmail) &&
-    !alreadyUsed;
-  return { isEligible, alreadyUsed, paused };
+    !paused && eligibleEmails.includes(normalizedEmail) && !alreadyUsed;
+  return { isEligible, alreadyUsed, paused, email: normalizedEmail };
 }
 
 // ****************************************************
@@ -51,17 +55,20 @@ export async function addUsedEmailToTeacherAppreciation(
     throw new Error('Teacher appreciation not found');
   }
 
-  if (teacherAppreciation.usedEmails.includes(email)) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const usedEmails = teacherAppreciation.usedEmails.map(e =>
+    e.trim().toLowerCase()
+  );
+
+  if (usedEmails.includes(normalizedEmail)) {
     throw new Error('Email has already been used');
   }
-
-  const lowercaseEmail = email.toLowerCase();
 
   const updateResult = await db
     .collection<OptionalId<TeacherAppreciation>>('teacherAppreciation')
     .updateOne(
       { _id: new ObjectID(_id) },
-      { $push: { usedEmails: lowercaseEmail } }
+      { $push: { usedEmails: normalizedEmail } }
     );
   if (updateResult.result.ok === 0) {
     throw new Error('Failed to add teacher appreciation email to usedEmails');
@@ -70,7 +77,7 @@ export async function addUsedEmailToTeacherAppreciation(
   const updatedTeacherAppreciation: TeacherAppreciation = {
     ...teacherAppreciation,
     _id,
-    usedEmails: [...teacherAppreciation.usedEmails, email],
+    usedEmails: [...teacherAppreciation.usedEmails, normalizedEmail],
   };
   return updatedTeacherAppreciation;
 }

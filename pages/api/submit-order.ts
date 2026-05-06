@@ -123,7 +123,7 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
 
     // teacher appreciation verification
     const teacherAppreciationEmail =
-      req.body.teacherAppreciationEmail?.toLowerCase() ?? '';
+      req.body.teacherAppreciationEmail?.trim().toLowerCase() ?? '';
     const teacherAppreciationId = store.teacherAppreciationId;
 
     let teacherAppreciation;
@@ -139,11 +139,17 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
     const teacherAppreciationProgramPaused =
       !!teacherAppreciation && !teacherAppreciation.active;
 
+    const teacherAppreciationEligibleEmails =
+      teacherAppreciation?.eligibleEmails.map(e => e.trim().toLowerCase()) ??
+      [];
+    const teacherAppreciationUsedEmails =
+      teacherAppreciation?.usedEmails.map(e => e.trim().toLowerCase()) ?? [];
+
     const isEligibleForTeacherAppreciation =
       !!teacherAppreciation &&
       teacherAppreciation.active &&
-      teacherAppreciation.eligibleEmails.includes(teacherAppreciationEmail) &&
-      !teacherAppreciation.usedEmails.includes(teacherAppreciationEmail);
+      teacherAppreciationEligibleEmails.includes(teacherAppreciationEmail) &&
+      !teacherAppreciationUsedEmails.includes(teacherAppreciationEmail);
 
     // check if the cart has a teacher appreciation item
     const cartHasTeacherAppreciationItem = req.body.items.some(item => {
