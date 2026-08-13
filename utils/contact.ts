@@ -132,8 +132,13 @@ export const formatPhoneInput = (next: string, previous: string) => {
 // screen and in the customer's confirmation email; two copies would drift.
 const NEXT_STEPS: Record<string, string> = {
   apparel: 'We will put a price together and get back to you.',
+  // Not "before anything goes live", which takes it as given that it will.
+  // Whether Macaport can take the store on at all — the dates, the group size,
+  // the artwork — is still an open question at this point, and the copy should
+  // not answer it on Macaport's behalf. "What we can do" is the same honest
+  // framing the missed-deadline path uses.
   'team-store':
-    'We will go through garments, colors, and dates with you before anything goes live.',
+    'We will go through garments, colors, and dates with you and let you know what we can do.',
   'gang-sheets': 'We will get back to you with an answer.',
   existing: 'We will look it up and get back to you.',
   'missed-deadline':
@@ -142,6 +147,30 @@ const NEXT_STEPS: Record<string, string> = {
 
 export const nextStep = (inquiryType: string) =>
   NEXT_STEPS[inquiryType] ?? 'We will get back to you.';
+
+// What the form says above the submit button, restated for the confirmation
+// email. Deliberately not the same strings: on the form it is "sending this
+// doesn't place an order", and by the time this is read it has been sent, so
+// the tense has to move. Only the paths where the misunderstanding is expensive
+// carry one — a gang sheet question cannot be mistaken for an order.
+// Each says something the next step above it does not. Repeating "we will come
+// back with pricing" one line below "we will put a price together" wastes the
+// most emphasised box in the email on an echo — what it is there to prevent is
+// someone believing they have already ordered.
+const CONFIRMATION_NOTES: Record<string, string> = {
+  apparel:
+    'This is not an order. Nothing gets printed until you have approved the price and the details.',
+  // Phrased as a constraint on what has happened, like the apparel note, rather
+  // than a promise about what will. "You will see it and approve it" made the
+  // customer the last remaining gate, when Macaport has not agreed to it yet.
+  'team-store':
+    'This does not create a store. Nothing is set up until we have gone through the details and dates with you.',
+  'missed-deadline':
+    'There is a chance we can reopen the store for you. If the group’s order has already been printed, it may not be possible.',
+};
+
+export const confirmationNote = (inquiryType: string) =>
+  CONFIRMATION_NOTES[inquiryType] ?? '';
 
 export const isInquiryType = (value: unknown): value is InquiryType =>
   INQUIRY_OPTIONS.some(option => option.value === value);

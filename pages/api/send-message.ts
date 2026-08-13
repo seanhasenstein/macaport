@@ -3,6 +3,7 @@ import { format, utcToZonedTime } from 'date-fns-tz';
 import { createContactReference } from '../../utils';
 import { sendEmail } from '../../utils/mailgun';
 import {
+  contactSubject,
   generateContactFormEmail,
   generateCustomerConfirmationEmail,
 } from '../../utils/email';
@@ -24,10 +25,20 @@ export default async function handler(
     throw new Error('CONTACT_FORM_FROM env. var is required');
   }
 
+  // The form checks this before it submits, but that only stops a bot driving
+  // the page. Anything posting straight at this endpoint skipped that check
+  // entirely, which made the honeypot decorative. Answers 200 rather than an
+  // error so a bot learns nothing from the response.
+  if (req.body?.honeypot) {
+    return res.status(200).json({ success: true });
+  }
+
   try {
     const id = createContactReference();
     const zonedDate = utcToZonedTime(new Date(), 'America/Chicago');
-    const timestamp = format(zonedDate, "MM/dd/yyyy 'at' h:mmaaa '(CT)'");
+    // Long form to match the deadline dates in the emails, and because the
+    // customer's confirmation quotes this inside a sentence.
+    const timestamp = format(zonedDate, "MMMM d, yyyy 'at' h:mmaaa '(CT)'");
 
     const { text, html } = generateContactFormEmail(req.body, id, timestamp);
 
@@ -43,7 +54,9 @@ export default async function handler(
     const result = await sendEmail({
       to: formattedToField,
       from: `Macaport Contact Form <${process.env.CONTACT_FORM_FROM}>`,
-      subject: `Contact Form Message [#${id}]`,
+      // Says what it is and who from, so it can be triaged from the inbox list
+      // without opening it.
+      subject: contactSubject(req.body, id),
       replyTo: req.body.email,
       text,
       html,
