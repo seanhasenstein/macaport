@@ -15,6 +15,9 @@
 # production
 /build
 
+# source screenshots used to produce the images in public/images
+/screenshots
+
 # misc
 .DS_Store
 *.pem

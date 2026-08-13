@@ -1,11 +1,35 @@
 import { formatPhoneNumber, formatToMoney } from './index';
+import {
+  nextStep,
+  FABRIC_OPTIONS,
+  SHIPPING_OPTIONS,
+  inquiryLabel,
+  joinLabels,
+  productLabel,
+} from './contact';
 import { Order } from '../interfaces';
 
 interface Message {
+  inquiryType?: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
+  organization?: string;
+  products?: string[];
+  quantities?: Record<string, string>;
+  productOther?: string;
+  orderNumber?: string;
+  decoration?: string;
+  fabric?: string[];
+  colors?: string;
+  artwork?: string;
+  delivery?: string;
+  shipping?: string[];
+  neededBy?: string;
+  groupSize?: string;
+  openTiming?: string;
+  storeDuration?: string;
   message: string;
 }
 
@@ -14,18 +38,134 @@ interface EmailParams extends Message {
   date: string;
 }
 
+// The contact form asks a different set of follow-up questions depending on
+// what the lead is about, so the email only lists the ones that were answered.
+// Anything blank is dropped rather than rendered as an empty row.
+function inquiryDetails(input: EmailParams) {
+  const rows: { label: string; value: string }[] = [
+    {
+      label: 'About',
+      value: input.inquiryType ? inquiryLabel(input.inquiryType) : '',
+    },
+    { label: 'Organization', value: input.organization ?? '' },
+    { label: 'Order number', value: input.orderNumber ?? '' },
+    {
+      label: 'Products',
+      // "T-shirts (24), Hats (12)" — the quantity belongs beside the item it
+      // counts, not in a separate total that has to be worked back out.
+      value: (input.products ?? [])
+        .map(id => {
+          const quantity = input.quantities?.[id]?.trim();
+          return quantity
+            ? `${productLabel(id)} (${quantity})`
+            : productLabel(id);
+        })
+        .join(', '),
+    },
+    { label: 'Also looking for', value: input.productOther ?? '' },
+    { label: 'Decoration', value: input.decoration ?? '' },
+    { label: 'Artwork', value: input.artwork ?? '' },
+    { label: 'Fabric', value: joinLabels(FABRIC_OPTIONS, input.fabric) },
+    { label: 'Colors', value: input.colors ?? '' },
+    { label: 'Needed by', value: input.neededBy ?? '' },
+    { label: 'Delivery', value: input.delivery ?? '' },
+    {
+      label: 'Store fulfillment',
+      value: joinLabels(SHIPPING_OPTIONS, input.shipping),
+    },
+    { label: 'Group size', value: input.groupSize ?? '' },
+    { label: 'Store opens', value: input.openTiming ?? '' },
+    { label: 'Open for', value: input.storeDuration ?? '' },
+  ];
+
+  return rows.filter(row => row.value.trim() !== '');
+}
+
 function generateText(input: EmailParams) {
+  const details = inquiryDetails(input)
+    .map(row => `${row.label}: ${row.value}`)
+    .join('\n');
+
   return `Contact Form Message [#${input.id}]\n\nName: ${input.firstName} ${
     input.lastName
-  }\nEmail: ${input.email}\nPhone: ${formatPhoneNumber(
-    input.phone
-  )}\n\nMessage: ${
+  }\nEmail: ${input.email}\nPhone: ${formatPhoneNumber(input.phone)}\n${
+    details ? `\n${details}\n` : ''
+  }\nMessage: ${
     input.message
   }\n\n*This message was sent from the contact form at macaport.com/contact.\n`;
 }
 
+// Matches the markup of the hand-written rows in generateHtml below.
+function detailRowHtml(label: string, value: string) {
+  return `<table role="presentation" width="100%" height="100%" align="left" border="0" cellpadding="0" ><tbody><tr><td style="margin-top:16px;padding-top:16px;padding-bottom:16px;border-bottom:1px solid #EEEEEE;"><div class="message-category" style="margin: 0; padding: 0;" ><div class="title" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.35;font-weight:bold;margin: 0 0 4px 0;" > <b>${label}</b></div><div class="data" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;margin:0;" > ${value}</div></div></td></tr></tbody></table>`;
+}
+
 export function generateHtml(input: EmailParams) {
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Macaport Contact Form Message [#${input.id}]</title></head><body><div style="background-color:#eff2f3;margin:0;width:100%;" ><table role="presentation" width="100%" height="100%" align="left" border="0" cellpadding="20" bgcolor="#EFF2F3" stye="font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;" class="body-table" ><tbody><tr><td align="left" width="100%" valign="top"><div style="font-size:1px;color:#eff2f3;line-height:1px;overflow:hidden;mso-hide:all;margin:0;padding:0;" > ${input.message}</div><table role="presentation" border="0" align="center" cellpadding="0" cellspacing="0" width="100%" ><tbody><tr><td><div style="margin: 0 auto; padding: 20px 0; width: 100%;"><center> <img alt="Macaport Logo with Mountains" src="https://res.cloudinary.com/dra3wumrv/image/upload/v1621535049/macaport/logo-horizontal.png" style="text-decoration:none;padding:0;outline:none;line-height:100%;border:0;display:block;max-width:100%;height:56px;" /></div></center></td></tr></tbody></table><div class="main-width" style="margin:0 auto;max-width:600px;width:100%;padding:0;box-sizing: border-box;" ><table role="presentation" width="100%" align="center" border="0" cellpadding="0" ><tbody><tr><td width="100%" align="left" valign="top"><div class="main-body" style="width:100%;background-color:#FFFFFF;border-radius:6px;box-sizing:border-box;padding:0 16px;" ><table role="presentation" border="0" align="center" cellpadding="0" cellspacing="0" width="100%" ><tbody><tr><td width="100%" align="left" valign="top" bgcolor="#FFFFFF" style="background-color: #FFFFFF;border-radius:8px;box-sizing: border-box;padding: 0 20px 36px;" ><table role="presentation" border="0" align="center" cellpadding="0" cellspacing="0" width="100%" ><tbody><tr><td><div style="padding: 24px 0 12px;"><h2 style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:18px;line-height:1.25;text-align:left;font-weight:700" > Contact Form Message [#${input.id}]</h2></div></td></tr></tbody></table><table role="presentation" width="100%" height="100%" align="left" border="0" cellpadding="0" ><tbody><tr><td style="padding: 0 0 12px;border-bottom:1px solid #EEEEEE;"><div class="message-category" style="margin: 0;padding: 0;" ><div class="title" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.35;font-weight:bold;margin: 0 0 4px 0;" > <b>Date</b></div><div class="data" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;margin:0;" > ${input.date}</div></div></td></tr></tbody></table><table role="presentation" width="100%" height="100%" align="left" border="0" cellpadding="0" ><tbody><tr><td style="padding: 14px 0; border-bottom:1px solid #EEEEEE;"><div class="message-category" style="margin: 0; padding: 0;" ><div class="title" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.35;font-weight:bold;margin: 0 0 4px 0;" > <b>Name</b></div><div class="data" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;margin:0;" > ${input.firstName} ${input.lastName}</div></div></td></tr></tbody></table><table role="presentation" width="100%" height="100%" align="left" border="0" cellpadding="0" ><tbody><tr><td style="margin-top:16px;padding-top:16px;padding-bottom:16px;border-bottom:1px solid #EEEEEE;"><div class="message-category" style="margin: 0; padding: 0;" ><div class="title" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.35;font-weight:bold;margin: 0 0 4px 0;" > <b>Email</b></div><div class="data" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;margin:0;" > ${input.email}</div></div></td></tr></tbody></table><table role="presentation" width="100%" height="100%" align="left" border="0" cellpadding="0" ><tbody><tr><td style="margin-top:16px;padding-top:16px;padding-bottom:16px;border-bottom:1px solid #EEEEEE;"><div class="message-category" style="margin: 0; padding: 0;" ><div class="title" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.35;font-weight:bold;margin: 0 0 4px 0;" > <b>Phone</b></div><div class="data" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;margin:0;" > ${input.phone}</div></div></td></tr></tbody></table><table role="presentation" width="100%" height="100%" align="left" border="0" cellpadding="0" ><tbody><tr><td style="margin-top:16px;padding-top:16px;margin-bottom:0;"><div class="message-category" style="margin: 0; padding: 0;" ><div class="title" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.35;font-weight:bold;margin: 0 0 4px 0;" > <b>Message</b></div><div class="data" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;margin:0;" > ${input.message}</div></div></td></tr></tbody></table></td></tr></tbody></table></div></td></tr></tbody></table><table role="presentation" width="100%" height="100%" align="left" border="0" cellpadding="0" ><tbody><tr><td><center><div style="padding:24px 0 40px; width: 100%;"><p style="display:block;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;color:#878e92;font-size:14px;line-height:22px;text-align:center" > <a href="https://www.macaport.com" target="_blank" style="font-weight:500;padding:0 6px;color:#203557;text-decoration:none" ><span style="color:#203557;text-decoration:none" >www.macaport.com</span ></a ></p></div></center></td></tr></tbody></table></div></td></tr></tbody></table></div></body></html>`;
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Macaport Contact Form Message [#${
+    input.id
+  }]</title></head><body><div style="background-color:#eff2f3;margin:0;width:100%;" ><table role="presentation" width="100%" height="100%" align="left" border="0" cellpadding="20" bgcolor="#EFF2F3" stye="font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;" class="body-table" ><tbody><tr><td align="left" width="100%" valign="top"><div style="font-size:1px;color:#eff2f3;line-height:1px;overflow:hidden;mso-hide:all;margin:0;padding:0;" > ${
+    input.message
+  }</div><table role="presentation" border="0" align="center" cellpadding="0" cellspacing="0" width="100%" ><tbody><tr><td><div style="margin: 0 auto; padding: 20px 0; width: 100%;"><center> <img alt="Macaport Logo with Mountains" src="https://res.cloudinary.com/dra3wumrv/image/upload/v1621535049/macaport/logo-horizontal.png" style="text-decoration:none;padding:0;outline:none;line-height:100%;border:0;display:block;max-width:100%;height:56px;" /></div></center></td></tr></tbody></table><div class="main-width" style="margin:0 auto;max-width:600px;width:100%;padding:0;box-sizing: border-box;" ><table role="presentation" width="100%" align="center" border="0" cellpadding="0" ><tbody><tr><td width="100%" align="left" valign="top"><div class="main-body" style="width:100%;background-color:#FFFFFF;border-radius:6px;box-sizing:border-box;padding:0 16px;" ><table role="presentation" border="0" align="center" cellpadding="0" cellspacing="0" width="100%" ><tbody><tr><td width="100%" align="left" valign="top" bgcolor="#FFFFFF" style="background-color: #FFFFFF;border-radius:8px;box-sizing: border-box;padding: 0 20px 36px;" ><table role="presentation" border="0" align="center" cellpadding="0" cellspacing="0" width="100%" ><tbody><tr><td><div style="padding: 24px 0 12px;"><h2 style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:18px;line-height:1.25;text-align:left;font-weight:700" > Contact Form Message [#${
+    input.id
+  }]</h2></div></td></tr></tbody></table><table role="presentation" width="100%" height="100%" align="left" border="0" cellpadding="0" ><tbody><tr><td style="padding: 0 0 12px;border-bottom:1px solid #EEEEEE;"><div class="message-category" style="margin: 0;padding: 0;" ><div class="title" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.35;font-weight:bold;margin: 0 0 4px 0;" > <b>Date</b></div><div class="data" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;margin:0;" > ${
+    input.date
+  }</div></div></td></tr></tbody></table><table role="presentation" width="100%" height="100%" align="left" border="0" cellpadding="0" ><tbody><tr><td style="padding: 14px 0; border-bottom:1px solid #EEEEEE;"><div class="message-category" style="margin: 0; padding: 0;" ><div class="title" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.35;font-weight:bold;margin: 0 0 4px 0;" > <b>Name</b></div><div class="data" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;margin:0;" > ${
+    input.firstName
+  } ${
+    input.lastName
+  }</div></div></td></tr></tbody></table><table role="presentation" width="100%" height="100%" align="left" border="0" cellpadding="0" ><tbody><tr><td style="margin-top:16px;padding-top:16px;padding-bottom:16px;border-bottom:1px solid #EEEEEE;"><div class="message-category" style="margin: 0; padding: 0;" ><div class="title" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.35;font-weight:bold;margin: 0 0 4px 0;" > <b>Email</b></div><div class="data" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;margin:0;" > ${
+    input.email
+  }</div></div></td></tr></tbody></table><table role="presentation" width="100%" height="100%" align="left" border="0" cellpadding="0" ><tbody><tr><td style="margin-top:16px;padding-top:16px;padding-bottom:16px;border-bottom:1px solid #EEEEEE;"><div class="message-category" style="margin: 0; padding: 0;" ><div class="title" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.35;font-weight:bold;margin: 0 0 4px 0;" > <b>Phone</b></div><div class="data" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;margin:0;" > ${
+    input.phone
+  }</div></div></td></tr></tbody></table>${inquiryDetails(input)
+    .map(row => detailRowHtml(row.label, row.value))
+    .join(
+      ''
+    )}<table role="presentation" width="100%" height="100%" align="left" border="0" cellpadding="0" ><tbody><tr><td style="margin-top:16px;padding-top:16px;margin-bottom:0;"><div class="message-category" style="margin: 0; padding: 0;" ><div class="title" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.35;font-weight:bold;margin: 0 0 4px 0;" > <b>Message</b></div><div class="data" style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;margin:0;" > ${
+    input.message
+  }</div></div></td></tr></tbody></table></td></tr></tbody></table></div></td></tr></tbody></table><table role="presentation" width="100%" height="100%" align="left" border="0" cellpadding="0" ><tbody><tr><td><center><div style="padding:24px 0 40px; width: 100%;"><p style="display:block;font-family:-apple-system,BlinkMacSystemFont,“Segoe UI”,Roboto,Helvetica,Arial,sans-serif;color:#878e92;font-size:14px;line-height:22px;text-align:center" > <a href="https://www.macaport.com" target="_blank" style="font-weight:500;padding:0 6px;color:#203557;text-decoration:none" ><span style="color:#203557;text-decoration:none" >www.macaport.com</span ></a ></p></div></center></td></tr></tbody></table></div></td></tr></tbody></table></div></body></html>`;
+}
+
+// Sent to the customer, not to Macaport. Its jobs, in order: prove the address
+// they typed actually works, give them a durable copy of what they sent, and
+// give them somewhere to reply if anything is wrong — so a correction lands in
+// the same thread instead of arriving as a second, competing enquiry.
+export function generateCustomerConfirmationEmail(
+  message: Message,
+  id: string,
+  date: string
+) {
+  const input: EmailParams = {
+    ...message,
+    phone: formatPhoneNumber(message.phone),
+    id,
+    date,
+  };
+  const details = inquiryDetails(input);
+
+  const summary = details.map(row => `${row.label}: ${row.value}`).join('\n');
+
+  const text = `Hi ${input.firstName},\n\nThanks for getting in touch with Macaport. ${nextStep(
+    input.inquiryType ?? ''
+  )}\n\nHere is what you sent us on ${date} (reference #${id}):\n\n${
+    summary ? `${summary}\n\n` : ''
+  }Message: ${
+    input.message
+  }\n\nIf anything above is wrong, just reply to this email and it will reach us.\n\nMacaport\nNew London, WI\n`;
+
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>We got your message</title></head><body style="margin:0;padding:0;background-color:#fafafa;"><div style="background-color:#fafafa;margin:0;padding:24px 0;width:100%;"><table role="presentation" border="0" align="center" cellpadding="0" cellspacing="0" width="100%"><tbody><tr><td align="center"><div style="margin:0 auto;padding:8px 0 24px;"><img alt="Macaport" src="https://res.cloudinary.com/dra3wumrv/image/upload/v1621535049/macaport/logo-horizontal.png" style="display:block;border:0;outline:none;text-decoration:none;height:48px;" /></div></td></tr></tbody></table><div style="margin:0 auto;max-width:600px;width:100%;padding:0 16px;box-sizing:border-box;"><table role="presentation" width="100%" align="center" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td width="100%" align="left" valign="top" bgcolor="#FFFFFF" style="background-color:#FFFFFF;border:1px solid #e5e5e5;border-radius:12px;box-sizing:border-box;padding:28px 24px 32px;"><h1 style="margin:0;color:#171717;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:22px;line-height:1.25;font-weight:700;">Thanks, ${
+    input.firstName
+  }. We got your message.</h1><p style="margin:12px 0 0;color:#737373;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;">${nextStep(
+    input.inquiryType ?? ''
+  )}</p><p style="margin:24px 0 4px;color:#171717;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">What you sent</p>${details
+    .map(row => detailRowHtml(row.label, row.value))
+    .join(
+      ''
+    )}<table role="presentation" width="100%" align="left" border="0" cellpadding="0"><tbody><tr><td style="padding-top:16px;"><div style="color:#171717;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.35;font-weight:bold;margin:0 0 4px;"><b>Message</b></div><div style="color:#2e3b42;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;margin:0;">${
+    input.message
+  }</div></td></tr></tbody></table><p style="margin:24px 0 0;padding:14px 16px;color:#737373;background-color:#fafafa;border:1px solid #e5e5e5;border-radius:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.55;">If anything above is wrong, reply to this email and it will reach us. Reference #${id}.</p></td></tr></tbody></table><table role="presentation" width="100%" align="center" border="0" cellpadding="0"><tbody><tr><td align="center"><p style="padding:24px 0 32px;color:#a1a1a1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;text-align:center;">Macaport &middot; New London, WI &middot; <a href="https://www.macaport.com" style="color:#737373;text-decoration:underline;">macaport.com</a></p></td></tr></tbody></table></div></div></body></html>`;
+
+  return { text, html };
 }
 
 export function generateContactFormEmail(
