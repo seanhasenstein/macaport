@@ -7,11 +7,19 @@ import {
   generateContactFormEmail,
   generateCustomerConfirmationEmail,
 } from '../../utils/email';
+import { validationSchema } from '../../utils/contact';
+import { clientIp, rateLimit } from '../../utils/rateLimit';
 import { ContactFormValues } from 'interfaces';
 
 interface ExtendedRequest extends NextApiRequest {
   body: ContactFormValues;
 }
+
+// Two a minute is far more than anyone filling in a form by hand, and a low
+// enough ceiling that using this endpoint to deliver mail in volume is not
+// worth the effort.
+const LIMIT = 5;
+const WINDOW_MS = 10 * 60 * 1000;
 
 export default async function handler(
   req: ExtendedRequest,
@@ -25,12 +33,41 @@ export default async function handler(
     throw new Error('CONTACT_FORM_FROM env. var is required');
   }
 
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   // The form checks this before it submits, but that only stops a bot driving
   // the page. Anything posting straight at this endpoint skipped that check
   // entirely, which made the honeypot decorative. Answers 200 rather than an
   // error so a bot learns nothing from the response.
   if (req.body?.honeypot) {
     return res.status(200).json({ success: true });
+  }
+
+  // This endpoint sends one email to Macaport and a second to whatever address
+  // the caller supplies, so without a ceiling it will relay attacker-written
+  // text from a domain Macaport has spent its sending reputation on.
+  const limit = rateLimit({
+    key: clientIp(req),
+    limit: LIMIT,
+    windowMs: WINDOW_MS,
+  });
+
+  if (!limit.allowed) {
+    res.setHeader('Retry-After', String(limit.retryAfterSeconds));
+    return res.status(429).json({ error: 'Too many messages. Try again later.' });
+  }
+
+  // The same schema the form validates against, so the two cannot drift. Until
+  // now the body was trusted exactly as posted: a wrong type threw somewhere
+  // deep in the templates and surfaced as a 500, and anything well-formed
+  // enough to render got delivered.
+  try {
+    await validationSchema.validate(req.body, { abortEarly: false });
+  } catch (err) {
+    return res.status(400).json({ error: 'Invalid submission' });
   }
 
   try {
