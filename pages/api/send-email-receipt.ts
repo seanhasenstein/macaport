@@ -3,7 +3,7 @@ import nc from 'next-connect';
 import { sendEmail } from '../../utils/mailgun';
 import { generateReceiptEmail } from '../../utils/email';
 import { isInternalRequest } from '../../utils/internalRequest';
-import { clientIp, rateLimit } from '../../utils/rateLimit';
+import { rateLimit } from '../../utils/rateLimit';
 import { Order } from '../../interfaces';
 
 interface Request extends NextApiRequest {
@@ -12,9 +12,9 @@ interface Request extends NextApiRequest {
   };
 }
 
-// Only reached by an unsigned caller, which in normal operation is nobody:
-// submit-order is the one legitimate caller and it signs its requests.
-const LIMIT = 10;
+// Per recipient, and only reached by an unsigned caller. A customer receiving
+// more than a handful of receipts inside ten minutes is not a customer.
+const LIMIT = 5;
 const WINDOW_MS = 10 * 60 * 1000;
 
 const isNonEmptyString = (value: unknown): value is string =>
@@ -47,12 +47,21 @@ const handler = nc<Request, NextApiResponse>().post(async (req, res) => {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  // Signed calls skip the ceiling. A store launch can put dozens of orders
-  // through in minutes, and they all arrive from the same server address, so
-  // throttling by IP would drop real receipts on exactly the busiest day.
+  if (!looksLikeOrder(req.body?.order)) {
+    return res.status(400).json({ error: 'A valid order is required' });
+  }
+
+  const order = req.body.order;
+
+  // Keyed on who the receipt is going to, not on who asked for it to be sent.
+  // Every legitimate call arrives from the same server address, so an IP key
+  // would throttle a store launch — dozens of real orders in minutes — and drop
+  // receipts on the busiest day of that store's life. A recipient key cannot do
+  // that, because each of those orders belongs to a different customer, while
+  // still stopping anyone using this to mail the same person over and over.
   if (internal === null) {
     const limit = rateLimit({
-      key: clientIp(req),
+      key: `receipt:${order.customer.email.trim().toLowerCase()}`,
       limit: LIMIT,
       windowMs: WINDOW_MS,
     });
@@ -62,12 +71,6 @@ const handler = nc<Request, NextApiResponse>().post(async (req, res) => {
       return res.status(429).json({ error: 'Too many requests' });
     }
   }
-
-  if (!looksLikeOrder(req.body?.order)) {
-    return res.status(400).json({ error: 'A valid order is required' });
-  }
-
-  const order = req.body.order;
   const { text, html } = generateReceiptEmail(order);
 
   const result = await sendEmail({

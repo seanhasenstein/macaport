@@ -194,6 +194,7 @@ export default function Contact({ presetType }: Props) {
     null
   );
   const [referenceId, setReferenceId] = React.useState<string>();
+  const [throttled, setThrottled] = React.useState(false);
 
   // The success screen is far shorter than the form it replaces, so the browser
   // clamps the old scroll position to the new page height instead of resetting
@@ -222,6 +223,7 @@ export default function Contact({ presetType }: Props) {
     });
 
     if (!response.ok) {
+      setThrottled(response.status === 429);
       setStatus('ERROR');
       return;
     } else {
@@ -477,11 +479,20 @@ export default function Contact({ presetType }: Props) {
                           label="Message"
                           note={heading.messageNote}
                         />
-                        <div className="sr-only">
+                        {/* aria-hidden, not just sr-only. sr-only is the clip
+                            pattern, which hides this visually while keeping it
+                            in the accessibility tree — the opposite of what a
+                            honeypot wants. A screen reader user would meet a
+                            field telling them not to fill it in, and if it ever
+                            held a value the submit button below disables with
+                            nothing to explain why. autoComplete off keeps a
+                            browser from walking into the same dead end. */}
+                        <div className="sr-only" aria-hidden="true">
                           <FieldItem
                             name="honeypot"
                             label="Please do not fill this field out"
                             tabIndex="-1"
+                            autoComplete="off"
                           />
                         </div>
                         <button
@@ -507,7 +518,10 @@ export default function Contact({ presetType }: Props) {
                           </Link>
                           .
                         </p>
-                        <ServerError serverError={status === 'ERROR'} />
+                        <ServerError
+                              serverError={status === 'ERROR'}
+                              throttled={throttled}
+                            />
                       </Form>
                     </>
                   );

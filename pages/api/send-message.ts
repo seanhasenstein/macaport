@@ -15,10 +15,12 @@ interface ExtendedRequest extends NextApiRequest {
   body: ContactFormValues;
 }
 
-// Two a minute is far more than anyone filling in a form by hand, and a low
-// enough ceiling that using this endpoint to deliver mail in volume is not
-// worth the effort.
-const LIMIT = 5;
+// Headroom for shared addresses. A school, an office, or anyone on mobile data
+// can share one public IP, so a booster club filling this in from a meeting
+// could look like one person submitting repeatedly. Ten still cuts a bot's
+// throughput by orders of magnitude, and the cost of turning away a real lead
+// is much higher here than the cost of letting a few more spam messages land.
+const LIMIT = 10;
 const WINDOW_MS = 10 * 60 * 1000;
 
 export default async function handler(
