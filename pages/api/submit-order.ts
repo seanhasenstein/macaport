@@ -29,6 +29,7 @@ import {
 } from '../../utils';
 import { getStoreStatus } from '../../utils/store';
 import { verifyCartItems } from 'utils/payment';
+import { internalHeaders } from '../../utils/internalRequest';
 
 interface ExtendedRequest extends NextApiRequest {
   body: {
@@ -375,7 +376,7 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
     // 9. send email receipt
     await fetch(`${process.env.API_HOST}/api/send-email-receipt`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...internalHeaders() },
       body: JSON.stringify({ order }),
     });
 

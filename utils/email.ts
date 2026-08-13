@@ -478,7 +478,7 @@ function generateReceiptHtml(order: Order) {
   return `<!DOCTYPE html>
   <html lang="en">
     <head>
-      <title>${order.store.name} | Macaport</title>
+      <title>${escapeHtml(order.store.name)} | Macaport</title>
       <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -648,7 +648,7 @@ function generateReceiptHtml(order: Order) {
                             text-align: center;
                           "
                         >
-                          ${order.store.name}
+                          ${escapeHtml(order.store.name)}
                         </h1>
                       </td>
                     </tr>
@@ -667,11 +667,11 @@ function generateReceiptHtml(order: Order) {
                             line-height: 1;
                           "
                         >
-                          Order #${order.orderId}
+                          Order #${escapeHtml(order.orderId)}
                         </h1>
                         ${
                           order.group
-                            ? `<p style="margin: 0; padding: 0; font-size: 15px; font-weight: 400; color: #868f9d; text-align: center; line-height: 1;">${order.group}</p>`
+                            ? `<p style="margin: 0; padding: 0; font-size: 15px; font-weight: 400; color: #868f9d; text-align: center; line-height: 1;">${escapeHtml(order.group)}</p>`
                             : ''
                         }
                       </td>
@@ -710,8 +710,8 @@ function generateReceiptHtml(order: Order) {
                         >
                           <tr>
                             <td style="color: #6B7280">
-                              ${order.customer.firstName}
-                              ${order.customer.lastName}
+                              ${escapeHtml(order.customer.firstName)}
+                              ${escapeHtml(order.customer.lastName)}
                             </td>
                           </tr>
                         </table>
@@ -749,7 +749,7 @@ function generateReceiptHtml(order: Order) {
                         >
                           <tr>
                             <td style="color: #6B7280">
-                              ${order.customer.email}
+                              ${escapeHtml(order.customer.email)}
                             </td>
                           </tr>
                         </table>
@@ -787,7 +787,7 @@ function generateReceiptHtml(order: Order) {
                         >
                           <tr>
                             <td style="color: #6B7280">
-                              ${formatPhoneNumber(order.customer.phone)}
+                              ${escapeHtml(formatPhoneNumber(order.customer.phone))}
                             </td>
                           </tr>
                         </table>
@@ -917,17 +917,17 @@ function generateReceiptHtml(order: Order) {
                         >
                           <tr>
                             <td style="color: #6B7280">
-                              ${order.customer.firstName} ${order.customer.lastName}
+                              ${escapeHtml(order.customer.firstName)} ${escapeHtml(order.customer.lastName)}
                             </td>
                           </tr>
                           <tr>
                             <td style="color: #6B7280">
-                              ${order.shippingAddress.street} ${order.shippingAddress.street2}
+                              ${escapeHtml(order.shippingAddress.street)} ${escapeHtml(order.shippingAddress.street2)}
                             </td>
                           </tr>
                           <tr>
                             <td style="color: #6B7280">
-                              ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zipcode}
+                              ${escapeHtml(order.shippingAddress.city)}, ${escapeHtml(order.shippingAddress.state)} ${escapeHtml(order.shippingAddress.zipcode)}
                             </td>
                           </tr>
                         </table>
@@ -968,9 +968,9 @@ function generateReceiptHtml(order: Order) {
                           <div style="margin: 10px 0 0 0">For all order details and order items please <a href="${
                             process.env.API_HOST
                           }/store/${
-    order.store.id
+    encodeURIComponent(order.store.id)
   }/order-confirmation?orderId=${
-    order.orderId
+    encodeURIComponent(order.orderId)
   }" style="color: #4338CA; text-decoration: underline">click here</a>.</div>
                           </td>
                         </tr>
@@ -1084,7 +1084,7 @@ function generateReceiptHtml(order: Order) {
                                 please contact us at
                                 <a
                                   href="mailto:support@macaport.com?subject=Order Inquiry [Order #${
-                                    order.orderId
+                                    encodeURIComponent(order.orderId)
                                   }]"
                                   style="color: #4338CA; text-decoration: none"
                                   >support@macaport.com</a
@@ -1108,15 +1108,15 @@ function generateReceiptHtml(order: Order) {
                       >
                         <p style="margin: 0 0 20px 0">
                           You're receiving this email because you made a purchase
-                        from the ${order.store.name} store by <a href="${
+                        from the ${escapeHtml(order.store.name)} store by <a href="${
     process.env.API_HOST
   }" style="color: #4338CA; text-decoration: none">Macaport LLC</a>.
                         </p>
                         <p style="margin: 0 0 20px 0">
                           <a href="${process.env.API_HOST}/store/${
-    order.store.id
+    encodeURIComponent(order.store.id)
   }/order-confirmation?orderId=${
-    order.orderId
+    encodeURIComponent(order.orderId)
   }" style="color: #4338CA; text-decoration: none">Click here</a> to view your order in the web browser.
                         </p>
                         <p style="margin: 0">
