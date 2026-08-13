@@ -55,14 +55,37 @@ export function rateLimit({
   };
 }
 
-// x-forwarded-for is a list, client first, appended to by each proxy. The
-// socket address alone would be the proxy's on any real deployment.
-export function clientIp(req: NextApiRequest) {
-  const header = req.headers['x-forwarded-for'];
-  const raw = Array.isArray(header) ? header[0] : header;
-  const first = raw?.split(',')[0]?.trim();
+const header = (req: NextApiRequest, name: string) => {
+  const value = req.headers[name];
+  return (Array.isArray(value) ? value[0] : value)?.trim() || undefined;
+};
 
-  return first || req.socket?.remoteAddress || 'unknown';
+/**
+ * Best available client address.
+ *
+ * Order matters. The headers tried first are written by the edge itself and
+ * cannot be set by the caller, so they are worth trusting. x-forwarded-for is
+ * last and is only a fallback: it is a list the client starts and each proxy
+ * appends to, so its leftmost entry — the one everyone reaches for — is
+ * whatever the caller decided to send. Reading that would let anyone rotate a
+ * header and walk straight past every limit keyed on this.
+ *
+ * The last entry is the address the nearest proxy actually observed, which is
+ * the closest thing to a fact when nothing better is available.
+ */
+export function clientIp(req: NextApiRequest) {
+  const trusted =
+    header(req, 'cf-connecting-ip') ??
+    header(req, 'x-vercel-forwarded-for') ??
+    header(req, 'x-real-ip');
+
+  if (trusted) return trusted;
+
+  const forwarded = header(req, 'x-forwarded-for');
+  const hops = forwarded?.split(',').map(hop => hop.trim()).filter(Boolean);
+  const nearest = hops?.[hops.length - 1];
+
+  return nearest || req.socket?.remoteAddress || 'unknown';
 }
 
 // Exported for tests. Nothing else should need it.

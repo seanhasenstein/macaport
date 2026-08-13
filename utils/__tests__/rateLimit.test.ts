@@ -47,10 +47,23 @@ describe('client ip', () => {
   const req = (headers: Record<string, string | string[]>, remote?: string) =>
     ({ headers, socket: { remoteAddress: remote } } as unknown as NextApiRequest);
 
-  it('takes the client from the front of x-forwarded-for', () => {
-    expect(clientIp(req({ 'x-forwarded-for': '203.0.113.4, 70.41.3.18' }))).toBe(
-      '203.0.113.4'
-    );
+  it('prefers a header the edge writes over one the caller controls', () => {
+    expect(
+      clientIp(
+        req({
+          'cf-connecting-ip': '203.0.113.4',
+          'x-forwarded-for': 'spoofed, 70.41.3.18',
+        })
+      )
+    ).toBe('203.0.113.4');
+  });
+
+  it('ignores the spoofable end of x-forwarded-for', () => {
+    // A caller can put anything at the front of this list. Rotating that value
+    // would otherwise be enough to walk past every limit keyed on the address.
+    expect(
+      clientIp(req({ 'x-forwarded-for': 'spoofed-by-caller, 70.41.3.18' }))
+    ).toBe('70.41.3.18');
   });
 
   it('falls back to the socket when unproxied', () => {
