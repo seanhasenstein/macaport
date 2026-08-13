@@ -383,7 +383,7 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
     // 10. send request to subtract inventory
     await fetch(`${process.env.API_HOST}/api/subtract-inventory`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...internalHeaders() },
       body: JSON.stringify(order.items),
     });
 
