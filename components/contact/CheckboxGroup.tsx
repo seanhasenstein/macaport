@@ -77,6 +77,7 @@ export function CheckboxGroup({
       role="group"
       aria-labelledby={`${name}-label`}
       $withQuantities={Boolean(quantityName)}
+      $withDescriptions={options.some(option => Boolean(option.description))}
     >
       <span className="label" id={`${name}-label`}>
         {label}
@@ -124,7 +125,10 @@ export function CheckboxGroup({
   );
 }
 
-const CheckboxGroupStyles = styled.fieldset<{ $withQuantities: boolean }>`
+const CheckboxGroupStyles = styled.fieldset<{
+  $withQuantities: boolean;
+  $withDescriptions: boolean;
+}>`
   margin: 1.25rem 0 0;
   padding: 0;
   display: flex;
@@ -161,8 +165,13 @@ const CheckboxGroupStyles = styled.fieldset<{ $withQuantities: boolean }>`
      is a wall, so this halves the height wherever the card is wide enough. */
   .options {
     display: grid;
+    /* One per row once there are descriptions to read. Two columns of wrapped
+       prose is harder to scan than one column, and the twelve product
+       checkboxes have no descriptions and must stay in a grid. */
     grid-template-columns: ${props =>
-      props.$withQuantities
+      props.$withDescriptions
+        ? '1fr'
+        : props.$withQuantities
         ? 'repeat(auto-fit, minmax(15rem, 1fr))'
         : 'repeat(auto-fit, minmax(12rem, 1fr))'};
     gap: 0.5rem;
@@ -175,9 +184,14 @@ const CheckboxGroupStyles = styled.fieldset<{ $withQuantities: boolean }>`
     display: block;
   }
 
+  .option input[type='checkbox'] {
+    margin-top: ${props => (props.$withDescriptions ? '0.125rem' : '0')};
+    flex-shrink: 0;
+  }
+
   .option-description {
     display: block;
-    margin: 0.125rem 0 0;
+    margin: 0.1875rem 0 0;
     font-size: 0.8125rem;
     line-height: 1.45;
     font-weight: 400;
@@ -216,10 +230,10 @@ const CheckboxGroupStyles = styled.fieldset<{ $withQuantities: boolean }>`
     margin: 0;
     flex: 1;
     display: flex;
-    align-items: center;
+    align-items: ${props => (props.$withDescriptions ? 'flex-start' : 'center')};
     gap: 0.5rem;
     font-size: 0.875rem;
-    font-weight: 400;
+    font-weight: 500;
     color: ${theme.color.text};
     cursor: pointer;
   }

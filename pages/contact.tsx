@@ -426,24 +426,26 @@ export default function Contact({ presetType }: Props) {
                               options={ARTWORK_OPTIONS}
                               optional
                             />
-                            <details className="more">
-                              <summary>Add more detail (optional)</summary>
-                              <div className="more-body">
-                                <FieldItem
-                                  name="groupSize"
-                                  label="Approximate group size"
-                                  placeholder="e.g. 40"
-                                  optional
-                                />
-                                <CheckboxGroup
-                                  name="shipping"
-                                  label="How should people get their orders?"
-                                  note="A store can offer any combination of these."
-                                  optional
-                                  options={SHIPPING_OPTIONS}
-                                />
-                              </div>
-                            </details>
+                            {/* Not collapsed. Hiding two fields saves about the
+                                height of the summary row that hides them, and
+                                an optional field behind a click gets answered
+                                less often — while group size and fulfillment
+                                are two of the more useful answers here. The
+                                apparel form keeps its collapse, which hides
+                                five. */}
+                            <FieldItem
+                              name="groupSize"
+                              label="Approximate group size"
+                              placeholder="e.g. 40"
+                              optional
+                            />
+                            <CheckboxGroup
+                              name="shipping"
+                              label="How should people get their orders?"
+                              note="A store can offer any combination of these."
+                              optional
+                              options={SHIPPING_OPTIONS}
+                            />
                           </>
                         )}
 

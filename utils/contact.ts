@@ -62,13 +62,26 @@ export const FABRIC_OPTIONS = [
 // Mirrors the three independent flags a real store carries in the Store model
 // (allowStorePickup / hasPrimaryShippingLocation / allowDirectShipping), which
 // is why this is a multi-select — a store can offer any combination.
+// Four, not three. "Store pickup" covered two different operations — every
+// buyer collecting their own, and the organizer collecting the lot to hand out
+// — which no description can disambiguate, because a single box ticked for
+// both tells Macaport nothing about which to set up. A group wanting both
+// ticks both.
+//
+// "At Macaport in New London" rather than either alone: which company is
+// ambiguous in a form about setting up a store, and where decides whether a
+// group can realistically collect at all.
 export const SHIPPING_OPTIONS = [
   {
     id: 'pickup',
-    label: 'Store pickup',
-    // "Store" means Macaport's shop, not the online store being discussed, and
-    // in a form about setting up a store that is genuinely ambiguous.
-    description: 'Everyone collects their own order from us in New London.',
+    label: 'Individual pickup',
+    description: 'Each person collects their own order at Macaport in New London.',
+  },
+  {
+    id: 'pickup-group',
+    label: 'Group pickup',
+    description:
+      'You collect the whole order at Macaport in New London and hand it out.',
   },
   {
     id: 'primary',
@@ -92,7 +105,9 @@ export const ARTWORK_OPTIONS = [
 ];
 
 export const DELIVERY_OPTIONS = [
-  'Free local pickup',
+  // "Local" leaves both who and where unsaid, in the one option where a lead
+  // needs to judge whether collecting is realistic for them.
+  'Free pickup at Macaport in New London',
   'Shipped to me',
   'Not sure yet',
 ];

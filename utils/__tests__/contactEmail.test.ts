@@ -37,7 +37,7 @@ describe('contact form notification email', () => {
       fabric: ['cotton', 'performance'],
       colors: 'navy and white',
       neededBy: '2026-09-15',
-      delivery: 'Free local pickup',
+      delivery: 'Free pickup at Macaport in New London',
       organization: 'New London Rec',
     });
 
@@ -51,7 +51,9 @@ describe('contact form notification email', () => {
     expect(text).toContain('Fabric: Cotton, Performance / moisture-wicking');
     expect(text).toContain('Garment colors: navy and white');
     expect(text).toContain('Needed by: September 15, 2026');
-    expect(text).toContain('Pickup or shipping: Free local pickup');
+    expect(text).toContain(
+      'Pickup or shipping: Free pickup at Macaport in New London'
+    );
     expect(html).toContain('>Products</div>');
     expect(html).toContain('>Printed or embroidered</div>');
   });
@@ -76,7 +78,7 @@ describe('contact form notification email', () => {
       storeDuration: 'Open permanently',
       neededBy: '2026-09-05',
       products: ['hoodies'],
-      shipping: ['pickup', 'direct'],
+      shipping: ['pickup', 'pickup-group', 'direct'],
     });
 
     expect(text).toContain('About: Setting up an online store');
@@ -86,7 +88,7 @@ describe('contact form notification email', () => {
     expect(text).toContain('Open for: Open permanently');
     expect(text).toContain('Needed by: September 5, 2026');
     expect(text).toContain(
-      'How people get their orders: Store pickup, Ship to each person'
+      'How people get their orders: Individual pickup, Group pickup, Ship to each person'
     );
     // Quantities are meaningless for a store, so no number is invented.
     expect(text).toContain('Products: Hoodies & crewnecks\n');
@@ -649,5 +651,31 @@ describe('the notification subject for an existing order', () => {
     expect(
       contactSubject(submission({ inquiryType: 'existing' }), ID)
     ).toBe('Question about an existing order from Sam Rivera [#ABC123]');
+  });
+});
+
+describe('fulfillment options', () => {
+  it('tells the two kinds of pickup apart in the email', () => {
+    // One box meaning both "everyone collects their own" and "the organizer
+    // collects the lot" told Macaport nothing about which to set up.
+    const { text } = generate({
+      inquiryType: 'team-store',
+      shipping: ['pickup', 'pickup-group'],
+    });
+
+    expect(text).toContain(
+      'How people get their orders: Individual pickup, Group pickup'
+    );
+  });
+
+  it('still resolves every id to a label rather than leaking one', () => {
+    const { text } = generate({
+      inquiryType: 'team-store',
+      shipping: ['pickup', 'pickup-group', 'primary', 'direct'],
+    });
+
+    expect(text).not.toContain('pickup-group');
+    expect(text).toContain('Ship to one address');
+    expect(text).toContain('Ship to each person');
   });
 });
