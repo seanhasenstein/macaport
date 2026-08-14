@@ -95,8 +95,7 @@ export const SHIPPING_OPTIONS = [
   {
     id: 'primary',
     label: 'Ship to one address',
-    description:
-      'Shipped to one address you choose, which can be anywhere that suits your group, for you to hand out.',
+    description: 'Shipped to any address you choose, and you hand the orders out.',
   },
   {
     id: 'direct',
