@@ -73,6 +73,10 @@ export const FABRIC_OPTIONS = [
 // stops being true the moment individual pickup is offered alongside it. The
 // note on the field carries that once instead of hedging every line.
 //
+// "Picked up" and "shipped", not "collected" and "posted". Macaport and its
+// customers are in Wisconsin, and the second pair reads as someone else's
+// English.
+//
 // "At Macaport in New London" rather than either alone: which company is
 // ambiguous in a form about setting up a store, and where decides whether a
 // group can realistically collect at all.
@@ -80,13 +84,13 @@ export const SHIPPING_OPTIONS = [
   {
     id: 'pickup',
     label: 'Individual pickup',
-    description: 'Collected at Macaport in New London by whoever ordered it.',
+    description: 'Picked up at Macaport in New London by whoever ordered it.',
   },
   {
     id: 'pickup-group',
     label: 'Group pickup',
     description:
-      'You collect from Macaport in New London and hand the orders out.',
+      'You pick the orders up at Macaport in New London and hand them out.',
   },
   {
     id: 'primary',
@@ -97,7 +101,7 @@ export const SHIPPING_OPTIONS = [
   {
     id: 'direct',
     label: 'Ship to each person',
-    description: 'Posted to each buyer, at their own cost.',
+    description: "Shipped to each buyer's own address, at their own cost.",
   },
 ];
 

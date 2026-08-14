@@ -606,7 +606,7 @@ const ContactStyles = styled.div`
 
   /* Collapsed by default. Only optional fields live in here, so nothing that
      can fail validation is ever hidden behind it. */
-  /* Left aligned with the rest of the form. Centred, two short lines under a
+  /* Left aligned with the rest of the form. Centered, two short lines under a
      full width button read as a tombstone and fight the label alignment. */
   .submit-note {
     margin: 1.25rem 0 0;
