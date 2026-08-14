@@ -29,6 +29,7 @@ import {
 } from '../../utils';
 import { getStoreStatus } from '../../utils/store';
 import { verifyCartItems } from 'utils/payment';
+import { internalHeaders } from '../../utils/internalRequest';
 
 interface ExtendedRequest extends NextApiRequest {
   body: {
@@ -57,6 +58,39 @@ interface ExtendedRequest extends NextApiRequest {
 const stripe = new Stripe(`${process.env.STRIPE_SECRET_KEY}`, {
   apiVersion: '2020-08-27',
 });
+
+/**
+ * Calls one of our own routes and says so loudly when it fails.
+ *
+ * These two used to be bare awaited fetches whose responses were dropped. The
+ * payment has already gone through by the time they run, so neither should
+ * fail the order — but silence is the wrong other extreme. Both endpoints now
+ * refuse unsigned callers, which means a missing or mismatched
+ * INTERNAL_API_SECRET in any one environment turns into orders that quietly
+ * never decrement stock and never send a receipt, with the customer charged
+ * and nothing anywhere saying why.
+ */
+async function callInternal(path: string, body: unknown, orderId: string) {
+  try {
+    const response = await fetch(`${process.env.API_HOST}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...internalHeaders() },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      console.error(
+        `[order ${orderId}] ${path} responded ${response.status}.` +
+          (response.status === 401
+            ? ' INTERNAL_API_SECRET is missing or does not match between this' +
+              ' deployment and the one API_HOST points at.'
+            : '')
+      );
+    }
+  } catch (err) {
+    console.error(`[order ${orderId}] ${path} could not be reached`, err);
+  }
+}
 
 export default async (req: ExtendedRequest, res: NextApiResponse) => {
   try {
@@ -373,18 +407,10 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
     await orderModel.addOrderToStore(db, store._id, order);
 
     // 9. send email receipt
-    await fetch(`${process.env.API_HOST}/api/send-email-receipt`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order }),
-    });
+    await callInternal('/api/send-email-receipt', { order }, order.orderId);
 
     // 10. send request to subtract inventory
-    await fetch(`${process.env.API_HOST}/api/subtract-inventory`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(order.items),
-    });
+    await callInternal('/api/subtract-inventory', order.items, order.orderId);
 
     // 11. if teacher appreciation was used, add email to teacher appreciation usedEmails
     if (orderIncludesTeacherAppreciation) {

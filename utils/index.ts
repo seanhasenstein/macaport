@@ -136,6 +136,59 @@ export function createReceiptNumber() {
   return value.join('');
 }
 
+// Deliberately not createReceiptNumber, which numbers real store orders and
+// must keep its format. A contact reference is read off a screen and quoted
+// back over the phone, so it is short and drops the characters that get
+// misheard or mistyped: no 0/O, no 1/I, no 5/S, no 8/B.
+const REFERENCE_CHARS = '234679ACDEFGHJKLMNPQRTUVWXYZ';
+
+export function createContactReference() {
+  const length = 6;
+  const rnd = crypto.randomBytes(length);
+  const value = new Array(length);
+
+  for (let i = 0; i < length; i++) {
+    value[i] = REFERENCE_CHARS[rnd[i] % REFERENCE_CHARS.length];
+  }
+
+  return value.join('');
+}
+
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+// "2026-09-15" is what a date input hands over, and it reads like a database
+// row. US long form because Macaport and its customers are, so there is no
+// 09/15 versus 15/09 to misread.
+//
+// Built from the parts rather than new Date(value): a date-only string parses
+// as UTC midnight, which in Central time is the previous evening, so every
+// deadline would quietly render a day early. Anything not in this exact shape
+// is passed through untouched rather than guessed at.
+export function formatDateValue(value?: string) {
+  const raw = (value ?? '').trim();
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (!match) return raw;
+
+  const [, year, month, day] = match;
+  const name = MONTHS[Number(month) - 1];
+  if (!name) return raw;
+
+  return `${name} ${Number(day)}, ${year}`;
+}
+
 export function checkHexColor(hexValue: string) {
   // values considered too light
   const lightValues = ['c', 'd', 'e', 'f'];

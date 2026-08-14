@@ -1,5 +1,16 @@
 import { createGlobalStyle } from 'styled-components';
 
+// Rendered only by components/Layout.tsx, so the store and checkout pages keep
+// their instant scrolling. scroll-behavior has to sit on the scrolling element,
+// which is why this is global rather than scoped to a wrapper.
+export const MarketingGlobalStyles = createGlobalStyle`
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+`;
+
 export const GlobalStyles = createGlobalStyle`
   @font-face {
   font-family: 'Inter';

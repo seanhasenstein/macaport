@@ -270,11 +270,44 @@ export interface CheckoutForm {
   note?: string;
 }
 
+export type InquiryType =
+  | 'apparel'
+  | 'team-store'
+  | 'gang-sheets'
+  | 'existing'
+  | 'missed-deadline'
+  | 'other';
+
 export interface ContactFormValues {
+  inquiryType: InquiryType | '';
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
+  organization: string;
+  // Shared by both paths: what you want printed, or what you want the store
+  // to sell. Same option list either way, so it's one field with two labels.
+  products: string[];
+  // Keyed by product id, so only the items actually selected carry a number.
+  quantities: Record<string, string>;
+  // Free text, only asked for when "Something else" is one of the products.
+  productOther: string;
+  // Store name reuses `organization`; this is the order number alone.
+  orderNumber: string;
+  // How the garments get decorated. Deliberately separate from `products` —
+  // embroidery is a process, not a thing you can order a quantity of.
+  decoration: string;
+  // Multi-select: one order can mix fabrics, and a store can offer more than
+  // one way of getting the order to people.
+  fabric: string[];
+  colors: string;
+  artwork: string;
+  delivery: string;
+  shipping: string[];
+  neededBy: string;
+  groupSize: string;
+  openTiming: string;
+  storeDuration: string;
   message: string;
   honeypot: string;
 }

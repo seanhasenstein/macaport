@@ -495,7 +495,7 @@ export default function PrivacyPolicy() {
           <p>
             Macaport LLC
             <br />
-            3080 Fredrick Farm Ln.
+            3080 Frederick Farm Ln. Suite 101
             <br />
             New London, WI 54961
             <br />

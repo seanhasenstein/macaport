@@ -1,6 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import styled from 'styled-components';
+import { scrollToHash } from '../utils/scroll';
 
 type NavItemProps = {
   text: string;
@@ -8,10 +10,20 @@ type NavItemProps = {
 };
 
 function NavItem({ text, href }: NavItemProps) {
+  const router = useRouter();
+
+  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (scrollToHash(href, router)) event.preventDefault();
+  };
+
   return (
     <li>
       <Link href={href}>
-        <a>{text}</a>
+        {/* href is repeated so this stays a real link without JS. Next
+            overwrites it with the same value when it clones the child. */}
+        <a href={href} onClick={handleClick}>
+          {text}
+        </a>
       </Link>
     </li>
   );
@@ -19,6 +31,20 @@ function NavItem({ text, href }: NavItemProps) {
 
 export default function Header() {
   const [isOpen, setIsOpen] = React.useState(false);
+  const router = useRouter();
+
+  // Close the mobile menu once navigation lands. Without this, the "Gang
+  // Sheets" anchor scrolls the homepage while the open menu still covers it.
+  React.useEffect(() => {
+    const close = () => setIsOpen(false);
+    router.events.on('routeChangeComplete', close);
+    router.events.on('hashChangeComplete', close);
+
+    return () => {
+      router.events.off('routeChangeComplete', close);
+      router.events.off('hashChangeComplete', close);
+    };
+  }, [router.events]);
 
   return (
     <HeaderStyles>
@@ -71,8 +97,8 @@ export default function Header() {
             </button>
           </div>
           <ul className={isOpen ? 'open' : ''}>
-            <NavItem text="Home" href="/" />
             <NavItem text="Stores" href="/stores" />
+            <NavItem text="DTF Gang Sheets" href="/#gang-sheets" />
             <NavItem text="Sublimation" href="/sublimation-customization" />
             <NavItem text="Headwear" href="/headwear-customization" />
             <NavItem text="Contact Us" href="/contact" />
@@ -88,7 +114,12 @@ const HeaderStyles = styled.header`
   padding: 1.125rem 1.5rem;
   width: 100%;
   background-color: #fff;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  /* Positioned so the shadow actually paints. The next section down is
+     position: relative with its own background, which would otherwise paint
+     straight over it — the shadow was invisible at any opacity. */
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07);
 
   nav {
     margin: 0 auto;
