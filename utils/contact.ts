@@ -63,9 +63,23 @@ export const FABRIC_OPTIONS = [
 // (allowStorePickup / hasPrimaryShippingLocation / allowDirectShipping), which
 // is why this is a multi-select — a store can offer any combination.
 export const SHIPPING_OPTIONS = [
-  { id: 'pickup', label: 'Store pickup' },
-  { id: 'primary', label: 'Ship to one address' },
-  { id: 'direct', label: 'Ship to each person' },
+  {
+    id: 'pickup',
+    label: 'Store pickup',
+    // "Store" means Macaport's shop, not the online store being discussed, and
+    // in a form about setting up a store that is genuinely ambiguous.
+    description: 'Everyone collects their own order from us in New London.',
+  },
+  {
+    id: 'primary',
+    label: 'Ship to one address',
+    description: 'We send the whole order to you to hand out.',
+  },
+  {
+    id: 'direct',
+    label: 'Ship to each person',
+    description: 'Everyone gets their order posted to them, at their own cost.',
+  },
 ];
 
 // Three states rather than a yes/no. "Needs design help" is a different job

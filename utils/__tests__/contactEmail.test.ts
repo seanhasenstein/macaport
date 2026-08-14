@@ -574,9 +574,14 @@ describe('the confirmation subject the customer sees', () => {
 
   it('does not name the missed deadline back at them', () => {
     // Fair as a work queue label, unkind in the inbox of someone apologising.
-    expect(customerSubject(submission({ inquiryType: 'missed-deadline' }), ID)).toBe(
-      'We got your message [#ABC123]'
+    // "Request" matches the button they pressed to get here.
+    const subject = customerSubject(
+      submission({ inquiryType: 'missed-deadline' }),
+      ID
     );
+
+    expect(subject).toBe('We got your request [#ABC123]');
+    expect(subject).not.toMatch(/missed|deadline/i);
   });
 
   it('reads differently from the one Macaport gets', () => {
@@ -627,5 +632,22 @@ describe('the existing order or store path, which serves two audiences', () => {
         ID
       )
     ).toBe(`We got your apparel quote request [#${ID}]`);
+  });
+});
+
+describe('the notification subject for an existing order', () => {
+  it('carries the order number, which is the first thing looked up', () => {
+    expect(
+      contactSubject(
+        submission({ inquiryType: 'existing', orderNumber: '8FK2QP' }),
+        ID
+      )
+    ).toBe('Question about order #8FK2QP from Sam Rivera [#ABC123]');
+  });
+
+  it('falls back to the path name when they did not give one', () => {
+    expect(
+      contactSubject(submission({ inquiryType: 'existing' }), ID)
+    ).toBe('Question about an existing order from Sam Rivera [#ABC123]');
   });
 });

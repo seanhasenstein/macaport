@@ -158,7 +158,14 @@ const adminHeading = (inquiryType?: string) =>
 export function contactSubject(message: Message, id: string) {
   const raw = `${message.firstName ?? ''} ${message.lastName ?? ''}`;
   const name = String(raw).replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
-  const heading = adminHeading(message.inquiryType);
+
+  // The order number is the first thing anyone looks up to answer one of these,
+  // so it belongs where it can be read and searched without opening the email.
+  const orderNumber = message.orderNumber?.trim();
+  const heading =
+    message.inquiryType === 'existing' && orderNumber
+      ? `Question about order #${orderNumber}`
+      : adminHeading(message.inquiryType);
 
   return `${heading}${name ? ` from ${name}` : ''} [#${id}]`;
 }
@@ -167,10 +174,12 @@ export function contactSubject(message: Message, id: string) {
 // these are not ADMIN_HEADINGS. Specific enough to find in a search weeks
 // later, and to tell apart from a second enquiry about something else.
 //
-// missed-deadline is deliberately absent. "Missed store deadline" is a fair
-// description for a work queue and an unkind thing to put in the inbox of
-// someone already apologising for it, so that path keeps the neutral subject.
+// missed-deadline says "request" rather than naming the miss. It matches the
+// button they pressed to get here, and "Missed store deadline" is a fair label
+// for a work queue and an unkind thing to put in the inbox of someone already
+// apologising for it.
 const CUSTOMER_SUBJECTS: Record<string, string> = {
+  'missed-deadline': 'We got your request',
   apparel: 'We got your apparel quote request',
   'team-store': 'We got your online store request',
   'gang-sheets': 'We got your gang sheet question',

@@ -452,7 +452,7 @@ export default function Contact({ presetType }: Props) {
                             name="organization"
                             label="Which store did you miss?"
                             note="The group or team name the store was set up under."
-                            placeholder="e.g. New London Gridiron Club"
+                            placeholder="e.g. Lincoln High School Band"
                           />
                         )}
 
@@ -461,7 +461,7 @@ export default function Contact({ presetType }: Props) {
                             <FieldItem
                               name="organization"
                               label="Store name"
-                              placeholder="e.g. New London Gridiron Club"
+                              placeholder="e.g. Lincoln High School Band"
                               optional
                             />
                             <FieldItem

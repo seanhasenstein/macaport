@@ -7,7 +7,7 @@ import {
   reducedMotion,
 } from '../../styles/theme';
 
-type Option = { id: string; label: string };
+type Option = { id: string; label: string; description?: string };
 
 type Props = {
   name: string;
@@ -97,7 +97,14 @@ export function CheckboxGroup({
                   nested in a label, typing a number would toggle the box. */}
               <label className="option">
                 <Field type="checkbox" name={name} value={option.id} />
-                <span>{option.label}</span>
+                <span className="option-text">
+                  {option.label}
+                  {/* "Store pickup" and the rest are short enough to be read two
+                      ways. The line under them says which. */}
+                  {option.description ? (
+                    <span className="option-description">{option.description}</span>
+                  ) : null}
+                </span>
               </label>
               {quantityName && isSelected && (
                 <QuantityField
@@ -164,6 +171,20 @@ const CheckboxGroupStyles = styled.fieldset<{ $withQuantities: boolean }>`
   /* Each item is a bounded row rather than a loose checkbox. It gives the
      quantity input something to sit inside, so the number reads as belonging
      to the item beside it instead of floating at the far edge of the card. */
+  .option-text {
+    display: block;
+  }
+
+  .option-description {
+    display: block;
+    margin: 0.125rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    font-weight: 400;
+    color: ${theme.color.textMuted};
+    text-wrap: pretty;
+  }
+
   .row {
     padding: ${props =>
       props.$withQuantities ? '0.4375rem 0.5rem 0.4375rem 0.75rem' : '0.625rem 0.75rem'};
