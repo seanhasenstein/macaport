@@ -34,9 +34,11 @@ const PRIMARY_ACTIONS: Record<string, Destination> = {
 export function Success({
   values,
   referenceId,
+  onReset,
 }: {
   values: ContactFormValues;
   referenceId?: string;
+  onReset: () => void;
 }) {
   const primary = PRIMARY_ACTIONS[values.inquiryType];
 
@@ -59,11 +61,15 @@ export function Success({
             We have emailed a copy to <strong>{values.email}</strong>. It has
             everything you sent, and a reply goes straight to us.
           </p>
+          {/* A button, not a link to /contact. This screen is a state of that
+              page rather than a route of its own, so linking to it navigated
+              to where they already were: the component never unmounted, the
+              status stayed SUCCESS, and the click did nothing at all. */}
           <p className="correction">
             Wrong address?{' '}
-            <Link href="/contact">
-              <a>Send another message</a>
-            </Link>
+            <button type="button" onClick={onReset}>
+              Send another message
+            </button>
             .
           </p>
         </div>
@@ -180,10 +186,18 @@ const SuccessStyles = styled.div`
       margin-top: 0.875rem;
     }
 
-    a {
+    a,
+    button {
+      padding: 0;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: inherit;
       color: ${theme.color.text};
+      background: none;
+      border: none;
       text-decoration: underline;
       text-underline-offset: 3px;
+      cursor: pointer;
 
       &:hover {
         color: ${theme.color.brand};

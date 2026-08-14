@@ -211,6 +211,17 @@ export default function Contact({ presetType }: Props) {
     inquiryType: presetType,
   };
 
+  // "Wrong address?" is what sends people back here, so they are returning to
+  // fix one field rather than to start again. Formik unmounts while the success
+  // screen is up, so what it was given last time is gone unless it is handed
+  // back — and retyping a dozen answers to correct a typo in one is the kind of
+  // thing that loses the enquiry entirely.
+  const handleReset = () => {
+    setThrottled(false);
+    setReferenceId(undefined);
+    setStatus('IDLE');
+  };
+
   const handleSubmit = async (values: ContactFormValues) => {
     if (values.honeypot) return;
 
@@ -246,12 +257,16 @@ export default function Contact({ presetType }: Props) {
     <Layout>
       <>
         {status === 'SUCCESS' && submitted ? (
-          <Success values={submitted} referenceId={referenceId} />
+          <Success
+            values={submitted}
+            referenceId={referenceId}
+            onReset={handleReset}
+          />
         ) : (
           <ContactStyles>
             <div className="wrapper">
               <Formik
-                initialValues={formValues}
+                initialValues={submitted ?? formValues}
                 validationSchema={validationSchema}
                 onSubmit={values => handleSubmit(values)}
               >
