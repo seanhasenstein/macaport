@@ -63,10 +63,15 @@ export const FABRIC_OPTIONS = [
 // (allowStorePickup / hasPrimaryShippingLocation / allowDirectShipping), which
 // is why this is a multi-select — a store can offer any combination.
 // Four, not three. "Store pickup" covered two different operations — every
-// buyer collecting their own, and the organizer collecting the lot to hand out
-// — which no description can disambiguate, because a single box ticked for
-// both tells Macaport nothing about which to set up. A group wanting both
-// ticks both.
+// buyer collecting their own, and the organizer collecting them to hand out —
+// which no description can disambiguate, because a single box ticked for both
+// tells Macaport nothing about which to set up.
+//
+// None of these describe what will happen, because a store can offer several
+// and each buyer picks at checkout. "Everyone gets their order posted to them"
+// is only true if posting is the sole option, and "you collect the whole order"
+// stops being true the moment individual pickup is offered alongside it. The
+// note on the field carries that once instead of hedging every line.
 //
 // "At Macaport in New London" rather than either alone: which company is
 // ambiguous in a form about setting up a store, and where decides whether a
@@ -75,23 +80,24 @@ export const SHIPPING_OPTIONS = [
   {
     id: 'pickup',
     label: 'Individual pickup',
-    description: 'Each person collects their own order at Macaport in New London.',
+    description: 'Collected at Macaport in New London by whoever ordered it.',
   },
   {
     id: 'pickup-group',
     label: 'Group pickup',
     description:
-      'You collect the whole order at Macaport in New London and hand it out.',
+      'You collect from Macaport in New London and hand the orders out.',
   },
   {
     id: 'primary',
     label: 'Ship to one address',
-    description: 'We send the whole order to you to hand out.',
+    description:
+      'Shipped to one address you choose, which can be anywhere that suits your group, for you to hand out.',
   },
   {
     id: 'direct',
     label: 'Ship to each person',
-    description: 'Everyone gets their order posted to them, at their own cost.',
+    description: 'Posted to each buyer, at their own cost.',
   },
 ];
 

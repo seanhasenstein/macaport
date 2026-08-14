@@ -442,7 +442,7 @@ export default function Contact({ presetType }: Props) {
                             <CheckboxGroup
                               name="shipping"
                               label="How should people get their orders?"
-                              note="A store can offer any combination of these."
+                              note="A store can offer any combination of these. Each buyer picks from what you offer when they order."
                               optional
                               options={SHIPPING_OPTIONS}
                             />
