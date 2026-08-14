@@ -566,7 +566,7 @@ describe('the confirmation subject the customer sees', () => {
     ['apparel', 'We got your apparel quote request [#ABC123]'],
     ['team-store', 'We got your online store request [#ABC123]'],
     ['gang-sheets', 'We got your gang sheet question [#ABC123]'],
-    ['existing', 'We got your question about your order [#ABC123]'],
+    ['existing', 'We got your question [#ABC123]'],
     ['other', 'We got your message [#ABC123]'],
   ])('names the %s enquiry so it can be found again later', (inquiryType, subject) => {
     expect(customerSubject(submission({ inquiryType }), ID)).toBe(subject);
@@ -585,5 +585,23 @@ describe('the confirmation subject the customer sees', () => {
     expect(customerSubject(values, ID)).not.toBe(contactSubject(values, ID));
     expect(contactSubject(values, ID)).toContain('from Sam Rivera');
     expect(customerSubject(values, ID)).not.toContain('Sam Rivera');
+  });
+});
+
+describe('the existing order or store path, which serves two audiences', () => {
+  it('does not claim it was about an order', () => {
+    // The same enquiry covers "where is my order" and "when does my store
+    // close". Both arrive here, and the form cannot tell them apart.
+    const asStoreOwner = customerSubject(
+      submission({ inquiryType: 'existing', organization: 'Waupaca Hockey' }),
+      ID
+    );
+    const asShopper = customerSubject(
+      submission({ inquiryType: 'existing', orderNumber: '8FK2QP' }),
+      ID
+    );
+
+    expect(asStoreOwner).not.toContain('order');
+    expect(asStoreOwner).toBe(asShopper);
   });
 });

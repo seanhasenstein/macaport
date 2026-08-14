@@ -174,7 +174,12 @@ const CUSTOMER_SUBJECTS: Record<string, string> = {
   apparel: 'We got your apparel quote request',
   'team-store': 'We got your online store request',
   'gang-sheets': 'We got your gang sheet question',
-  existing: 'We got your question about your order',
+  // Not "about your order". This path is for a question about an order or a
+  // store, and the form only asks for a store name and an order number, both
+  // optional — so someone chasing an order without the number to hand looks
+  // exactly like someone asking about a store. Naming the wrong one reads as
+  // not having understood them, which is worse than not naming it.
+  existing: 'We got your question',
 };
 
 export function customerSubject(message: Message, id: string) {
