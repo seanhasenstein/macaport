@@ -589,19 +589,43 @@ describe('the confirmation subject the customer sees', () => {
 });
 
 describe('the existing order or store path, which serves two audiences', () => {
-  it('does not claim it was about an order', () => {
+  it('does not claim it was about an order when nothing says it was', () => {
     // The same enquiry covers "where is my order" and "when does my store
-    // close". Both arrive here, and the form cannot tell them apart.
+    // close", and with no order number the form cannot tell them apart.
     const asStoreOwner = customerSubject(
       submission({ inquiryType: 'existing', organization: 'Waupaca Hockey' }),
       ID
     );
-    const asShopper = customerSubject(
-      submission({ inquiryType: 'existing', orderNumber: '8FK2QP' }),
-      ID
-    );
 
     expect(asStoreOwner).not.toContain('order');
-    expect(asStoreOwner).toBe(asShopper);
+    expect(asStoreOwner).toBe(`We got your question [#${ID}]`);
+  });
+
+  it('uses the order number when they gave one, since that is a fact', () => {
+    expect(
+      customerSubject(
+        submission({ inquiryType: 'existing', orderNumber: '8FK2QP' }),
+        ID
+      )
+    ).toBe(`We got your question about order #8FK2QP [#${ID}]`);
+  });
+
+  it('ignores whitespace someone pasted around it', () => {
+    expect(
+      customerSubject(
+        submission({ inquiryType: 'existing', orderNumber: '  8FK2QP  ' }),
+        ID
+      )
+    ).toBe(`We got your question about order #8FK2QP [#${ID}]`);
+  });
+
+  it('never names an order on a path where none exists yet', () => {
+    // A stale orderNumber can survive in Formik state after switching paths.
+    expect(
+      customerSubject(
+        submission({ inquiryType: 'apparel', orderNumber: '8FK2QP' }),
+        ID
+      )
+    ).toBe(`We got your apparel quote request [#${ID}]`);
   });
 });

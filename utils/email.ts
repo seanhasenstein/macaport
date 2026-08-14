@@ -183,6 +183,15 @@ const CUSTOMER_SUBJECTS: Record<string, string> = {
 };
 
 export function customerSubject(message: Message, id: string) {
+  // An order number is a fact rather than a guess, and it is the thing someone
+  // actually types into a mailbox search months later. Only used where the
+  // enquiry is about an existing order: on the other paths it would name an
+  // order that does not exist yet.
+  const orderNumber = message.orderNumber?.trim();
+  if (message.inquiryType === 'existing' && orderNumber) {
+    return `We got your question about order #${orderNumber} [#${id}]`;
+  }
+
   const subject = CUSTOMER_SUBJECTS[message.inquiryType ?? ''];
 
   return `${subject ?? 'We got your message'} [#${id}]`;
