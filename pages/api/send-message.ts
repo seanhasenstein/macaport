@@ -4,6 +4,7 @@ import { createContactReference } from '../../utils';
 import { sendEmail } from '../../utils/mailgun';
 import {
   contactSubject,
+  customerSubject,
   generateContactFormEmail,
   generateCustomerConfirmationEmail,
 } from '../../utils/email';
@@ -115,7 +116,7 @@ export default async function handler(
       await sendEmail({
         to: req.body.email,
         from: `Macaport <${process.env.CONTACT_FORM_FROM}>`,
-        subject: `We got your message [#${id}]`,
+        subject: customerSubject(req.body, id),
         // Replies go to Macaport, so a correction lands in this thread rather
         // than arriving as a second, competing enquiry.
         replyTo: Array.isArray(formattedToField)

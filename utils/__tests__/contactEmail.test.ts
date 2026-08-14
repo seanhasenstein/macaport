@@ -1,5 +1,6 @@
 import {
   contactSubject,
+  customerSubject,
   generateContactFormEmail,
   generateCustomerConfirmationEmail,
 } from '../email';
@@ -557,5 +558,32 @@ describe('the subject header, which is the one place user text reaches a header'
     expect(contactSubject(submission({ inquiryType: 'apparel' }), ID)).toBe(
       'Apparel quote request from Sam Rivera [#ABC123]'
     );
+  });
+});
+
+describe('the confirmation subject the customer sees', () => {
+  it.each<[InquiryType, string]>([
+    ['apparel', 'We got your apparel quote request [#ABC123]'],
+    ['team-store', 'We got your online store request [#ABC123]'],
+    ['gang-sheets', 'We got your gang sheet question [#ABC123]'],
+    ['existing', 'We got your question about your order [#ABC123]'],
+    ['other', 'We got your message [#ABC123]'],
+  ])('names the %s enquiry so it can be found again later', (inquiryType, subject) => {
+    expect(customerSubject(submission({ inquiryType }), ID)).toBe(subject);
+  });
+
+  it('does not name the missed deadline back at them', () => {
+    // Fair as a work queue label, unkind in the inbox of someone apologising.
+    expect(customerSubject(submission({ inquiryType: 'missed-deadline' }), ID)).toBe(
+      'We got your message [#ABC123]'
+    );
+  });
+
+  it('reads differently from the one Macaport gets', () => {
+    const values = submission({ inquiryType: 'apparel' });
+
+    expect(customerSubject(values, ID)).not.toBe(contactSubject(values, ID));
+    expect(contactSubject(values, ID)).toContain('from Sam Rivera');
+    expect(customerSubject(values, ID)).not.toContain('Sam Rivera');
   });
 });

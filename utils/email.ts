@@ -163,6 +163,26 @@ export function contactSubject(message: Message, id: string) {
   return `${heading}${name ? ` from ${name}` : ''} [#${id}]`;
 }
 
+// Written for the person who sent it, not for whoever has to action it, so
+// these are not ADMIN_HEADINGS. Specific enough to find in a search weeks
+// later, and to tell apart from a second enquiry about something else.
+//
+// missed-deadline is deliberately absent. "Missed store deadline" is a fair
+// description for a work queue and an unkind thing to put in the inbox of
+// someone already apologising for it, so that path keeps the neutral subject.
+const CUSTOMER_SUBJECTS: Record<string, string> = {
+  apparel: 'We got your apparel quote request',
+  'team-store': 'We got your online store request',
+  'gang-sheets': 'We got your gang sheet question',
+  existing: 'We got your question about your order',
+};
+
+export function customerSubject(message: Message, id: string) {
+  const subject = CUSTOMER_SUBJECTS[message.inquiryType ?? ''];
+
+  return `${subject ?? 'We got your message'} [#${id}]`;
+}
+
 // One field, asked four different ways. Someone on the missed-deadline path
 // answers "Which store did you miss?" and would otherwise get it back labelled
 // "Organization", which reads like we filed their answer under the wrong
