@@ -3,8 +3,8 @@ import Hero from '../components/home/Hero';
 import ValueProps from '../components/home/ValueProps';
 import Apparel from '../components/home/Apparel';
 import TeamStores from '../components/home/TeamStores';
+import OnsitePrinting from '../components/home/OnsitePrinting';
 import GangSheetSpotlight from '../components/home/GangSheetSpotlight';
-import TrustLine from '../components/home/TrustLine';
 
 export default function Home() {
   return (
@@ -21,8 +21,8 @@ export default function Home() {
           Anyone here for gang sheets has the hero calculator and the nav. */}
       <Apparel />
       <TeamStores />
+      <OnsitePrinting />
       <GangSheetSpotlight />
-      <TrustLine />
     </Layout>
   );
 }
