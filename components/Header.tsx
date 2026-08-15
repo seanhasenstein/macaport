@@ -96,12 +96,18 @@ export default function Header() {
               )}
             </button>
           </div>
+          {/* The four services first, then the two things a returning visitor
+              comes back to do. Sublimation and headwear moved to the footer: they
+              are Momentec storefronts rather than services, and they were taking
+              two of five slots while custom apparel, team stores and onsite
+              printing had none. Anchors for now; they become page links as each
+              page is built, and nothing else has to change. */}
           <ul className={isOpen ? 'open' : ''}>
-            <NavItem text="Stores" href="/stores" />
-            <NavItem text="DTF Gang Sheets" href="/#gang-sheets" />
-            <NavItem text="Sublimation" href="/sublimation-customization" />
-            <NavItem text="Headwear" href="/headwear-customization" />
-            <NavItem text="Contact Us" href="/contact" />
+            <NavItem text="Custom Apparel" href="/#apparel" />
+            <NavItem text="Team Stores" href="/#team-stores" />
+            <NavItem text="Onsite Printing" href="/#onsite-printing" />
+            <NavItem text="Gang Sheets" href="/#gang-sheets" />
+            <NavItem text="Contact" href="/contact" />
           </ul>
         </nav>
       </div>
@@ -137,7 +143,11 @@ const HeaderStyles = styled.header`
     }
 
     li {
-      padding: 0 1.75rem;
+      /* Five items at 1.75rem needed about 1010px to stay on one line, which
+         is more than the breakpoint below allowed, so between 950 and 1010 the
+         nav wrapped onto two rows. Trimmed here and the breakpoint raised, so
+         the menu takes over before the links ever have to wrap. */
+      padding: 0 1.5rem;
 
       &:last-of-type {
         padding-right: 0;
@@ -167,7 +177,7 @@ const HeaderStyles = styled.header`
     display: none;
   }
 
-  @media (max-width: 950px) {
+  @media (max-width: 1024px) {
     nav {
       flex-direction: column;
       align-items: flex-start;

@@ -11,14 +11,34 @@ import { theme, focusRing, reducedMotion } from '../styles/theme';
 
 const groups = [
   {
+    id: 'services',
+    title: 'Services',
+    links: [
+      { id: 'apparel', text: 'Custom apparel', href: '/#apparel' },
+      { id: 'team-stores', text: 'Online team stores', href: '/#team-stores' },
+      { id: 'onsite', text: 'Onsite printing', href: '/#onsite-printing' },
+      { id: 'gang-sheets', text: 'DTF gang sheets', href: '/#gang-sheets' },
+    ],
+  },
+  // Split out of Services rather than for length alone. These two need nobody
+  // on the Macaport side: a parent finds their store and orders, a shop builds
+  // a sheet and checks out. Everything above starts with a conversation, and
+  // team stores and gang sheets each appear once as what they are and once as
+  // something to go and do.
+  {
     id: 'shop',
     title: 'Shop',
     links: [
-      { id: 'gang-sheets', text: 'DTF gang sheets', href: '/#gang-sheets' },
-      // Two different things: the explainer section, and the live stores you
-      // can actually order from today.
-      { id: 'team-stores', text: 'How team stores work', href: '/#team-stores' },
-      { id: 'stores', text: 'Open team stores', href: '/stores' },
+      { id: 'stores', text: 'Find your store', href: '/stores' },
+      {
+        id: 'builder',
+        text: 'Build a gang sheet',
+        href: 'https://sheets.macaport.com/editor',
+        external: true,
+      },
+      // Storefronts, not marketing pages. Each is a Momentec catalog embedded
+      // whole, browsed and ordered through without anyone at Macaport being
+      // involved until the order reaches Nick's dashboard.
       {
         id: 'sublimation',
         text: 'Sublimation',
@@ -27,17 +47,30 @@ const groups = [
       { id: 'headwear', text: 'Headwear', href: '/headwear-customization' },
     ],
   },
+  // The contact links live together rather than inside Shop. Shop means the
+  // things nobody at Macaport has to be involved in, and a quote request is
+  // the opposite of that. Each ?about= lands on the form with the right
+  // questions already showing, which is the whole reason to link them
+  // separately instead of pointing four times at the same page.
   {
-    id: 'company',
-    title: 'Company',
+    id: 'quotes',
+    title: 'Get in touch',
     links: [
-      { id: 'contact', text: 'Contact us', href: '/contact' },
-      { id: 'privacy', text: 'Privacy policy', href: '/privacy-policy' },
       {
-        id: 'terms',
-        text: 'Terms & conditions',
-        href: '/terms-and-conditions',
+        id: 'quote-apparel',
+        text: 'Get an apparel quote',
+        href: '/contact?about=apparel',
       },
+      {
+        id: 'quote-store',
+        text: 'Ask about an online store',
+        href: '/contact?about=team-store',
+      },
+      // No ?about= yet: onsite printing has no path on the form. Pointing at
+      // one that does not exist would preselect nothing and silently drop the
+      // context, so it goes to the general form until that path is built.
+      { id: 'quote-onsite', text: 'Ask about onsite printing', href: '/contact' },
+      { id: 'contact', text: 'Contact us', href: '/contact' },
     ],
   },
 ];
@@ -56,9 +89,14 @@ export default function SiteFooter() {
               </a>
             </Link>
             <p>
-              Custom apparel, embroidery, online team stores, and DTF gang
-              sheets out of New London, Wisconsin.
+              Custom printing and embroidery for schools, teams, businesses,
+              and events. Made in New London, Wisconsin.
             </p>
+            <address>
+              3080 Frederick Farm Ln. Suite 101
+              <br />
+              New London, WI 54961
+            </address>
           </div>
 
           <nav className="groups" aria-label="Footer">
@@ -68,44 +106,53 @@ export default function SiteFooter() {
                 <ul>
                   {group.links.map(link => (
                     <li key={link.id}>
-                      <Link href={link.href}>
-                        <a
-                          href={link.href}
-                          onClick={event => {
-                            if (scrollToHash(link.href, router)) {
-                              event.preventDefault();
-                            }
-                          }}
-                        >
+                      {/* The builder is a different application on its own subdomain, so
+                          it gets a plain anchor. Routed through next/link it would try to
+                          handle an absolute URL client-side and would lose target and rel. */}
+                      {link.external ? (
+                        <a href={link.href} target="_blank" rel="noreferrer">
                           {link.text}
                         </a>
-                      </Link>
+                      ) : (
+                        <Link href={link.href}>
+                          <a
+                            href={link.href}
+                            onClick={event => {
+                              if (scrollToHash(link.href, router)) {
+                                event.preventDefault();
+                              }
+                            }}
+                          >
+                            {link.text}
+                          </a>
+                        </Link>
+                      )}
                     </li>
                   ))}
                 </ul>
               </div>
             ))}
 
-            <div>
-              <h2>Visit</h2>
-              <address>
-                Macaport LLC
-                <br />
-                3080 Frederick Farm Ln. Suite 101
-                <br />
-                New London, WI 54961
-                <br />
-                <a href="mailto:support@macaport.com">support@macaport.com</a>
-              </address>
-              {/* Hours go here once confirmed. */}
-            </div>
           </nav>
         </div>
 
+        {/* Privacy and terms sit here rather than in a column. Nobody browses
+            a footer looking for a privacy policy; they look at the very bottom
+            of the page, which is also where they stop competing for attention
+            with the things someone might actually want. */}
         <div className="bottom">
           <p>
             &copy; Macaport {new Date().getFullYear()}. All Rights Reserved.
           </p>
+          <div className="bottom-links">
+            <Link href="/privacy-policy">
+              <a>Privacy policy</a>
+            </Link>
+            <Link href="/terms-and-conditions">
+              <a>Terms &amp; conditions</a>
+            </Link>
+            <a href="mailto:support@macaport.com">support@macaport.com</a>
+          </div>
         </div>
       </div>
     </SiteFooterStyles>
@@ -149,6 +196,18 @@ const SiteFooterStyles = styled.footer`
   .brand p {
     margin: 1rem 0 0;
     font-size: 0.875rem;
+    line-height: 1.6;
+    color: ${theme.color.textMuted};
+  }
+
+  /* Browsers italicise address by default, which reads as emphasis nobody
+     asked for on a street address. */
+  .brand address {
+    /* More than the gap between the logo and the blurb: those are one thought,
+       and the address is a separate fact underneath it. */
+    margin: 2rem 0 0;
+    font-size: 0.875rem;
+    font-style: normal;
     line-height: 1.6;
     color: ${theme.color.textMuted};
   }
@@ -204,12 +263,41 @@ const SiteFooterStyles = styled.footer`
   .bottom {
     margin: 3rem 0 0;
     padding: 1.5rem 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
     border-top: 1px solid ${theme.color.border};
 
     p {
       margin: 0;
       font-size: 0.8125rem;
       color: ${theme.color.textSubtle};
+    }
+
+    .bottom-links {
+      display: flex;
+      flex-wrap: wrap;
+      /* Wide enough that three links at the same size and colour read as three
+         things rather than one run of grey text. */
+      gap: 0.375rem 2rem;
+    }
+
+    a {
+      font-size: 0.8125rem;
+      color: ${theme.color.textMuted};
+      transition: color 150ms ease;
+      ${reducedMotion}
+
+      &:hover {
+        color: ${theme.color.text};
+      }
+
+      &:focus-visible {
+        ${focusRing}
+        border-radius: ${theme.radius.sm};
+      }
     }
   }
 
