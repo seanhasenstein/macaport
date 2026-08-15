@@ -8,6 +8,8 @@ import {
   nextStep,
   FABRIC_OPTIONS,
   SHIPPING_OPTIONS,
+  PERSONALIZATION_OPTIONS,
+  SIZE_MIX_OPTIONS,
   inquiryLabel,
   joinLabels,
   productLabel,
@@ -102,6 +104,17 @@ const divider = (top: number) =>
 
 interface Message {
   inquiryType?: string;
+  personalization?: string[];
+  personalizationOther?: string;
+  schedule?: string;
+  sizeMix?: string[];
+  eventName?: string;
+  eventDates?: string;
+  eventHours?: string;
+  venue?: string;
+  venueSetting?: string;
+  power?: string;
+  whoPays?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -138,6 +151,7 @@ const ADMIN_HEADINGS: Record<string, string> = {
   apparel: 'Apparel quote request',
   'team-store': 'Online store request',
   'gang-sheets': 'Gang sheet question',
+  onsite: 'Onsite printing request',
   existing: 'Question about an existing order',
   'missed-deadline': 'Missed store deadline',
   other: 'General inquiry',
@@ -183,6 +197,7 @@ const CUSTOMER_SUBJECTS: Record<string, string> = {
   apparel: 'We got your apparel quote request',
   'team-store': 'We got your online store request',
   'gang-sheets': 'We got your gang sheet question',
+  onsite: 'We got your onsite printing request',
   // Not "about your order". This path is for a question about an order or a
   // store, and the form only asks for a store name and an order number, both
   // optional — so someone chasing an order without the number to hand looks
@@ -190,6 +205,118 @@ const CUSTOMER_SUBJECTS: Record<string, string> = {
   // not having understood them, which is worse than not naming it.
   existing: 'We got your question',
 };
+
+// What arrived, short enough for a pill. Separate from CUSTOMER_SUBJECTS
+// rather than derived from it: a subject line has room for "apparel quote
+// request" and a badge does not, and squeezing one into the other would make
+// both worse.
+const BADGE_LABELS: Record<string, string> = {
+  apparel: 'Quote request received',
+  'team-store': 'Store request received',
+  'gang-sheets': 'Question received',
+  onsite: 'Event request received',
+  existing: 'Question received',
+  'missed-deadline': 'Request received',
+};
+
+export const badgeLabel = (inquiryType?: string) =>
+  BADGE_LABELS[inquiryType ?? ''] ?? 'Message received';
+
+// How each path refers to what arrived, once it has something of theirs to
+// attach it to. The preposition is not interchangeable: "for Lincoln
+// Invitational" means we would print at it, "about Waupaca Hockey" means they
+// are asking after it. Getting that backwards on missed-deadline would read as
+// though we were quoting someone a new job they never asked for.
+const HEADING_PHRASING: Record<
+  string,
+  { noun: string; preposition: string }
+> = {
+  apparel: { noun: 'quote request', preposition: 'for' },
+  'team-store': { noun: 'store request', preposition: 'for' },
+  onsite: { noun: 'request', preposition: 'for' },
+  'missed-deadline': { noun: 'request', preposition: 'about' },
+  existing: { noun: 'question', preposition: 'about' },
+};
+
+// Long enough for a real event or organization name — "New London Gridiron
+// Club" is 24 — and short enough that whatever comes back is still a heading.
+// None of these fields is length-limited on the form, on purpose: rejecting a
+// submission over a display concern would turn away a lead. So the guard lives
+// here, where the cost of an overlong value is a heading nobody can read, and
+// the answer is to leave it out of the heading rather than to refuse it.
+const SUBJECT_MAX_LENGTH = 60;
+
+// Whitespace is collapsed rather than trimmed alone. A name pasted out of a
+// spreadsheet can arrive with a newline in the middle of it, which is invisible
+// in the HTML heading and breaks the sentence in two in the plain-text part.
+function nameable(value?: string) {
+  const collapsed = (value ?? '').replace(/\s+/g, ' ').trim();
+
+  return collapsed.length > SUBJECT_MAX_LENGTH ? '' : collapsed;
+}
+
+// The one thing in the enquiry that only this customer could have told us.
+// gang-sheets and other are absent on purpose — neither form asks for anything
+// nameable, so there is never a subject to find.
+function headingSubject(message: Message) {
+  switch (message.inquiryType) {
+    case 'onsite':
+      return nameable(message.eventName);
+    case 'existing': {
+      // Order number first: it is the more specific of the two, and someone
+      // who has it to hand is asking about that order rather than the store.
+      const orderNumber = nameable(message.orderNumber);
+      return orderNumber
+        ? `order #${orderNumber}`
+        : nameable(message.organization);
+    }
+    case 'apparel':
+    case 'team-store':
+    case 'missed-deadline':
+      return nameable(message.organization);
+    default:
+      return '';
+  }
+}
+
+// "We have your request for Lincoln Invitational." — the half of the opening
+// that could only have come from this customer. Empty whenever there is nothing
+// of theirs to name, which is what both callers branch on.
+function haveClause(message: Message) {
+  const phrasing = HEADING_PHRASING[message.inquiryType ?? ''];
+  const subject = headingSubject(message);
+
+  if (!phrasing || !subject) return '';
+
+  return `We have your ${phrasing.noun} ${phrasing.preposition} ${subject}.`;
+}
+
+// The badge above this can only say what kind of enquiry arrived. The heading
+// says which one. Because the second half comes from what they typed, the two
+// lines cannot restate each other the way "Message received" over "We got your
+// message" did.
+//
+// Where there is nothing to name it stops at the thanks rather than padding out
+// to "We have your quote request", which is the badge again in a larger font.
+// That is always the case on gang-sheets and other, and happens on apparel and
+// existing whenever the optional field was left blank.
+export function customerHeading(message: Message) {
+  const clause = haveClause(message);
+
+  return `Thanks, ${message.firstName}.${clause ? ` ${clause}` : ''}`;
+}
+
+// The plain-text part has no badge, so it never had the repetition the heading
+// was fixing. This is here for parity: the two parts of a multipart message
+// should say the same thing, and the text part is what gets indexed when
+// someone searches their mail for the event months later.
+export function customerOpening(message: Message) {
+  const clause = haveClause(message);
+
+  return `Thanks for getting in touch with Macaport.${
+    clause ? ` ${clause}` : ''
+  } ${nextStep(message.inquiryType ?? '')}`;
+}
 
 export function customerSubject(message: Message, id: string) {
   // An order number is a fact rather than a guess, and it is the thing someone
@@ -232,6 +359,16 @@ function inquiryDetails(input: EmailParams) {
       value: input.organization ?? '',
     },
     { label: 'Order number', value: input.orderNumber ?? '' },
+    { label: 'Event', value: input.eventName ?? '' },
+    { label: 'Dates', value: input.eventDates ?? '' },
+    // "Event times", not "Hours needed": the field asks when their day runs,
+    // and calling it hours needed reads as hours Macaport agreed to be there.
+    { label: 'Event times', value: input.eventHours ?? '' },
+    { label: 'Venue', value: input.venue ?? '' },
+    { label: 'Indoor or outdoor', value: input.venueSetting ?? '' },
+    { label: 'Power on site', value: input.power ?? '' },
+    { label: 'Schedule', value: input.schedule ?? '' },
+    { label: 'Who pays', value: input.whoPays ?? '' },
     {
       label: 'Products',
       // "T-shirts (24), Hats (12)" — the quantity belongs beside the item it
@@ -254,8 +391,24 @@ function inquiryDetails(input: EmailParams) {
         ? input.productOther ?? ''
         : '',
     },
+    {
+      label: 'Sizes to bring',
+      value: joinLabels(SIZE_MIX_OPTIONS, input.sizeMix),
+    },
     { label: 'Printed or embroidered', value: input.decoration ?? '' },
     { label: 'Artwork ready', value: input.artwork ?? '' },
+    {
+      label: 'Personalization',
+      value: joinLabels(PERSONALIZATION_OPTIONS, input.personalization),
+    },
+    {
+      label: 'Personalization detail',
+      // Guarded the same way "Also looking for" is: unticking the box does not
+      // clear the text behind it.
+      value: (input.personalization ?? []).includes(OTHER_PRODUCT_ID)
+        ? input.personalizationOther ?? ''
+        : '',
+    },
     { label: 'Fabric', value: joinLabels(FABRIC_OPTIONS, input.fabric) },
     { label: 'Garment colors', value: input.colors ?? '' },
     { label: 'Needed by', value: formatDateValue(input.neededBy) },
@@ -264,7 +417,11 @@ function inquiryDetails(input: EmailParams) {
       label: 'How people get their orders',
       value: joinLabels(SHIPPING_OPTIONS, input.shipping),
     },
-    { label: 'Group size', value: input.groupSize ?? '' },
+    {
+      label:
+        input.inquiryType === 'onsite' ? 'Expected attendance' : 'Group size',
+      value: input.groupSize ?? '',
+    },
     { label: 'Store opens', value: input.openTiming ?? '' },
     { label: 'Open for', value: input.storeDuration ?? '' },
   ];
@@ -319,8 +476,11 @@ export function generateHtml(input: EmailParams) {
   const name = `${input.firstName} ${input.lastName}`.trim();
   // "About" becomes the heading and "Needed by" the deadline line, so neither
   // is repeated in the rows below.
+  // Whichever date was hoisted into the callout comes out of the rows, so it
+  // is stated once rather than twice.
+  const hoisted = input.inquiryType === 'onsite' ? 'Dates' : 'Needed by';
   const details = inquiryDetails(input).filter(
-    row => row.label !== 'About' && row.label !== 'Needed by'
+    row => row.label !== 'About' && row.label !== hoisted
   );
 
   // Tappable on a phone, which is where these get read first. The reply-to on
@@ -358,9 +518,19 @@ export function generateHtml(input: EmailParams) {
   // "Date requested", not "Needed by": this is what the customer asked for, and
   // nobody has agreed to it yet. In a bordered callout at the top of the email,
   // "Needed by" reads like a commitment Macaport has already made.
-  const deadline = input.neededBy?.trim()
-    ? `<p style="margin:16px 0 0;padding:10px 14px;color:#171717;background-color:#fafafa;border:1px solid ${BORDER};border-radius:8px;font-family:${FONT};font-size:14px;line-height:1.5;"><span style="color:#737373;">Date requested</span> &nbsp;<b>${escapeHtml(
-        formatDateValue(input.neededBy)
+  // An event's own dates are the same kind of fact as a deadline and decide
+  // the enquiry just as hard, so the onsite path hoists those instead. Labelled
+  // as dates rather than a request: the event is on those days whether or not
+  // Macaport is there.
+  const isOnsite = input.inquiryType === 'onsite';
+  const dateLabel = isOnsite ? 'Event dates' : 'Date requested';
+  const dateValue = isOnsite
+    ? input.eventDates ?? ''
+    : formatDateValue(input.neededBy);
+
+  const deadline = dateValue.trim()
+    ? `<p style="margin:16px 0 0;padding:10px 14px;color:#171717;background-color:#fafafa;border:1px solid ${BORDER};border-radius:8px;font-family:${FONT};font-size:14px;line-height:1.5;"><span style="color:#737373;">${dateLabel}</span> &nbsp;<b>${escapeHtml(
+        dateValue
       )}</b></p>`
     : '';
 
@@ -423,8 +593,8 @@ export function generateCustomerConfirmationEmail(
 
   const note = confirmationNote(input.inquiryType ?? '');
 
-  const text = `Hi ${input.firstName},\n\nThanks for getting in touch with Macaport. ${nextStep(
-    input.inquiryType ?? ''
+  const text = `Hi ${input.firstName},\n\n${customerOpening(
+    message
   )}\n${note ? `\n${note}\n` : ''}\nHere is what you sent us on ${date} (reference #${id}):\n\n${
     summary ? `${summary}\n\n` : ''
   }Message: ${
@@ -451,11 +621,15 @@ export function generateCustomerConfirmationEmail(
   // Same header shape as the notification: title, then reference and when it
   // arrived, then a rule. Without it the greeting ran straight into the list of
   // answers with nothing marking where one ended and the other began.
+  // Three elements, one job each: the badge names what kind of enquiry
+  // arrived, the heading names theirs, the line under it says what happens
+  // next. It used to open "Message received" and then "We got your message",
+  // which is the same sentence twice and identical on all seven paths.
   const body = `${badge(
-    'Message received'
-  )}<h1 style="margin:0;color:#171717;font-family:${FONT};font-size:22px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;">Thanks, ${escapeHtml(
-    input.firstName
-  )}. We got your message.</h1><p style="margin:10px 0 0;color:#737373;font-family:${FONT};font-size:15px;line-height:1.6;">${escapeHtml(
+    badgeLabel(input.inquiryType)
+  )}<h1 style="margin:0;color:#171717;font-family:${FONT};font-size:22px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;">${escapeHtml(
+    customerHeading(message)
+  )}</h1><p style="margin:10px 0 0;color:#737373;font-family:${FONT};font-size:15px;line-height:1.6;">${escapeHtml(
     nextStep(input.inquiryType ?? '')
   )}</p>${metaLine(id, date)}${noteHtml}${divider(24)}${sectionHeading('What you sent', 20)}${table(rows)}<p style="margin:22px 0 0;padding:14px 16px;color:#737373;background-color:#fafafa;border:1px solid ${BORDER};border-radius:10px;font-family:${FONT};font-size:13px;line-height:1.55;">If anything above is wrong, reply to this email and it will reach us.</p>`;
 

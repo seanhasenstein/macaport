@@ -155,7 +155,8 @@ describe('customer confirmation email', () => {
 
     expect(text).toContain('Hi Sam,');
     expect(text).toContain('We will put a price together and get back to you.');
-    expect(html).toContain('Thanks, Sam. We got your message.');
+    expect(html).toContain('Thanks, Sam.');
+    expect(html).toContain('Quote request received');
   });
 
   it('gives them back what they sent, including the message', () => {
@@ -424,24 +425,24 @@ describe('what the copy promises on Macaport behalf', () => {
 });
 
 describe('the badge and the requested date', () => {
-  it('shows the badge on every path, including the sparse ones', () => {
-    const paths: InquiryType[] = [
-      'apparel',
-      'team-store',
-      'gang-sheets',
-      'existing',
-      'missed-deadline',
-      'other',
-    ];
+  it.each<[InquiryType, string]>([
+    ['apparel', 'Quote request received'],
+    ['team-store', 'Store request received'],
+    ['gang-sheets', 'Question received'],
+    ['onsite', 'Event request received'],
+    ['existing', 'Question received'],
+    ['missed-deadline', 'Request received'],
+    ['other', 'Message received'],
+  ])('names what arrived on the %s path', (inquiryType, label) => {
+    const { html } = generateCustomerConfirmationEmail(
+      submission({ inquiryType }),
+      ID,
+      DATE
+    );
 
-    paths.forEach(inquiryType => {
-      const { html } = generateCustomerConfirmationEmail(
-        submission({ inquiryType }),
-        ID,
-        DATE
-      );
-      expect(html).toContain('Message received');
-    });
+    expect(html).toContain(label);
+    // The heading stops repeating it: the badge says what, the heading thanks.
+    expect(html).not.toContain('We got your message.');
   });
 
   it('keeps the badge to text, since icons and symbol fonts are unreliable', () => {
@@ -472,6 +473,181 @@ describe('the badge and the requested date', () => {
     );
 
     expect(text).toContain('Needed by: September 15, 2026');
+  });
+});
+
+// The badge can only name a kind of enquiry, so on its own it repeats itself
+// across paths — gang-sheets and existing both produce "Question received".
+// The heading is what tells them apart, because its second half is theirs.
+describe('the heading, which names what the customer named', () => {
+  const heading = (overrides: Partial<ContactFormValues>) =>
+    generateCustomerConfirmationEmail(submission(overrides), ID, DATE).html;
+
+  it.each<[string, Partial<ContactFormValues>, string]>([
+    [
+      'onsite',
+      { inquiryType: 'onsite', eventName: 'Lincoln Invitational' },
+      'Thanks, Sam. We have your request for Lincoln Invitational.',
+    ],
+    [
+      'team-store',
+      { inquiryType: 'team-store', organization: 'Wildcats Booster Club' },
+      'Thanks, Sam. We have your store request for Wildcats Booster Club.',
+    ],
+    [
+      'apparel',
+      { inquiryType: 'apparel', organization: 'New London Gridiron Club' },
+      'Thanks, Sam. We have your quote request for New London Gridiron Club.',
+    ],
+    [
+      'missed-deadline',
+      { inquiryType: 'missed-deadline', organization: 'Waupaca Hockey' },
+      'Thanks, Sam. We have your request about Waupaca Hockey.',
+    ],
+    [
+      'existing, by order number',
+      { inquiryType: 'existing', orderNumber: '8FK2QP' },
+      'Thanks, Sam. We have your question about order #8FK2QP.',
+    ],
+    [
+      'existing, by store name',
+      { inquiryType: 'existing', organization: 'Waupaca Hockey' },
+      'Thanks, Sam. We have your question about Waupaca Hockey.',
+    ],
+  ])('names it on the %s path', (_label, overrides, expected) => {
+    expect(heading(overrides)).toContain(expected);
+  });
+
+  // "About", not "for". They are asking after a store that already exists, and
+  // "for Waupaca Hockey" would read as a new job being quoted at them.
+  it('does not offer to print for the store someone missed', () => {
+    expect(heading({
+      inquiryType: 'missed-deadline',
+      organization: 'Waupaca Hockey',
+    })).not.toContain('request for Waupaca Hockey');
+  });
+
+  // With no name to add, the long form is the badge again in a larger font,
+  // which is the doubling this heading exists to remove.
+  it.each<[string, Partial<ContactFormValues>]>([
+    ['gang-sheets, which never asks for one', { inquiryType: 'gang-sheets' }],
+    ['other, which never asks for one', { inquiryType: 'other' }],
+    ['apparel, where organization is optional', { inquiryType: 'apparel' }],
+    ['existing, where both fields are optional', { inquiryType: 'existing' }],
+  ])('stops at the thanks on %s', (_label, overrides) => {
+    const html = heading(overrides);
+
+    expect(html).toContain('Thanks, Sam.</h1>');
+    expect(html).not.toContain('We have your');
+  });
+
+  it('escapes a name the customer typed', () => {
+    const html = heading({
+      inquiryType: 'onsite',
+      eventName: '<script>alert(1)</script>',
+    });
+
+    expect(html).not.toContain('<script>alert(1)</script>');
+    expect(html).toContain('&lt;script&gt;');
+  });
+});
+
+// Neither field is length-limited on the form, because refusing a submission
+// over a display concern would turn away a lead. So an overlong value has to
+// fail somewhere, and the heading is the right place for it to fail.
+describe('a name too long to be a heading', () => {
+  const longName = 'The Annual '.repeat(12);
+
+  it('leaves it out rather than setting a paragraph in 22px bold', () => {
+    const { html } = generateCustomerConfirmationEmail(
+      submission({ inquiryType: 'onsite', eventName: longName }),
+      ID,
+      DATE
+    );
+
+    expect(html).toContain('Thanks, Sam.</h1>');
+    expect(html).not.toContain('We have your request for The Annual');
+  });
+
+  it('still reports it in full where length does not matter', () => {
+    // Dropping it from the heading must not drop it from the record of what
+    // they sent, which is the part they check for mistakes.
+    const { text } = generateCustomerConfirmationEmail(
+      submission({ inquiryType: 'onsite', eventName: longName }),
+      ID,
+      DATE
+    );
+
+    expect(text).toContain(`Event: ${longName}`);
+  });
+
+  it('collapses a newline pasted into the middle of a name', () => {
+    // Invisible in the heading, but it would break the plain-text sentence
+    // across two lines and read as a formatting bug.
+    const { html, text } = generateCustomerConfirmationEmail(
+      submission({ inquiryType: 'onsite', eventName: 'Lincoln\n Invitational' }),
+      ID,
+      DATE
+    );
+
+    expect(html).toContain('We have your request for Lincoln Invitational.');
+    expect(text).toContain('We have your request for Lincoln Invitational.');
+  });
+});
+
+// No badge here, so this was never repeating itself the way the heading was.
+// It says the same thing for parity: the two parts of a multipart message
+// should agree, and this is the part that gets indexed by mail search.
+describe('the plain-text opening', () => {
+  it('names the event alongside the thanks and the next step', () => {
+    const { text } = generateCustomerConfirmationEmail(
+      submission({ inquiryType: 'onsite', eventName: 'Lincoln Invitational' }),
+      ID,
+      DATE
+    );
+
+    expect(text).toContain(
+      'Thanks for getting in touch with Macaport. We have your request for Lincoln Invitational. We will'
+    );
+  });
+
+  it('reads exactly as it did before when there is nothing to name', () => {
+    const { text } = generateCustomerConfirmationEmail(
+      submission({ inquiryType: 'gang-sheets' }),
+      ID,
+      DATE
+    );
+
+    expect(text).toContain('Thanks for getting in touch with Macaport. We');
+    expect(text).not.toContain('We have your');
+  });
+
+  it('agrees with the heading on every path', () => {
+    const paths: [InquiryType, Partial<ContactFormValues>][] = [
+      ['apparel', { organization: 'New London Gridiron Club' }],
+      ['team-store', { organization: 'Wildcats Booster Club' }],
+      ['gang-sheets', {}],
+      ['onsite', { eventName: 'Lincoln Invitational' }],
+      ['existing', { orderNumber: '8FK2QP' }],
+      ['missed-deadline', { organization: 'Waupaca Hockey' }],
+      ['other', {}],
+    ];
+
+    paths.forEach(([inquiryType, overrides]) => {
+      const { html, text } = generateCustomerConfirmationEmail(
+        submission({ inquiryType, ...overrides }),
+        ID,
+        DATE
+      );
+      const clause = html
+        .match(/<h1[^>]*>Thanks, Sam\.(.*?)<\/h1>/)?.[1]
+        ?.trim();
+
+      // Either both carry the clause or neither does. One source of truth is
+      // only worth having if a test would notice it forking.
+      expect(text.includes('We have your')).toBe(Boolean(clause));
+      if (clause) expect(text).toContain(clause);
+    });
   });
 });
 
@@ -677,5 +853,229 @@ describe('fulfillment options', () => {
     expect(text).not.toContain('pickup-group');
     expect(text).toContain('Ship to one address');
     expect(text).toContain('Ship to each person');
+  });
+});
+
+describe('the onsite printing path', () => {
+  const event = (o: Partial<ContactFormValues> = {}) =>
+    submission({
+      inquiryType: 'onsite',
+      eventName: 'Lincoln Invitational',
+      eventDates: 'March 14-16',
+      eventHours: '8am to 4pm',
+      venue: 'Lincoln High School, New London',
+      venueSetting: 'Indoor',
+      power: 'Yes, there is power',
+      whoPays: 'Attendees pay for their own',
+      groupSize: '300',
+      products: ['tshirts', 'hoodies'],
+      ...o,
+    });
+
+  it('carries everything that decides whether the day is possible', () => {
+    const { text } = generateContactFormEmail(event(), ID, DATE);
+
+    expect(text).toContain('Event: Lincoln Invitational');
+    expect(text).toContain('Dates: March 14-16');
+    expect(text).toContain('Event times: 8am to 4pm');
+    expect(text).toContain('Venue: Lincoln High School, New London');
+    expect(text).toContain('Indoor or outdoor: Indoor');
+    expect(text).toContain('Power on site: Yes, there is power');
+    expect(text).toContain('Who pays: Attendees pay for their own');
+  });
+
+  it('calls the head count attendance, not group size', () => {
+    // On a team store the same field is the size of the group ordering. At an
+    // event it is how many people turn up, which is a different question.
+    expect(generateContactFormEmail(event(), ID, DATE).text).toContain(
+      'Expected attendance: 300'
+    );
+    expect(
+      generateContactFormEmail(
+        submission({ inquiryType: 'team-store', groupSize: '40' }),
+        ID,
+        DATE
+      ).text
+    ).toContain('Group size: 40');
+  });
+
+  it('does not leak event rows onto the other paths', () => {
+    const { text } = generateContactFormEmail(
+      submission({ inquiryType: 'apparel', products: ['tshirts'] }),
+      ID,
+      DATE
+    );
+
+    expect(text).not.toContain('Event:');
+    expect(text).not.toContain('Who pays:');
+    expect(text).not.toContain('Power on site:');
+  });
+
+  it('names the request in both subjects', () => {
+    expect(contactSubject(event(), ID)).toBe(
+      'Onsite printing request from Sam Rivera [#ABC123]'
+    );
+    expect(customerSubject(event(), ID)).toBe(
+      'We got your onsite printing request [#ABC123]'
+    );
+  });
+
+  it('does not let a sent form read as a booked date', () => {
+    const { text } = generateCustomerConfirmationEmail(event(), ID, DATE);
+
+    expect(text).toContain('We will check the date and let you know');
+    expect(text).toContain('This does not book the date');
+  });
+});
+
+describe('what to stock for an event', () => {
+  it('reports the size mix by label, not by id', () => {
+    const { text } = generateContactFormEmail(
+      submission({
+        inquiryType: 'onsite',
+        eventName: 'Lincoln Invitational',
+        eventDates: 'March 14-16',
+        sizeMix: ['adult', 'womens', 'youth'],
+      }),
+      ID,
+      DATE
+    );
+
+    expect(text).toContain("Sizes to bring: Adult unisex, Women's cuts, Youth");
+    expect(text).not.toContain('womens');
+  });
+
+  it('drops the row when nothing was ticked', () => {
+    const { text } = generateContactFormEmail(
+      submission({
+        inquiryType: 'onsite',
+        eventName: 'Lincoln Invitational',
+        eventDates: 'March 14-16',
+      }),
+      ID,
+      DATE
+    );
+
+    expect(text).not.toContain('Sizes to bring');
+  });
+});
+
+describe('personalization, which the form used to bury', () => {
+  it('reports it by label on the paths that offer it', () => {
+    const { text } = generateContactFormEmail(
+      submission({
+        inquiryType: 'apparel',
+        products: ['tshirts'],
+        personalization: ['names', 'numbers'],
+      }),
+      ID,
+      DATE
+    );
+
+    expect(text).toContain('Personalization: Names, Numbers');
+    expect(text).not.toContain('numbers,');
+  });
+
+  it('carries results too, which is what an event wants', () => {
+    const { text } = generateContactFormEmail(
+      submission({
+        inquiryType: 'onsite',
+        eventName: 'Lincoln Invitational',
+        eventDates: 'March 14-16',
+        personalization: ['names', 'results'],
+        schedule: 'lincolninvitational.com/schedule',
+      }),
+      ID,
+      DATE
+    );
+
+    expect(text).toContain('Personalization: Names, Event or result details');
+    expect(text).toContain('Schedule: lincolninvitational.com/schedule');
+  });
+
+  it('drops both rows when neither was answered', () => {
+    const { text } = generateContactFormEmail(
+      submission({ inquiryType: 'other' }),
+      ID,
+      DATE
+    );
+
+    expect(text).not.toContain('Personalization:');
+    expect(text).not.toContain('Schedule:');
+  });
+});
+
+describe('the free-text behind "Something else" on personalization', () => {
+  it('carries it while the box is ticked', () => {
+    const { text } = generate({
+      inquiryType: 'apparel',
+      products: ['tshirts'],
+      personalization: ['names', 'other'],
+      personalizationOther: 'graduation year',
+    });
+
+    expect(text).toContain('Personalization detail: graduation year');
+  });
+
+  it('drops it once the box is unticked, like the products one', () => {
+    // Formik keeps the text when the checkbox goes; reporting it would name
+    // something the customer already took back off the list.
+    const { text } = generate({
+      inquiryType: 'apparel',
+      products: ['tshirts'],
+      personalization: ['names'],
+      personalizationOther: 'graduation year',
+    });
+
+    expect(text).not.toContain('graduation year');
+  });
+});
+
+describe('the date callout in the notification', () => {
+  it('hoists the event dates on the onsite path', () => {
+    const { html } = generate({
+      inquiryType: 'onsite',
+      eventName: 'Lincoln Invitational',
+      eventDates: 'March 14-16',
+    });
+
+    expect(html).toContain('Event dates');
+    expect(html).not.toContain('Date requested');
+    // Once, not twice: hoisted out of the rows rather than copied above them.
+    expect(html.split('March 14-16').length - 1).toBe(1);
+  });
+
+  it('still hoists the deadline everywhere else', () => {
+    const { html } = generate({ inquiryType: 'apparel', neededBy: '2026-09-15' });
+
+    expect(html).toContain('Date requested');
+    expect(html).not.toContain('Event dates');
+  });
+});
+
+describe('how the notification is ordered', () => {
+  it('keeps the event facts together and the stock facts together', () => {
+    const { text } = generate({
+      inquiryType: 'onsite',
+      eventName: 'Lincoln Invitational',
+      eventDates: 'March 14-16',
+      eventHours: 'Fri 4-9pm',
+      venue: 'Lincoln High School',
+      schedule: 'example.com/schedule',
+      whoPays: 'A mix of both',
+      products: ['tshirts'],
+      sizeMix: ['youth'],
+      personalization: ['names'],
+    });
+
+    const at = (label: string) => text.indexOf(label);
+
+    // Everything about the day, then everything about what comes off the van.
+    expect(at('Event:')).toBeLessThan(at('Event times:'));
+    expect(at('Event times:')).toBeLessThan(at('Venue:'));
+    expect(at('Venue:')).toBeLessThan(at('Schedule:'));
+    expect(at('Schedule:')).toBeLessThan(at('Products:'));
+    expect(at('Products:')).toBeLessThan(at('Sizes to bring:'));
+    expect(at('Sizes to bring:')).toBeLessThan(at('Personalization:'));
   });
 });

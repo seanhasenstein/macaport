@@ -48,10 +48,7 @@ export default function OnsitePrinting() {
           ))}
         </ul>
 
-        {/* Points at the general form until the onsite path exists. That path
-            needs the event, venue, dates, hours, attendance, and who is paying,
-            none of which the current paths ask for. */}
-        <Link href="/contact">
+        <Link href="/contact?about=onsite">
           <a className="cta">Ask about onsite printing</a>
         </Link>
       </div>

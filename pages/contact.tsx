@@ -26,6 +26,11 @@ import {
   INQUIRY_OPTIONS,
   SHIPPING_OPTIONS,
   OPEN_TIMING_OPTIONS,
+  POWER_OPTIONS,
+  PERSONALIZATION_OPTIONS,
+  SIZE_MIX_OPTIONS,
+  VENUE_SETTING_OPTIONS,
+  WHO_PAYS_OPTIONS,
   STORE_DURATION_OPTIONS,
   OTHER_PRODUCT_ID,
   PRODUCT_OPTIONS,
@@ -63,7 +68,7 @@ const HEADINGS: Record<
     blurb:
       "Tell us about your group and we'll take it from there. We go through garments, colors, and open dates with you before anything goes live.",
     messageNote:
-      "Anything the questions above missed. Personalization, specific brands, or how you'd like the store to work.",
+      "Anything the questions above missed. Specific brands, or how you'd like the store to work.",
     submitNote:
       "Sending this doesn't create a store. We'll go through the details with you before anything goes live.",
     submitLabel: 'Send your request',
@@ -77,6 +82,19 @@ const HEADINGS: Record<
       'What would you like to know? Sizing, artwork, and turnaround come up most often.',
     submitNote: '',
     submitLabel: 'Send your question',
+  },
+  onsite: {
+    eyebrow: 'Printing at your event',
+    title: 'Printing at your event',
+    blurb:
+      'Tell us about the day and we will let you know what we can do. The date is the part that decides it, so start there.',
+    messageNote:
+      'Anything the questions above missed. What you would like on the products, how you imagine it running, or anything unusual about the venue.',
+    // A date is not held until somebody says it is. An organizer who reads a
+    // sent form as a booking stops looking for anyone else.
+    submitNote:
+      "Sending this doesn't book the date. We'll confirm what the day needs before anything is held.",
+    submitLabel: 'Send your request',
   },
   existing: {
     eyebrow: 'Existing order or store',
@@ -138,6 +156,16 @@ const TYPE_SPECIFIC: Partial<ContactFormValues> = {
   shipping: [],
   neededBy: '',
   groupSize: '',
+  personalization: [],
+  schedule: '',
+  sizeMix: [],
+  eventName: '',
+  eventDates: '',
+  eventHours: '',
+  venue: '',
+  venueSetting: '',
+  power: '',
+  whoPays: '',
   openTiming: '',
   storeDuration: '',
 };
@@ -332,6 +360,20 @@ export default function Contact({ presetType }: Props) {
                               options={ARTWORK_OPTIONS}
                               optional
                             />
+                            <CheckboxGroup
+                              name="personalization"
+                              label="Would you like personalization?"
+                              note="Individual names, numbers, or results added to each item."
+                              optional
+                              options={PERSONALIZATION_OPTIONS}
+                            />
+                            {values.personalization.includes(OTHER_PRODUCT_ID) && (
+                              <FieldItem
+                                name="personalizationOther"
+                                label="What would you like added?"
+                                placeholder="e.g. graduation year, monogram"
+                              />
+                            )}
                             {/* Everything below here is optional, which is why
                                 it can be collapsed — nothing inside can fail
                                 validation, so no error can hide in here. */}
@@ -426,6 +468,20 @@ export default function Contact({ presetType }: Props) {
                               options={ARTWORK_OPTIONS}
                               optional
                             />
+                            <CheckboxGroup
+                              name="personalization"
+                              label="Would you like personalization?"
+                              note="Individual names, numbers, or results added to each item. Buyers choose theirs when they order."
+                              optional
+                              options={PERSONALIZATION_OPTIONS}
+                            />
+                            {values.personalization.includes(OTHER_PRODUCT_ID) && (
+                              <FieldItem
+                                name="personalizationOther"
+                                label="What would you like added?"
+                                placeholder="e.g. graduation year, monogram"
+                              />
+                            )}
                             {/* Not collapsed. Hiding two fields saves about the
                                 height of the summary row that hides them, and
                                 an optional field behind a click gets answered
@@ -446,6 +502,143 @@ export default function Contact({ presetType }: Props) {
                               optional
                               options={SHIPPING_OPTIONS}
                             />
+                          </>
+                        )}
+
+                        {values.inquiryType === 'onsite' && (
+                          <>
+                            <FieldItem
+                              name="eventName"
+                              label="What is the event?"
+                              placeholder="e.g. Lincoln Invitational"
+                            />
+                            <FieldItem
+                              name="organization"
+                              label="Organization or group"
+                              placeholder="e.g. Lincoln High School Band"
+                              optional
+                            />
+                            <div className="grid-cols-2">
+                              {/* Free text, not a date picker. "March 14-16" and "every
+                                  Saturday in June" are both real answers and neither fits
+                                  a single date. */}
+                              <FieldItem
+                                name="eventDates"
+                                label="What are the dates?"
+                                placeholder="e.g. March 14-16"
+                              />
+                              {/* Their event times, not our hours. An organizer knows when the day
+                                  runs and does not know how long a setup takes or what coverage is
+                                  worth paying for, so asking for our hours makes them guess at our
+                                  job. The placeholder carries the multi-day case without a note,
+                                  which also keeps this level with the dates field beside it. */}
+                              <FieldItem
+                                name="eventHours"
+                                label="What time does it start and end?"
+                                placeholder="e.g. Fri 4-9pm, Sat 8am-6pm"
+                                optional
+                              />
+                            </div>
+                            <FieldItem
+                              name="venue"
+                              label="Where is it?"
+                              note="The venue name, or the town if you do not have one yet."
+                              placeholder="e.g. Lincoln High School, New London"
+                              optional
+                            />
+                            <SelectItem
+                              name="whoPays"
+                              label="Who is paying?"
+                              note="This changes the day more than anything else here."
+                              optional
+                              options={WHO_PAYS_OPTIONS}
+                            />
+                            <CheckboxGroup
+                              name="products"
+                              label="What would you like us to print on?"
+                              note="An idea is enough. We can talk through what works for the day."
+                              optional
+                              options={PRODUCT_OPTIONS}
+                            />
+                            {values.products.includes(OTHER_PRODUCT_ID) && (
+                              <FieldItem
+                                name="productOther"
+                                label="What else are you looking for?"
+                                placeholder="e.g. aprons, socks, koozies"
+                              />
+                            )}
+                            {/* The stocking question, asked as stock. What comes off the van
+                                depends on this more than on anything else here. */}
+                            <CheckboxGroup
+                              name="sizeMix"
+                              label="What should we bring sizes for?"
+                              note="Tick everything you expect at the event."
+                              optional
+                              options={SIZE_MIX_OPTIONS}
+                            />
+                            <CheckboxGroup
+                              name="personalization"
+                              label="Would you like personalization?"
+                              note="Individual names, numbers, or results, added while people wait. Popular at sports events."
+                              optional
+                              options={PERSONALIZATION_OPTIONS}
+                            />
+                            {values.personalization.includes(OTHER_PRODUCT_ID) && (
+                              <FieldItem
+                                name="personalizationOther"
+                                label="What would you like added?"
+                                placeholder="e.g. graduation year, monogram"
+                              />
+                            )}
+                            <details className="more">
+                              <summary>Add more detail (optional)</summary>
+                              <div className="more-body">
+                                <FieldItem
+                                  name="groupSize"
+                                  label="About how many people are you expecting?"
+                                  placeholder="e.g. 300"
+                                  optional
+                                />
+                                <div className="grid-cols-2">
+                                  <SelectItem
+                                    name="venueSetting"
+                                    label="Indoor or outdoor?"
+                                    optional
+                                    options={VENUE_SETTING_OPTIONS}
+                                  />
+                                  {/* A press needs power. Asked now rather than after a
+                                      date has been pencilled in. */}
+                                  <SelectItem
+                                    name="power"
+                                    label="Is there power on site?"
+                                    optional
+                                    options={POWER_OPTIONS}
+                                  />
+                                </div>
+                                {/* Optional and tucked away on purpose. Dates and hours decide whether
+                                    a day is possible at all; a schedule matters for planning once it is,
+                                    and Nick asks for it either way. A link saves that exchange. */}
+                                <FieldItem
+                                  name="schedule"
+                                  label="Is there a schedule or event page?"
+                                  note="A link is enough, if there is one."
+                                  placeholder="e.g. lincolninvitational.com/schedule"
+                                  optional
+                                />
+                                <FieldItem
+                                  name="colors"
+                                  label="Any colors in mind?"
+                                  placeholder="e.g. school colors, or not sure yet"
+                                  optional
+                                />
+                                <SelectItem
+                                  name="artwork"
+                                  label="Do you have artwork ready?"
+                                  optional
+                                  options={ARTWORK_OPTIONS}
+                                />
+                              </div>
+                            </details>
                           </>
                         )}
 

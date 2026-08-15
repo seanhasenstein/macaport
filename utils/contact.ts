@@ -11,6 +11,7 @@ export const INQUIRY_OPTIONS: { value: InquiryType; label: string }[] = [
   { value: 'apparel', label: 'A new custom apparel order' },
   { value: 'team-store', label: 'Setting up an online store' },
   { value: 'gang-sheets', label: 'DTF gang sheets' },
+  { value: 'onsite', label: 'Printing at my event' },
   { value: 'existing', label: 'A question about an existing order or store' },
   { value: 'missed-deadline', label: "I missed a store's order deadline" },
   { value: 'other', label: 'Something else' },
@@ -107,6 +108,48 @@ export const SHIPPING_OPTIONS = [
 // Three states rather than a yes/no. "Needs design help" is a different job
 // from "print this file", and knowing which one up front saves the exchange
 // that would otherwise establish it.
+// Who is buying decides the whole shape of the job: a quantity bought up front
+// is one invoice and a known number, while attendees paying individually is a
+// retail day with stock to guess at.
+// Nick asked for "gender". Taken as a stocking question rather than a
+// demographic one, which is what it is for: these are the size chart
+// categories a blank is ordered under, and the answer decides what comes off
+// the van. Asked as gender it invites a puzzled answer from an organizer who
+// cannot see why it matters; asked as what to bring, it gets a useful one.
+// Individual items carrying a person's own name, number or result. The store
+// platform has supported this since the beginning — CartItem carries
+// personalizationAddons — but the form only ever mentioned it in passing
+// inside the message note, which buries the thing families most want to buy.
+export const PERSONALIZATION_OPTIONS = [
+  { id: 'names', label: 'Names' },
+  { id: 'numbers', label: 'Numbers' },
+  { id: 'results', label: 'Event or result details' },
+  { id: 'other', label: 'Something else' },
+];
+
+export const SIZE_MIX_OPTIONS = [
+  { id: 'adult', label: 'Adult unisex' },
+  { id: 'womens', label: "Women's cuts" },
+  { id: 'youth', label: 'Youth' },
+];
+
+export const WHO_PAYS_OPTIONS = [
+  'We buy a quantity up front',
+  'Attendees pay for their own',
+  'A mix of both',
+  'Not sure yet',
+];
+
+export const VENUE_SETTING_OPTIONS = ['Indoor', 'Outdoor', 'Both', 'Not sure yet'];
+
+// A press needs power. Asking now saves the exchange that otherwise happens
+// after a date has already been pencilled in.
+export const POWER_OPTIONS = [
+  'Yes, there is power',
+  'No power available',
+  'Not sure yet',
+];
+
 export const ARTWORK_OPTIONS = [
   'Yes, print-ready',
   'I have something rough',
@@ -178,6 +221,7 @@ const NEXT_STEPS: Record<string, string> = {
   'team-store':
     'We will go through garments, colors, and dates with you and let you know what we can do.',
   'gang-sheets': 'We will get back to you with an answer.',
+  onsite: 'We will check the date and let you know what we can do.',
   existing: 'We will look it up and get back to you.',
   'missed-deadline':
     'We will check that store and let you know what we can do.',
@@ -205,6 +249,10 @@ const CONFIRMATION_NOTES: Record<string, string> = {
     'This does not create a store. Nothing is set up until we have gone through the details and dates with you.',
   'missed-deadline':
     'There is a chance we can reopen the store for you. If the group’s order has already been printed, it may not be possible.',
+  // Same trap as the store path: a date is not held until someone says it is,
+  // and an organizer who reads this as a booking will stop looking elsewhere.
+  onsite:
+    'This does not book the date. We will check what the day needs and confirm with you before anything is held.',
 };
 
 export const confirmationNote = (inquiryType: string) =>
@@ -235,6 +283,17 @@ export const initialValues: ContactFormValues = {
   shipping: [],
   neededBy: '',
   groupSize: '',
+  personalization: [],
+  personalizationOther: '',
+  schedule: '',
+  sizeMix: [],
+  eventName: '',
+  eventDates: '',
+  eventHours: '',
+  venue: '',
+  venueSetting: '',
+  power: '',
+  whoPays: '',
   openTiming: '',
   storeDuration: '',
   message: '',
@@ -308,6 +367,22 @@ export const validationSchema = Yup.object().shape({
   productOther: Yup.string().when('products', {
     is: (products: string[]) => (products ?? []).includes(OTHER_PRODUCT_ID),
     then: Yup.string().required('Please tell us what the other item is'),
+  }),
+  // Only two required beyond the universal fields. An event without a name or
+  // a date cannot be looked up or checked against the calendar; everything
+  // else can be settled in the reply, and requiring it would turn away leads.
+  eventName: Yup.string().when('inquiryType', {
+    is: 'onsite',
+    then: Yup.string().required('Please tell us what the event is'),
+  }),
+  eventDates: Yup.string().when('inquiryType', {
+    is: 'onsite',
+    then: Yup.string().required('Please tell us when it is'),
+  }),
+  personalizationOther: Yup.string().when('personalization', {
+    is: (personalization: string[]) =>
+      (personalization ?? []).includes(OTHER_PRODUCT_ID),
+    then: Yup.string().required('Please tell us what you have in mind'),
   }),
   message: Yup.string().required('A message is required'),
 });

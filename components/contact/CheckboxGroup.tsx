@@ -78,6 +78,7 @@ export function CheckboxGroup({
       aria-labelledby={`${name}-label`}
       $withQuantities={Boolean(quantityName)}
       $withDescriptions={options.some(option => Boolean(option.description))}
+      $columns={options.length}
     >
       <span className="label" id={`${name}-label`}>
         {label}
@@ -128,6 +129,7 @@ export function CheckboxGroup({
 const CheckboxGroupStyles = styled.fieldset<{
   $withQuantities: boolean;
   $withDescriptions: boolean;
+  $columns: number;
 }>`
   margin: 1.25rem 0 0;
   padding: 0;
@@ -165,12 +167,19 @@ const CheckboxGroupStyles = styled.fieldset<{
      is a wall, so this halves the height wherever the card is wide enough. */
   .options {
     display: grid;
-    /* One per row once there are descriptions to read. Two columns of wrapped
-       prose is harder to scan than one column, and the twelve product
-       checkboxes have no descriptions and must stay in a grid. */
+    /* One per row once there are descriptions to read: two columns of wrapped
+       prose is harder to scan than one, and the twelve product checkboxes have
+       no descriptions and must stay in a grid.
+
+       Exactly four goes two by two. Auto-fit puts three on the first row and
+       leaves the fourth alone underneath, which reads as an afterthought
+       rather than a fourth choice. Applies to fabric as well as
+       personalization, both of which are four. */
     grid-template-columns: ${props =>
       props.$withDescriptions
         ? '1fr'
+        : props.$columns === 4
+        ? 'repeat(2, minmax(0, 1fr))'
         : props.$withQuantities
         ? 'repeat(auto-fit, minmax(15rem, 1fr))'
         : 'repeat(auto-fit, minmax(12rem, 1fr))'};

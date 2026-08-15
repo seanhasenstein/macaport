@@ -66,10 +66,11 @@ const groups = [
         text: 'Ask about an online store',
         href: '/contact?about=team-store',
       },
-      // No ?about= yet: onsite printing has no path on the form. Pointing at
-      // one that does not exist would preselect nothing and silently drop the
-      // context, so it goes to the general form until that path is built.
-      { id: 'quote-onsite', text: 'Ask about onsite printing', href: '/contact' },
+      {
+        id: 'quote-onsite',
+        text: 'Ask about onsite printing',
+        href: '/contact?about=onsite',
+      },
       { id: 'contact', text: 'Contact us', href: '/contact' },
     ],
   },

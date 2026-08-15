@@ -274,6 +274,7 @@ export type InquiryType =
   | 'apparel'
   | 'team-store'
   | 'gang-sheets'
+  | 'onsite'
   | 'existing'
   | 'missed-deadline'
   | 'other';
@@ -306,6 +307,20 @@ export interface ContactFormValues {
   shipping: string[];
   neededBy: string;
   groupSize: string;
+  // Onsite printing. Dates and hours are free text on purpose: "March 14-16",
+  // "every Saturday in June" and "8am until the final" are all real answers,
+  // and a date picker can express none of them.
+  personalization: string[];
+  personalizationOther: string;
+  schedule: string;
+  sizeMix: string[];
+  eventName: string;
+  eventDates: string;
+  eventHours: string;
+  venue: string;
+  venueSetting: string;
+  power: string;
+  whoPays: string;
   openTiming: string;
   storeDuration: string;
   message: string;
