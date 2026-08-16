@@ -327,6 +327,31 @@ export interface ContactFormValues {
   honeypot: string;
 }
 
+// A contact enquiry as it is kept, rather than as it is emailed. The emails
+// remain the way anyone actually reads these; this exists so that a lead is not
+// held solely inside a mail transaction that has already completed.
+export interface ContactMessage {
+  _id: string;
+  // The same reference the customer is given in their confirmation, so the
+  // number we print in an email finally resolves to something.
+  referenceId: string;
+  // A real Date, not the long "August 15, 2026 at 9:00am (CT)" string the
+  // emails carry. That one is formatted for reading in a sentence and is
+  // useless for sorting or for a range query.
+  submittedAt: Date;
+  inquiryType: string;
+  // Everything they filled in, minus the honeypot, which is only ever empty by
+  // the time a submission reaches here and is noise in a stored record.
+  submission: Omit<ContactFormValues, 'honeypot'>;
+  // Whether each email was handed to Mailgun without being rejected. Not proof
+  // it arrived — nothing here can know that — but a false is a lead that
+  // definitely did not reach anyone, which is the case worth finding.
+  delivery: {
+    notification: boolean;
+    confirmation: boolean;
+  };
+}
+
 export interface Address {
   street: string;
   street2: string;

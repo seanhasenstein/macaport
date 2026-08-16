@@ -1,5 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { Db } from 'mongodb';
 import { format, utcToZonedTime } from 'date-fns-tz';
+import { connectToDb, contactMessage } from '../../db';
 import { createContactReference } from '../../utils';
 import { sendEmail } from '../../utils/mailgun';
 import {
@@ -23,6 +25,52 @@ interface ExtendedRequest extends NextApiRequest {
 // is much higher here than the cost of letting a few more spam messages land.
 const LIMIT = 10;
 const WINDOW_MS = 10 * 60 * 1000;
+
+// Email is otherwise the only place a contact enquiry exists. Mailgun accepting
+// a message is not the same as anyone receiving it: a bounce, a filter, or a
+// spam folder all leave the customer looking at a success screen, holding a
+// reference number that refers to nothing, while nobody at Macaport knows a
+// lead arrived. This is the copy that survives that.
+//
+// Fail-open, for the same reason utils/internalRequest is: a database that is
+// down, paused, or misconfigured must not cost the lead this exists to protect.
+// A record that cannot be written is logged and the emails go out regardless.
+async function recordSubmission(values: ContactFormValues, referenceId: string) {
+  try {
+    const db = await connectToDb();
+    await contactMessage.createContactMessage(
+      db,
+      values,
+      referenceId,
+      new Date()
+    );
+
+    return db;
+  } catch (err) {
+    console.error(`Contact message #${referenceId} was not recorded`, err);
+    return null;
+  }
+}
+
+// A null db means the record was never written, so there is nothing to mark.
+// Failing here is worth a log and nothing more — the enquiry is already stored,
+// and an unmarked delivery is a worse record, not a lost one.
+async function noteDelivered(
+  db: Db | null,
+  referenceId: string,
+  part: 'notification' | 'confirmation'
+) {
+  if (!db) return;
+
+  try {
+    await contactMessage.markDelivered(db, referenceId, part);
+  } catch (err) {
+    console.error(
+      `Contact message #${referenceId} sent but not marked ${part}`,
+      err
+    );
+  }
+}
 
 export default async function handler(
   req: ExtendedRequest,
@@ -80,6 +128,10 @@ export default async function handler(
     // customer's confirmation quotes this inside a sentence.
     const timestamp = format(zonedDate, "MMMM d, yyyy 'at' h:mmaaa '(CT)'");
 
+    // Kept before either email goes out, so the enquiry exists somewhere other
+    // than inside a mail transaction that has already finished.
+    const db = await recordSubmission(req.body, id);
+
     const { text, html } = generateContactFormEmail(req.body, id, timestamp);
 
     const toField = process.env.CONTACT_FORM_TO;
@@ -101,6 +153,8 @@ export default async function handler(
       text,
       html,
     });
+
+    await noteDelivered(db, id, 'notification');
 
     // Confirmation to the customer. Sent after the notification and in its own
     // try/catch on purpose: the enquiry reaching Macaport is what matters, and
@@ -125,6 +179,8 @@ export default async function handler(
         text: confirmation.text,
         html: confirmation.html,
       });
+
+      await noteDelivered(db, id, 'confirmation');
     } catch (confirmationError) {
       console.error('Customer confirmation failed to send', confirmationError);
     }
