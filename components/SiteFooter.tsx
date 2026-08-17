@@ -149,8 +149,8 @@ export default function SiteFooter() {
             <Link href="/privacy-policy">
               <a>Privacy policy</a>
             </Link>
-            <Link href="/terms-and-conditions">
-              <a>Terms &amp; conditions</a>
+            <Link href="/terms-of-service">
+              <a>Terms of service</a>
             </Link>
             <a href="mailto:support@macaport.com">support@macaport.com</a>
           </div>

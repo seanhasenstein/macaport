@@ -1,619 +1,296 @@
-import Link from 'next/link';
-import styled from 'styled-components';
-import Layout from '../components/Layout';
+import LegalPage from '../components/LegalPage';
 
+// Rewritten from the software rather than from a template. Every claim below
+// traces to something in this repo: the collections in db/, the third parties
+// in utils/mailgun.ts, utils/payment.ts and the Momentec iframes on the
+// sublimation and headwear pages, and the absence of any analytics dependency in package.json.
+//
+// The rule for editing this page: if the code changes what happens to a
+// customer's data, this changes in the same commit. A policy that describes
+// software we no longer run is worse than no policy, because the gap between
+// what it claims and what we do is itself the problem.
+//
+// The trackers named in the Momentec section were read off that site's own
+// content-security-policy header, not guessed at. If those pages ever stop
+// framing a third-party catalog, the "what we do not do" block gets simpler
+// and this page should be simplified with it.
+//
+// TODO before publishing: the AWS line is only true once the email logo moves
+// off Cloudinary. utils/email.ts still points at res.cloudinary.com.
 export default function PrivacyPolicy() {
   return (
-    <Layout title="Privacy Policy">
-      <PrivacyPolicyStyles>
-        <h2>Privacy Policy</h2>
-        <p className="updated">Last updated July 12, 2022</p>
-        <div className="section">
-          <p>
-            This privacy notice for Macaport LLC (“Company”, “we”, “us”, or
-            “our”), describes how and why we might collect, store, use, and/or
-            share (“process”) your information when you use our services
-            (“Services”), such as when you:
-          </p>
-          <ul>
-            <li>
-              Visit our website at{' '}
-              <Link href="/">
-                <a>https://www.macaport.com</a>
-              </Link>
-              , or any website of ours that links to this privacy notice.
-            </li>
+    <LegalPage
+      title="Privacy policy"
+      updated="August 16, 2026"
+      summary="We collect what we need to print your order and get it to you, and nothing else. We run no analytics of our own, we put no advertising trackers on this site, and we do not sell anyone's information."
+    >
+      <h2>Who we are</h2>
+      <p>
+        Macaport LLC is a custom apparel printing and embroidery company in New
+        London, Wisconsin. This policy covers www.macaport.com and the online
+        team stores we host on it.
+      </p>
+      <address>
+        Macaport LLC
+        <br />
+        3080 Frederick Farm Ln. Suite 101
+        <br />
+        New London, WI 54961
+        <br />
+        <a href="mailto:support@macaport.com">support@macaport.com</a>
+      </address>
 
-            <li>
-              Engage with us in other related ways, including sales, marketing,
-              or events.
-            </li>
-          </ul>
+      <h2>What we collect</h2>
 
-          <p>
-            Questions or concerns? Reading this privacy notice will help you
-            understand your privacy rights and choices. If you do not agree with
-            our policies and practices, please do not use our Services. If you
-            still have any questions or concerns, please contact us at{' '}
-            <a
-              href="mailto:support@macaport.com"
-              target="_blank"
-              rel="noreferrer"
-            >
-              support@macaport.com
-            </a>
-            .
-          </p>
-        </div>
-        <div className="section">
-          <h3>1. What information do we collect?</h3>
+      <h3>When you place an order</h3>
+      <p>
+        Your name, email address, phone number, and — if the order ships — your
+        shipping address. We keep a record of what you ordered, the sizes and
+        quantities, any personalization you asked for, and what you paid.
+      </p>
 
-          <p>Personal information you disclose to us</p>
+      <h3>When you send us a message</h3>
+      <p>
+        Your name, email address, phone number, and whatever you write in the
+        message. Depending on what your enquiry is about, the form may also ask
+        for your organization, your event and its dates, or an order number.
+        Everything beyond your contact details and the message itself is
+        optional.
+      </p>
 
-          <p className="italic">
-            <span className="bold">In Short:</span> We collect personal
-            information that you provide to us.
-          </p>
+      <h3>When a school sends us a teacher list</h3>
+      <p>
+        Schools and districts sometimes send us a list of teacher email
+        addresses so we can offer those teachers a discount. Those addresses
+        come to us from the school, not from the teachers, and we use them for
+        nothing except checking whether an email address is eligible for that
+        year&apos;s discount. These lists contain email addresses only. They do
+        not contain student information of any kind.
+      </p>
 
-          <p>
-            We collect personal information that you voluntarily provide to us
-            when you express an interest in obtaining information about us our
-            products and Services, the choices you make, and the products and
-            features you use. The personal information we collect may include
-            the following:
-          </p>
-          <ul>
-            <li className="m-0">names</li>
-            <li className="m-0">phone numbers</li>
-            <li className="m-0">email addresses</li>
-            <li className="m-0">mailing addresses</li>
-            <li>
-              Sensitive Information: We do not process sensitive information.
-            </li>
-          </ul>
+      <h3>Automatically</h3>
+      <p>
+        Our host records ordinary web server logs — the IP address a request
+        came from, the page requested, the browser, and the time. We use these
+        to keep the site running and to investigate abuse. We do not build
+        profiles from them.
+      </p>
 
-          <p>
-            Payment Data. We may collect data necessary to process your payment
-            if you make purchases, such as payment instrument number (such as
-            credit card number), and the security code associated with your
-            payment instrument. All payment is stored by Stripe. You may find
-            their privacy notice link(s) here:
-          </p>
+      <h2>What we do not do</h2>
+      <div className="callout">
+        <p>
+          <strong>We do not run analytics.</strong> No Google Analytics, no
+          advertising pixels, no session recording, no third-party tracking
+          scripts of any kind. Nothing we have put on this site is measuring
+          what you look at. The one exception is the embedded catalog on our
+          sublimation and headwear pages, which belongs to another company and
+          brings its own trackers — described below.
+        </p>
+        <p>
+          <strong>We do not sell or rent your information</strong> to anyone,
+          and we do not share it for anyone else&apos;s marketing.
+        </p>
+        <p>
+          <strong>We never see your card number.</strong> Card details go
+          directly from your browser to Stripe and never reach our servers.
+        </p>
+      </div>
 
-          <p>
-            <a
-              href="https://stripe.com/privacy"
-              target="_blank"
-              rel="noreferrer"
-            >
-              https://stripe.com/privacy
-            </a>
-          </p>
+      <h2>Cookies and browser storage</h2>
+      <p>
+        We do not set tracking cookies. Two pages on this site — the
+        sublimation and headwear pages — save your selections in your
+        browser&apos;s local storage so your choices survive while you browse.
+        That information stays on your device and is never sent to us.
+      </p>
+      <p>
+        Those same two pages embed a catalog from Momentec Brands, which is a
+        different company and does set its own cookies, including advertising
+        ones. See below.
+      </p>
 
-          <p>
-            All personal information that you provide to us must be true,
-            complete, and accurate, and you must notify us of any changes to
-            such personal information.
-          </p>
+      <h2>Other companies involved</h2>
+      <p>
+        Running this site means handing some information to companies that do
+        specific jobs for us. This is the complete list.
+      </p>
+      <ul>
+        <li>
+          <strong>Stripe</strong> processes payments and receives your card
+          details, name, and billing information directly.{' '}
+          <a href="https://stripe.com/privacy" target="_blank" rel="noreferrer">
+            Stripe&apos;s privacy policy
+          </a>
+        </li>
+        <li>
+          <strong>Mailgun</strong> delivers our email. It handles the recipient
+          address and the full contents of every message we send, including
+          order confirmations and replies to enquiries.{' '}
+          <a
+            href="https://www.mailgun.com/legal/privacy-policy/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Mailgun&apos;s privacy policy
+          </a>
+        </li>
+        <li>
+          <strong>MongoDB Atlas</strong> stores our orders, stores, and contact
+          enquiries.{' '}
+          <a
+            href="https://www.mongodb.com/legal/privacy/privacy-policy"
+            target="_blank"
+            rel="noreferrer"
+          >
+            MongoDB&apos;s privacy policy
+          </a>
+        </li>
+        <li>
+          <strong>Vercel</strong> hosts the site and keeps the server logs
+          described above.{' '}
+          <a
+            href="https://vercel.com/legal/privacy-notice"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Vercel&apos;s privacy notice
+          </a>
+        </li>
+        <li>
+          <strong>Amazon Web Services</strong> serves images, including the
+          logo in our emails. Loading an email that displays images tells the
+          image host your IP address and roughly when you opened it — this is
+          true of essentially all email and is not something we track.{' '}
+          <a href="https://aws.amazon.com/privacy/" target="_blank" rel="noreferrer">
+            AWS privacy notice
+          </a>
+        </li>
+      </ul>
 
-          <p>Information automatically collected</p>
+      <h2>Two places you leave our systems</h2>
+      <p>
+        These matter more than the list above, because in both cases the page
+        still looks like ours.
+      </p>
 
-          <p className="italic">
-            <span className="bold">In Short:</span> Some information — such as
-            your Internet Protocol (IP) address and/or browser and device
-            characteristics — is stored automatically when you visit our
-            Services.
-          </p>
+      <h3>The gang sheet builder at sheets.macaport.com</h3>
+      <div className="callout">
+        <p>
+          The gang sheet builder runs on <strong>Heddley</strong>, a separate
+          company, on a web address that uses our name. You are still buying
+          from Macaport — we are the seller and the payment goes to us — but
+          the software is Heddley&apos;s, and so are the records.
+        </p>
+        <p>
+          The artwork you upload, the sheet you build, and the name, email
+          address, and order details you enter at checkout are stored in
+          Heddley&apos;s systems rather than ours. If you want that information
+          corrected or deleted, tell us and we will pass it on, but Heddley
+          holds it and{' '}
+          <a href="https://www.heddley.com/privacy" target="_blank" rel="noreferrer">
+            their privacy policy
+          </a>{' '}
+          governs it.
+        </p>
+      </div>
 
-          <p>
-            We automatically collect certain information when you visit, use, or
-            navigate the Services. This information does not reveal your
-            specific identity (like your name and contact information) but may
-            include device and usage information, such as your IP address,
-            browser and device characteristics, operating system, language
-            preferences, referring URLs, device name, country, location,
-            information about the and when you use our Services, and other
-            technical information. This information is primarily needed to
-            maintain the security and operation of our Services, and for our
-            internal analytics and reporting purposes.
-          </p>
+      <h3>The sublimation and headwear pages</h3>
+      <div className="callout">
+        <p>
+          Both pages embed a catalog served directly by{' '}
+          <strong>Momentec Brands</strong>, formerly Augusta Sportswear.
+          Because the catalog loads from their servers, Momentec receives your
+          IP address and can set its own cookies whenever you view those pages,
+          whether or not you order anything.
+        </p>
+        <p>
+          <strong>
+            The catalog carries advertising and analytics trackers of its own
+          </strong>{' '}
+          — among them Google, Facebook, LinkedIn, and Criteo. Those are
+          Momentec&apos;s, not ours, and they are the one place on this site
+          where you are tracked by an advertising network. We do not receive
+          what you browse there and we get nothing from those trackers.{' '}
+          <a
+            href="https://resources.momentecbrands.com/en_us/momentec-brands-privacy-policy-B1q8Aa31x"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Momentec&apos;s privacy policy
+          </a>
+        </p>
+      </div>
 
-          <p>
-            Like many businesses, we also collect information through cookies
-            and similar technologies.
-          </p>
+      <h2>Names printed on garments</h2>
+      <p>
+        When you add a name, number, or other personalization to an order, we
+        store it as part of that order because it is what we have to print. If
+        you are ordering for someone else — a player on a team, or your child —
+        that information is about them rather than about you, and we treat it
+        the same way we treat the rest of the order: we use it to make the
+        garment and for nothing else.
+      </p>
 
-          <p>The information we collect includes:</p>
+      <h2>How long we keep things</h2>
+      <ul>
+        <li>
+          <strong>Orders</strong> — seven years, because they are business and
+          tax records.
+        </li>
+        <li>
+          <strong>Contact enquiries</strong> — three years.
+        </li>
+        <li>
+          <strong>Teacher discount lists</strong> — through the program year
+          they were sent for, then deleted.
+        </li>
+        <li>
+          <strong>Server logs</strong> — two weeks, which is how long our host
+          keeps them.
+        </li>
+      </ul>
 
-          <ul>
-            <li>
-              <span className="italic bold">Log and Usage Data.</span> Log and
-              usage data is service-related, diagnostic, usage, and performance
-              information our servers automatically collect when you access or
-              use our Services and which we record in log files. Depending on
-              how you interact with us, this log data may include your IP
-              address, device information, browser type, and settings and
-              information about your activity in the Services (such as the
-              date/time stamps associated with your usage, pages and files
-              viewed, searches, and other actions you take such as which
-              features you use), device event information (such as system
-              activity, error reports (sometimes called “crash dumps”), and
-              hardware settings).
-            </li>
+      <h2>Your choices</h2>
+      <p>
+        Email <a href="mailto:support@macaport.com">support@macaport.com</a>{' '}
+        and we will tell you what we have about you, correct anything wrong, or
+        delete it. We will not ask why.
+      </p>
+      <p>
+        Two honest limits. We cannot delete an order we are legally required to
+        keep as a tax record, and for anything held by Stripe, Heddley, or
+        Momentec we can pass your request along but cannot act on their
+        systems ourselves.
+      </p>
 
-            <li>
-              <span className="italic bold">Device Data.</span> We collect
-              device data such as information about your computer, phone,
-              tablet, or other device you use to access the Services. Depending
-              on the device used, this device data may include information such
-              as your IP address (or proxy server), device and application
-              identification numbers, location, browser type, hardware model,
-              Internet service provider and/or mobile carrier, operating system,
-              and system configuration information.
-            </li>
+      <h2>Children</h2>
+      <p>
+        This site is meant for adults. We do not knowingly collect information
+        directly from children under 13. Orders for a child are placed by a
+        parent, coach, or school, and any name we hold for a young person
+        reaches us that way rather than from the child. If you believe a child
+        has given us information directly, email us and we will remove it.
+      </p>
 
-            <li>
-              <span className="italic bold">Location Data.</span> We collect
-              location data such as information about your device's location,
-              which can be either precise or imprecise. How much information we
-              collect depends on the type and settings of the device you use to
-              access the Services. For example, we may use GPS and other
-              technologies to collect geolocation data that tells us your
-              current location (based on your IP address). You can opt out of
-              allowing us to collect this information either by refusing access
-              to the information or by disabling your Location setting on your
-              device. However, if you choose to opt out, you may not be able to
-              use certain aspects of the Services.
-            </li>
-          </ul>
-        </div>
-        <div className="section">
-          <h3>2. How do we process your information?</h3>
+      <h2>Security</h2>
+      <p>
+        Information is stored on managed services with access limited to the
+        people who run Macaport. Payment card details never reach our systems
+        at all. No system is perfectly secure, and we would rather say that
+        plainly than promise otherwise.
+      </p>
 
-          <p className="italic">
-            <span className="bold">In Short:</span> We process your information
-            to provide, improve, and administer our Services, communicate with
-            you, for security and fraud prevention, and to comply with law. We
-            may also process your information for other purposes with your
-            consent.
-          </p>
+      <h2>Changes</h2>
+      <p>
+        If we change how any of this works, we will change this page and update
+        the date at the top.
+      </p>
 
-          <p>
-            We process your personal information for a variety of reasons,
-            depending on how you interact with our Services, including:
-          </p>
-
-          <ul>
-            <li>
-              To deliver and facilitate delivery of services to the user. We may
-              process your information to provide you with the requested
-              service.
-            </li>
-
-            <li>
-              To respond to user inquiries/offer support to users. We may
-              process your information to respond to your inquiries and solve
-              any potential issues you might have with the requested service.
-            </li>
-
-            <li>
-              To fulfill and manage your orders. We may process your information
-              to fulfill and manage your orders, payments, returns, and
-              exchanges made through the Services.
-            </li>
-
-            <li>
-              To request feedback. We may process your information when
-              necessary to request feedback and to contact you about your use of
-              our Services.
-            </li>
-
-            <li>
-              To evaluate and improve our Services, products, marketing, and
-              your experience. We may process your information when we believe
-              it is necessary to identify usage trends, determine the
-              effectiveness of our promotional campaigns, and to evaluate and
-              improve our Services, products, marketing and your experience.
-            </li>
-
-            <li>
-              To identify usage trends. We may process your information about
-              how you use our Services to better understand how they are being
-              used so that we can improve them.
-            </li>
-          </ul>
-        </div>
-        <div className="section">
-          <h3>3. When and with whom do we share your personal information?</h3>
-          <p className="italic">
-            <span className="bold">In Short:</span> We may share information in
-            specific situations described in this section and/or with the
-            following third parties.
-          </p>
-
-          <p>
-            Vendors, Consultants, and Other Third-Party Service Providers. We
-            may share your data with third party vendors, service providers,
-            contractors, or agents (“third parties”) who perform services for us
-            on our behalf and require access to such information to do that
-            work. Third parties we may share personal information with are as
-            follows:
-          </p>
-
-          <p className="bold">Invoice and Billing</p>
-
-          <p>- Stripe</p>
-
-          <p>
-            We also may need to share your personal information in the following
-            situations:
-          </p>
-
-          <ul>
-            <li>
-              <span className="bold">Business Transfers.</span> We may share or
-              transfer your information in connection with, or during
-              negotiations of, any merger, sale of company assets, financing, or
-              acquisition of all or a portion of our business to another
-              company.
-            </li>
-
-            <li>
-              <span className="bold">Affiliates.</span> We my share your
-              information with our affiliates, in which case we will require
-              those affiliates to honor this privacy notice. Affiliates include
-              our parent company and any subsidiaries, joint venture partners,
-              or other companies that we control or that are under common
-              control with us.
-            </li>
-          </ul>
-        </div>
-        <div className="section">
-          <h3>4. Do we use cookies and other tracking technologies?</h3>
-
-          <p className="italic">
-            <span className="bold">In short:</span> We may use cookies and other
-            tracking technologies to collect and store your information.
-          </p>
-
-          <p>
-            We may use cookies and similar tracking technologies (like web
-            beacons and pixels) to access or store information.
-          </p>
-        </div>
-        <div className="section">
-          <h3>5. How long do we keep your information?</h3>
-
-          <p className="italic">
-            <span className="bold">In Short:</span> We keep your information for
-            as long as necessary to fulfill the purposes outlined in this
-            privacy notice unless otherwise required by law.
-          </p>
-
-          <p>
-            We will only keep your personal information for as long as it is
-            necessary for the purposes set out in this privacy notice, unless a
-            longer retention period is required or permitted by law (such as
-            taxes, accounting, or other legal requirements). No purpose in this
-            notice will require us keeping your personal information for longer
-            than 3 years.
-          </p>
-
-          <p>
-            When we have no ongoing legitimate business need to process your
-            personal information, we will either delete or anonymize such
-            information, or, if this is not possible (for example, because your
-            personal information has been stored in backup archives), then we
-            will securely store your personal information and isolate it from
-            any further processing until deletion is possible.
-          </p>
-        </div>
-        <div className="section">
-          <h3>6. How do we keep your information safe?</h3>
-
-          <p className="italic">
-            <span className="bold">In Short:</span> We aim to protect your
-            personal information through a system of organizational and
-            technical measures.
-          </p>
-
-          <p>
-            We have implemented appropriate and reasonable technical and
-            organizational security measures designed to protect the security of
-            any personal information we process. However, despite our safeguards
-            and efforts to secure your information, no electronic transmission
-            over the Internet or information storage technology can be
-            guaranteed to be 100% secure, so we cannot promise or guarantee that
-            hackers, cybercriminals, or other unauthorized third parties will
-            not be able to defeat our security and improperly collect, access,
-            steal, or modify your information. Although we will do our best to
-            protect your personal information, transmission of personal
-            information to and from our Services is at your own risk. You should
-            only access the Services within a secure environment.
-          </p>
-        </div>
-        <div className="section">
-          <h3>7. What are your privacy rights?</h3>
-
-          <p className="italic">
-            <span className="bold">In Short:</span> You may review, change, or
-            terminate your account at any time.
-          </p>
-
-          <p>
-            If you are located in the EEA or UK and you believe we are
-            unlawfully processing your personal information, you also have the
-            right to complain to your local data protection supervisory
-            authority. You can find their contact details here:{' '}
-            <a
-              href="https://ec.europa.eu/justice/data-protection/bodies/authorities/index_en.htm"
-              target="_blank"
-              rel="noreferrer"
-            >
-              https://ec.europa.eu/justice/data-protection/bodies/authorities/index_en.htm
-            </a>
-            .
-          </p>
-
-          <p>
-            If you are located in Switzerland, the contact details for the data
-            protection authorities are available here:{' '}
-            <a
-              href="https://www.edoeb.admin.ch/edoeb/en/home.html"
-              target="_blank"
-              rel="noreferrer"
-            >
-              https://www.edoeb.admin.ch/edoeb/en/home.html
-            </a>
-            .
-          </p>
-
-          <p>
-            <span className="bold">Withdrawing your consent:</span> If we are
-            relying on your consent to process your personal information, which
-            may be express and/or implied consent depending on the applicable
-            law, you have the right to withdraw your consent at any time. You
-            can withdraw your consent at any time by contacting us by using the
-            contact details provided in the section “How can you contact us
-            about this notice?” below.
-          </p>
-
-          <p>
-            However, please note that this will not affect the lawfulness of the
-            processing before its withdrawal, nor when applicable law allows,
-            will it affect the processing of your personal information conducted
-            in reliance on lawful processing grounds other than consent.
-          </p>
-
-          <p>
-            <span className="bold">Cookies and similar technologies:</span> Most
-            Web browsers are set to accept cookies by default. If you prefer,
-            you can usually choose to set your browser to remove cookies and to
-            reject cookies. If you choose to remove cookies or reject cookies,
-            this could affect certain features or services of our Services.
-          </p>
-
-          <p>
-            If you have questions or comments about your privacy rights, you may
-            email us at{' '}
-            <a
-              href="mailto:support@macaport.com"
-              target="_blank"
-              rel="noreferrer"
-            >
-              support@macaport.com
-            </a>
-            .
-          </p>
-        </div>
-        <div className="section">
-          <h3>8. Controls for do-not-track features</h3>
-
-          <p>
-            Most web browsers and some mobile operating systems and mobile
-            applications include Do-Not-Track (“DNT”) feature or setting you can
-            activate to signal your privacy preference not to have data about
-            your online browsing activities monitored and collected. At this
-            stage no uniform technology standard for recognizing and
-            implementing DNT signals has been finalized. As such, we do not
-            currently respond to DNT browser signals or any other mechanism that
-            automatically communicates your choice not to be tracked online. If
-            a standard for online tracking is adopted that we must follow in the
-            future, we will inform you about that practice in a revised version
-            of this Privacy notice.
-          </p>
-        </div>
-        <div className="section">
-          <h3>9. Do California residents have specific privacy rights?</h3>
-
-          <p className="italic">
-            <span className="bold">In Short:</span> Yes, if you are a resident
-            of California, you are granted specific rights regarding access to
-            your personal information.
-          </p>
-
-          <p>
-            California Civil Code Section 1798.83, also known as the “Shine The
-            Light” law, permits our users who are California residents to
-            request and obtain from us, once a year and free of charge,
-            information about categories of personal information (if any) we
-            disclosed to third parties for direct marketing purposes and the
-            names and addresses of all third parties with which we shared
-            personal information in the immediately preceding calendar year. If
-            you are a California resident and would like to make such a request,
-            please submit your request in writing to us using the contact
-            information provided below.
-          </p>
-
-          <p>
-            If you are under 18 years of age, reside in California, and have a
-            registered account with the Site, you have the right to request
-            removal of unwanted data that you publicly post on the Site. To
-            request removal of such data, please contact us using the contact
-            information provided below, and include the email address associated
-            with your account and a statement that you reside in California. We
-            will make sure the data is not publicly displayed on the Site, but
-            please be aware that the data may not be completely or
-            comprehensively removed from our systems.
-          </p>
-        </div>
-        <div className="section">
-          <h3>10. Do we make updates to this notice?</h3>
-
-          <p className="italic">
-            <span className="bold">In Short:</span> Yes, we will update this
-            notice as necessary to stay compliant with relevant laws.
-          </p>
-
-          <p>
-            We may update this privacy notice from time to time. The updated
-            version will be indicated by an updated “Revised” date and the
-            updated version will be effective as soon as it is accessible. If we
-            make material changes to this privacy notice, we may notify you
-            either by prominently posting a notice of such changes or by
-            directly sending you a notification. We encourage you to review this
-            privacy notice frequently to be informed of how we are protecting
-            your information.
-          </p>
-        </div>
-        <div className="section">
-          <h3>11. How can you contact us about this notice?</h3>
-
-          <p>
-            If you have questions or comments about this notice, you may email
-            us at{' '}
-            <a
-              href="mailto:support@macaport.com"
-              target="_blank"
-              rel="noreferrer"
-            >
-              support@macaport.com
-            </a>{' '}
-            or by post to:
-          </p>
-
-          <p>
-            Macaport LLC
-            <br />
-            3080 Frederick Farm Ln. Suite 101
-            <br />
-            New London, WI 54961
-            <br />
-            United States
-          </p>
-        </div>
-        <div className="section">
-          <h3>
-            12. How can you review, update or delete the data we collect from
-            you?
-          </h3>
-
-          <p>
-            Based on the applicable laws of your country, you may have the right
-            to access the personal information we collect from you, change that
-            information, or delete it. To request to review, update, or delete
-            your personal information, please submit a request by contacting us
-            at{' '}
-            <a
-              href="mailto:support@macaport.com"
-              target="_blank"
-              rel="noreferrer"
-            >
-              support@macaport.com
-            </a>
-            .
-          </p>
-        </div>
-      </PrivacyPolicyStyles>
-    </Layout>
+      <h2>Questions</h2>
+      <p>
+        Email <a href="mailto:support@macaport.com">support@macaport.com</a> and
+        a person will answer.
+      </p>
+    </LegalPage>
   );
 }
-
-const PrivacyPolicyStyles = styled.div`
-  margin: 0 auto;
-  padding: 6rem 1.5rem;
-  max-width: 72rem;
-  width: 100%;
-
-  .section {
-    margin: 0 0 3.5rem;
-  }
-
-  h2 {
-    margin: 0 0 1rem;
-    font-size: 2.75rem;
-    font-weight: 800;
-    text-align: center;
-    line-height: 1;
-    letter-spacing: -0.025em;
-  }
-
-  h3 {
-    margin: 0 0 1.125rem;
-    font-size: 1.5rem;
-    color: #111827;
-  }
-
-  .italic {
-    font-style: italic;
-  }
-
-  .bold {
-    font-weight: 700;
-  }
-
-  p,
-  li {
-    a {
-      color: #1d4ed8;
-      text-decoration: underline;
-    }
-  }
-
-  p {
-    margin: 0 0 1.75rem;
-    font-size: 1rem;
-    color: #4b5563;
-    line-height: 1.625;
-
-    &.updated {
-      margin: 0 0 4rem;
-      color: #4b5563;
-      text-align: center;
-    }
-
-    &.bold {
-      margin: 2.5rem 0 1rem;
-      font-weight: 600;
-      color: #111827;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-  }
-
-  ul {
-    padding: 0 0 0 1rem;
-
-    li.m-0 {
-      margin: 0;
-    }
-  }
-
-  li {
-    margin: 0 0 1.5rem;
-    padding: 0 0 0 0.5rem;
-    font-size: 1rem;
-    color: #4b5563;
-    line-height: 1.625;
-  }
-  @media (max-width: 500px) {
-    h2 {
-      font-size: 2rem;
-      line-height: 1.25;
-    }
-
-    h3 {
-      font-size: 1.25rem;
-    }
-  }
-`;
