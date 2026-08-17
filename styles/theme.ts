@@ -38,6 +38,12 @@ export const theme = {
 
     border: '#e5e5e5',
     borderStrong: '#d4d4d4',
+    // The 2px rules that head the three-item lists in each homepage section.
+    // Deliberately between textMuted and textSubtle: those are text tones and
+    // both were wrong here — the first outweighed the headings it introduces,
+    // the second let the rule start to disappear. Nothing in the border family
+    // works either, since all of them are pitched for 1px hairlines.
+    borderRule: '#8a8a8a',
     // Form controls sit on white and need to read as editable, so their
     // resting border is a step darker than a divider's.
     borderField: '#c4c4c4',

@@ -154,7 +154,13 @@ const SpotlightStyles = styled.section`
 
   .steps li {
     padding: 1.125rem 0 0;
-    border-top: 2px solid ${theme.color.text};
+    /* Twelve of these run down the page across the four sections, so their
+       weight adds up fast. See borderRule in styles/theme.ts for why it is its
+       own token rather than one of the text or border tones.
+
+       The 2px is what keeps them structural at that tone — halved to 1px they
+       would join the hairlines between sections and stop grouping anything. */
+    border-top: 2px solid ${theme.color.borderRule};
   }
 
   .step-number {
