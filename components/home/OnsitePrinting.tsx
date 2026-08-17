@@ -135,23 +135,26 @@ const OnsitePrintingStyles = styled.section`
     color: ${theme.color.textMuted};
   }
 
+  /* Identical to the apparel and team store buttons. This section was written
+     later and picked up its own values: a smaller button carrying larger text
+     in a darker green, resting on brandHover — which is where the other two
+     land on hover, so hovering one of those made it the twin of this one
+     sitting untouched. */
   .cta {
     margin: 3rem 0 0;
-    padding: 0.8125rem 1.375rem;
+    padding: 0.875rem 1.75rem;
     display: inline-flex;
     align-items: center;
-    font-size: 1rem;
+    font-size: 0.9375rem;
     font-weight: 600;
-    color: #fff;
-    background-color: ${theme.color.brandHover};
-    border: 1px solid ${theme.color.brandHover};
+    color: ${theme.color.onBrand};
+    background-color: ${theme.color.brand};
     border-radius: ${theme.radius.md};
-    transition: background-color 150ms ease, border-color 150ms ease;
+    transition: background-color 150ms ease;
     ${reducedMotion}
 
     &:hover {
-      background-color: ${theme.color.brandDeep};
-      border-color: ${theme.color.brandDeep};
+      background-color: ${theme.color.brandHover};
     }
 
     &:focus-visible {

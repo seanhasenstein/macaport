@@ -9,6 +9,23 @@ import {
 } from '../../config/gangSheets';
 import { theme, reducedMotion } from '../../styles/theme';
 
+// Colours for the pricing callout, the only dark surface on the homepage.
+// They are local because the theme's ramps are built for light grounds and
+// both run the wrong way here.
+//
+// Brand green does not survive the callout: #0d6b2b on #171717 is 2.69:1,
+// under the 3:1 WCAG asks for a control's edge, so the button blurred into the
+// panel it sat in. The usable band above it is narrow — brighten much further
+// and the white label starts failing its own 4.5:1 (#118a3b is already 4.45)
+// — so these two are close to the only pair clearing both in both states.
+const BRAND_ON_DARK = '#0f7d33'; // 3.42:1 on the callout, 5.25:1 under white
+const BRAND_ON_DARK_HOVER = '#108438'; // 3.74:1 and 4.79:1
+
+// Detail text. textMuted is 3.78:1 against near-black and fails AA at the 15px
+// this is set in — the tokens named "muted" and "subtle" are chosen to recede
+// from white, and on dark they recede until they stop being readable.
+const TEXT_ON_DARK = '#d4d4d4';
+
 const steps = [
   {
     id: '01',
@@ -96,10 +113,14 @@ export default function GangSheetSpotlight() {
 // in "talk to us", this one ends at a checkout. The tone change marks that
 // shift rather than just breaking up the scroll, which is why it is one
 // deliberate exception instead of an alternating stripe.
+//
+// No bottom border, unlike every other section. This is the last one on the
+// page and the footer already draws its own top rule — carrying one here too
+// stacked two hairlines with nothing between them and read as a 2px line. The
+// footer's stays because on every other page it is the only rule there is.
 const SpotlightStyles = styled.section`
   padding: 0 1.5rem;
   background-color: ${theme.color.surfaceSunken};
-  border-bottom: 1px solid ${theme.color.border};
   scroll-margin-top: 1.5rem;
 
   .wrapper {
@@ -223,12 +244,14 @@ const SpotlightStyles = styled.section`
     margin: 0.75rem 0 0;
     font-size: 0.9375rem;
     line-height: 1.6;
-    color: #d4d4d4;
+    color: ${TEXT_ON_DARK};
     font-variant-numeric: tabular-nums;
 
+    /* textSubtle, which is lighter than textMuted and therefore the more
+       legible of the two here — the ramp inverts on a dark ground. */
     &.muted {
       margin-top: 0.375rem;
-      color: ${theme.color.textMuted};
+      color: ${theme.color.textSubtle};
     }
   }
 
@@ -237,7 +260,7 @@ const SpotlightStyles = styled.section`
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
-    background-color: ${theme.color.brand};
+    background-color: ${BRAND_ON_DARK};
     color: ${theme.color.onBrand};
     font-size: 0.9375rem;
     font-weight: 600;
@@ -245,8 +268,11 @@ const SpotlightStyles = styled.section`
     transition: background-color 150ms ease;
     ${reducedMotion}
 
+    /* Brightens where every other button on the site darkens. That is not an
+       inconsistency but the same rule applied to an inverted ground: on white,
+       more prominent means darker; on near-black it means lighter. */
     &:hover {
-      background-color: #0f7d33;
+      background-color: ${BRAND_ON_DARK_HOVER};
     }
 
     &:focus-visible {
