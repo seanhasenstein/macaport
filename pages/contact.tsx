@@ -816,15 +816,19 @@ const ContactStyles = styled.div`
     }
   }
 
+  /* No padding here. Only <summary> toggles a <details>, so padding on this
+     element left a dead ring around a box that reads as one big button when
+     it is closed. The summary carries it instead and spans the full width. */
   .more {
     margin: 1.75rem 0 0;
-    padding: 1rem 1.125rem;
+    padding: 0;
     background-color: ${theme.color.surfaceMuted};
     border: 1px solid ${theme.color.borderStrong};
     border-radius: ${theme.radius.md};
   }
 
   .more > summary {
+    padding: 1rem 1.125rem;
     font-size: 0.875rem;
     font-weight: 600;
     color: ${theme.color.text};
@@ -842,9 +846,11 @@ const ContactStyles = styled.div`
       color: ${theme.color.textMuted};
     }
 
+    /* Matches the card it sits flush inside. Now that the summary spans the
+       full width, a tighter radius would cut visible corners off the ring. */
     &:focus-visible {
       ${focusRingNeutral}
-      border-radius: ${theme.radius.sm};
+      border-radius: ${theme.radius.md};
     }
   }
 
@@ -852,8 +858,14 @@ const ContactStyles = styled.div`
     content: '−';
   }
 
+  /* Once open, the summary's own bottom padding plus the first field's top
+     margin was too much air between the two. */
+  .more[open] > summary {
+    padding-bottom: 0.5rem;
+  }
+
   .more-body {
-    margin: -0.25rem 0 0.75rem;
+    padding: 0 1.125rem 1rem;
   }
 
   /* The card already has padding; the first field's own top margin doubled it. */

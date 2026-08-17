@@ -208,11 +208,16 @@ const CheckboxGroupStyles = styled.fieldset<{
     text-wrap: pretty;
   }
 
+  /* No padding of its own. The label supplies it, so that every pixel inside
+     the border toggles the box — padding on this element instead left a dead
+     ring around the edge of a control that looks entirely clickable. */
   .row {
-    padding: ${props =>
-      props.$withQuantities ? '0.4375rem 0.5rem 0.4375rem 0.75rem' : '0.625rem 0.75rem'};
+    padding: ${props => (props.$withQuantities ? '0 0.5rem 0 0' : '0')};
     display: flex;
-    align-items: center;
+    /* Stretch, not center: the label has to fill the row's full height for its
+       padding to be part of the hit target. Its own align-items centers the
+       text inside it. */
+    align-items: stretch;
     gap: 0.75rem;
     min-height: ${props => (props.$withQuantities ? '2.875rem' : 'auto')};
     background-color: ${theme.color.surface};
@@ -234,9 +239,14 @@ const CheckboxGroupStyles = styled.fieldset<{
     }
   }
 
-  /* Fills the row so clicking anywhere left of the input toggles the item. */
+  /* Carries the row's padding so the whole area inside the border is a hit
+     target — including the gap above, below, and to either side of the text. */
   .option {
     margin: 0;
+    padding: ${props =>
+      props.$withQuantities
+        ? '0.4375rem 0 0.4375rem 0.75rem'
+        : '0.625rem 0.75rem'};
     flex: 1;
     display: flex;
     align-items: ${props => (props.$withDescriptions ? 'flex-start' : 'center')};
@@ -251,6 +261,9 @@ const CheckboxGroupStyles = styled.fieldset<{
     padding: 0.375rem 0.5rem;
     width: 5.75rem;
     flex-shrink: 0;
+    /* The row stretches its children; without this the input would grow to the
+       full row height and stop looking like a field. */
+    align-self: center;
     text-align: center;
     font-size: 0.875rem;
     font-variant-numeric: tabular-nums;
