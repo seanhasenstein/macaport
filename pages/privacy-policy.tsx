@@ -157,10 +157,13 @@ export default function PrivacyPolicy() {
           </a>
         </li>
         <li>
-          <strong>Amazon Web Services</strong> serves images, including the
-          logo in our emails. Loading an email that displays images tells the
-          image host your IP address and roughly when you opened it — this is
-          true of essentially all email and is not something we track.{' '}
+          <strong>Amazon Web Services</strong> serves our images — the product
+          photos on every store page, and the logo in our emails. Because
+          images load from their servers, AWS receives your IP address when you
+          browse a store, and again if you open one of our emails with images
+          switched on. That second one also tells them roughly when you opened
+          it, which is true of essentially all email and is not something we
+          track or look at.{' '}
           <a href="https://aws.amazon.com/privacy/" target="_blank" rel="noreferrer">
             AWS privacy notice
           </a>
