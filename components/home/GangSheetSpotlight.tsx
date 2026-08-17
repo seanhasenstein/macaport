@@ -91,9 +91,14 @@ export default function GangSheetSpotlight() {
   );
 }
 
+// The only sunken band on the page, and the only section a customer can
+// finish without anyone at Macaport: apparel, team stores, and onsite all end
+// in "talk to us", this one ends at a checkout. The tone change marks that
+// shift rather than just breaking up the scroll, which is why it is one
+// deliberate exception instead of an alternating stripe.
 const SpotlightStyles = styled.section`
   padding: 0 1.5rem;
-  background-color: ${theme.color.surface};
+  background-color: ${theme.color.surfaceSunken};
   border-bottom: 1px solid ${theme.color.border};
   scroll-margin-top: 1.5rem;
 

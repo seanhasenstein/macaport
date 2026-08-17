@@ -104,7 +104,7 @@ export default function Apparel() {
 
 const ApparelStyles = styled.section`
   padding: 0 1.5rem;
-  background-color: ${theme.color.surfaceMuted};
+  background-color: ${theme.color.surface};
   border-bottom: 1px solid ${theme.color.border};
   scroll-margin-top: 1.5rem;
 

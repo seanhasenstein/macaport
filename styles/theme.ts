@@ -42,6 +42,11 @@ export const theme = {
     // resting border is a step darker than a divider's.
     borderField: '#c4c4c4',
     brandBorder: '#cfe3d7',
+    // A step darker, for rules that have to hold their own across a whole band
+    // of brandSubtle rather than outline a single small chip. Same value the
+    // confirmation emails pair with this background on their badge and
+    // callout, so the two surfaces stay in step.
+    brandBorderStrong: '#b5d5c2',
 
     surface: '#ffffff',
     surfaceMuted: '#fafafa',

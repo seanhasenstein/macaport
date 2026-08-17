@@ -60,9 +60,11 @@ export default function Hero() {
   );
 }
 
+// No bottom border. ValueProps below is a tinted band and draws both of its
+// own edges in green — a grey rule here gave it a neutral lid and a green
+// floor. The rule still exists, it just belongs to the band it bounds.
 const HeroStyles = styled.section`
   padding: 0 1.5rem;
-  border-bottom: 1px solid ${theme.color.border};
   ${gridBackdrop()}
 
   .wrapper {
