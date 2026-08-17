@@ -28,6 +28,29 @@ const BORDER_SOFT = '#e5e5e5'; // dividers between rows
 const BORDER_BRAND = '#b5d5c2'; // the green disclaimer callout
 const PAGE_BG = '#f0f0f0'; // the ground both contact emails sit on
 
+// One source for the logo, used by the contact shell and the order receipt.
+// Previously two separate Cloudinary files — a transparent one and a flattened
+// one — which meant a logo change had to be made twice and could be made
+// inconsistently. This has an alpha channel and sits correctly on both the
+// receipt's white cell and the contact shell's grey ground.
+//
+// Remote images are how email works, so the host of this file learns the
+// recipient's IP address and roughly when they opened the message. That is
+// disclosed in the privacy policy, and it is the reason this lives on
+// Macaport's own S3 bucket rather than on a third party's CDN.
+// Cropped and sized for email specifically, which is why it is not the same
+// file as the site logo: no transparent padding, and 400px wide so the largest
+// place it appears (200px on the receipt) still gets a clean 2x on a retina
+// screen without shipping a 1492px original to every inbox.
+const LOGO_URL =
+  'https://macaport-public.s3.us-east-2.amazonaws.com/email-logo.png';
+
+// 400x105 at source. Both call sites constrain one dimension and let the other
+// follow, so the intrinsic ratio is what keeps it undistorted — and Outlook
+// ignores CSS sizing on images, so the width and height attributes derived
+// from this are the only thing standing between it and a 400px logo.
+const LOGO_RATIO = 400 / 105;
+
 // One source for the postal address. It appears in the confirmation footer,
 // where it does double duty: a real address is one of the signals that keeps
 // mail out of spam folders, and this is a place customers actually collect
@@ -464,7 +487,7 @@ function shellHtml({
     title
   )}</title></head><body style="margin:0;padding:0;background-color:${PAGE_BG};"><div style="display:none;font-size:1px;color:${PAGE_BG};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${escapeHtml(
     preheader
-  )}</div><div style="background-color:${PAGE_BG};margin:0;padding:24px 0;width:100%;"><table role="presentation" border="0" align="center" cellpadding="0" cellspacing="0" width="100%"><tbody><tr><td align="center"><div style="margin:0 auto;padding:8px 0 24px;"><img alt="Macaport" src="https://res.cloudinary.com/dra3wumrv/image/upload/v1621535049/macaport/logo-horizontal.png" style="display:block;border:0;outline:none;text-decoration:none;height:44px;" /></div></td></tr></tbody></table><div style="margin:0 auto;max-width:600px;width:100%;padding:0 16px;box-sizing:border-box;"><table role="presentation" width="100%" align="center" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td width="100%" align="left" valign="top" bgcolor="#FFFFFF" style="background-color:#FFFFFF;border:1px solid ${BORDER};border-radius:12px;box-sizing:border-box;padding:28px 24px 28px;">${body}</td></tr></tbody></table><table role="presentation" width="100%" align="center" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td align="center" style="padding:24px 8px 32px;">${footer}</td></tr></tbody></table></div></div></body></html>`;
+  )}</div><div style="background-color:${PAGE_BG};margin:0;padding:24px 0;width:100%;"><table role="presentation" border="0" align="center" cellpadding="0" cellspacing="0" width="100%"><tbody><tr><td align="center"><div style="margin:0 auto;padding:8px 0 24px;"><img alt="Macaport" src="${LOGO_URL}" width="${Math.round(44 * LOGO_RATIO)}" height="44" style="display:block;border:0;outline:none;text-decoration:none;height:44px;width:auto;" /></div></td></tr></tbody></table><div style="margin:0 auto;max-width:600px;width:100%;padding:0 16px;box-sizing:border-box;"><table role="presentation" width="100%" align="center" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td width="100%" align="left" valign="top" bgcolor="#FFFFFF" style="background-color:#FFFFFF;border:1px solid ${BORDER};border-radius:12px;box-sizing:border-box;padding:28px 24px 28px;">${body}</td></tr></tbody></table><table role="presentation" width="100%" align="center" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td align="center" style="padding:24px 8px 32px;">${footer}</td></tr></tbody></table></div></div></body></html>`;
 }
 
 const footerLine = (content: string, last = false) =>
@@ -845,9 +868,10 @@ function generateReceiptHtml(order: Order) {
                     <tr>
                       <td align="center" style="padding: 40px 0 24px">
                         <img
-                          src="https://res.cloudinary.com/dra3wumrv/image/upload/v1621535049/macaport/logo-horizontal-transparent.png"
+                          src="${LOGO_URL}"
                           alt="Macaport logo with mountains"
                           width="200"
+                          height="${Math.round(200 / LOGO_RATIO)}"
                           style="display: block; margin: 0 auto"
                         />
                       </td>
