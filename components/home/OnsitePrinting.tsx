@@ -153,20 +153,23 @@ const OnsitePrintingStyles = styled.section`
     }
   }
 
+  /* One breakpoint, matching the other three sections. The heading and the
+     wrapper padding used to shift at 600px here while apparel, team stores and
+     gang sheets shifted at 900 — so between those widths this section carried a
+     2.25rem heading directly under a 1.75rem one, which read as an error rather
+     than a difference. */
   @media (max-width: 900px) {
-    .details {
-      grid-template-columns: 1fr;
-      gap: 1.75rem;
-    }
-  }
-
-  @media (max-width: 600px) {
     .wrapper {
       padding: 3.5rem 0;
     }
 
     h2 {
       font-size: 1.75rem;
+    }
+
+    .details {
+      grid-template-columns: 1fr;
+      gap: 1.75rem;
     }
   }
 `;

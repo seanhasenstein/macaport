@@ -54,7 +54,7 @@ export default function TeamStores() {
               arrives. That is the part we take over.
             </p>
             <Link href="/stores">
-              <a className="secondary-link">
+              <a className="secondary-cta">
                 Browse open stores
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -160,7 +160,7 @@ const TeamStoresStyles = styled.section`
 
   h2 {
     margin: 0;
-    font-size: 2rem;
+    font-size: 2.25rem;
     line-height: 1.15;
     font-weight: 700;
     color: ${theme.color.text};
@@ -175,33 +175,50 @@ const TeamStoresStyles = styled.section`
     color: ${theme.color.textMuted};
   }
 
-  .secondary-link {
+  /* The two actions in this section are for two different people, not one
+     person choosing. This is for someone whose group already has a store and
+     who wants to find it and order; the filled button further down is for the
+     organizer who would be setting one up. They sit at opposite ends of a long
+     section and never appear together, so an outline here competes with
+     nothing — and since the header no longer carries a stores link, this and
+     the footer are the only ways in for the first of those two people.
+
+     Outlined in full-strength brand rather than a grey hairline. A ghost
+     button at low contrast is the kind that gets scrolled past. */
+  .secondary-cta {
     margin: 1.5rem 0 0;
-    padding: 0.25rem 0;
+    padding: 0.8125rem 1.5rem;
     display: inline-flex;
     align-items: center;
     font-size: 0.9375rem;
     font-weight: 600;
-    color: ${theme.color.text};
-    border-bottom: 1px solid ${theme.color.borderStrong};
-    transition: color 150ms ease, border-color 150ms ease;
+    color: ${theme.color.brand};
+    background-color: transparent;
+    border: 1px solid ${theme.color.brand};
+    border-radius: ${theme.radius.md};
+    transition: background-color 150ms ease, color 150ms ease;
     ${reducedMotion}
 
     svg {
-      margin: 0 0 0 0.125rem;
+      margin: 0 -0.25rem 0 0.375rem;
       height: 1rem;
       width: 1rem;
     }
 
+    /* Fills on hover rather than tinting. brandSubtle against white is 1.09:1,
+       which is not a state change anyone can see — the same 2% step that was
+       doing nothing when it was a section background. Inverting to solid is
+       the conventional feedback for an outlined button and is unmistakable.
+
+       That it then resembles the filled button below is not a problem: the two
+       sit at opposite ends of the section and are never in view together. */
     &:hover {
-      color: ${theme.color.brand};
-      border-color: ${theme.color.brand};
+      color: ${theme.color.onBrand};
+      background-color: ${theme.color.brand};
     }
 
     &:focus-visible {
       ${focusRing}
-      border-radius: ${theme.radius.sm};
-      border-color: transparent;
     }
   }
 
