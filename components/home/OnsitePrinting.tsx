@@ -18,10 +18,15 @@ const details = [
     title: 'We bring the setup',
     body: 'Tell us the venue, the date, and the hours, and we will work out what fits.',
   },
+  // Two steps, not a choice between them: the organizer sets what is available
+  // and attendees pick inside that. The old wording made it sound like either
+  // the crowd chose freely or the organizer locked it down, when in practice
+  // both always happen. Pairs with the item above it — that one is what we do,
+  // this one is what the organizer does.
   {
-    id: 'onthespot',
-    title: 'Printed while they wait',
-    body: 'People pick a design on the day rather than ordering weeks ahead and hoping.',
+    id: 'choices',
+    title: 'You decide the options',
+    body: 'Pick the garments, colors, and designs. Attendees choose from those on the day.',
   },
 ];
 
@@ -31,11 +36,24 @@ export default function OnsitePrinting() {
       <div className="wrapper">
         <div className="intro">
           <p className="eyebrow">Onsite printing</p>
-          <h2>We bring the press to your event.</h2>
+          {/* Not "we bring the press": bring the press is a set phrase about
+            reporters, and a heat press is trade vocabulary this page avoids
+            elsewhere for the same reason ValueProps gives — nobody outside
+            the trade is moved by the name of the process.
+
+            Deliberately says nothing about when printing happens. Some of an
+            event's stock is printed beforehand, so any wording that promises
+            everything is made on the day would be untrue. */}
+        <h2>We bring the printing to your event.</h2>
+          {/* Personalization is the one thing this section never mentioned and
+              the contact form asks about directly — names, numbers, event or
+              result details. Everything else the old lede said is covered by
+              the three items below it: a crowd wanting something from the day,
+              printing while they wait, picking a design on the day. */}
           <p className="lede">
-            Instead of taking orders in advance, we set up where the event is
-            happening and print on the spot. Good for anything with a crowd and
-            a date.
+            We set up at the venue and print during the event. Names, numbers,
+            and results can go on individual pieces on site, so people leave
+            with something only they have.
           </p>
         </div>
 
