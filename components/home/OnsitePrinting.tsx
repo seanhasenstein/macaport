@@ -180,5 +180,10 @@ const OnsitePrintingStyles = styled.section`
       grid-template-columns: 1fr;
       gap: 1.75rem;
     }
+    .cta {
+      margin-top: 2.25rem;
+      width: 100%;
+      justify-content: center;
+    }
   }
 `;

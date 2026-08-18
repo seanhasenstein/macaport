@@ -37,7 +37,19 @@ const details = [
     title: 'Open and close dates',
     body: 'Pick when the store opens and closes and we print once it closes, or leave it open permanently and order on a schedule that suits you.',
   },
+  // Three independent settings on the store, not one policy: a nominated
+  // delivery location, pickup at Macaport, and direct shipping can each be
+  // switched on or off. Worth its own row because the lede promises to take
+  // over "sorting the box when it arrives" and nothing else here says what
+  // actually happens when it does — which is the organizer's real question,
+  // since the alternative is hand delivering forty packages.
+  {
+    id: 'delivery',
+    title: 'Pickup and shipping',
+    body: 'Have everything delivered to one place for handout, picked up at Macaport by you or by each person, or shipped to each home. Offer any combination.',
+  },
 ];
+
 
 export default function TeamStores() {
   return (
@@ -74,10 +86,10 @@ export default function TeamStores() {
 
           <div className="screenshot">
             <BrowserFrame
-              src="/images/team-store-home.png"
-              alt="A Macaport team store page for the New London Gridiron Club showing shirts, prices, color options, and the date the store closes"
-              width={2000}
-              height={1002}
+              src="/images/team-store-home-v2.webp"
+              alt="The New London Football 2026 team store, showing the date the store closes and six products with prices: a Nike tee, an Under Armour hooded sweatshirt, Nike joggers, a long sleeve, a crewneck, and a backpack"
+              width={1680}
+              height={934}
               label="macaport.com/store"
             />
           </div>
@@ -98,10 +110,10 @@ export default function TeamStores() {
         <div className="details">
           <div className="screenshot">
             <BrowserFrame
-              src="/images/team-store-product.png"
-              alt="A team store product page showing a Nike sweatshirt with color choices, sizes from XS to 4XL, and options to add a name or number on the back"
-              width={2000}
-              height={1002}
+              src="/images/product-page-v2.webp"
+              alt="A team store product page for a New London Bulldogs Nike hooded sweatshirt, showing three color swatches, sizes XS through 4XL, and name and number fields filled in with Turner and 12"
+              width={1292}
+              height={969}
               label="macaport.com/store/product"
             />
           </div>
@@ -120,7 +132,8 @@ export default function TeamStores() {
               <a className="cta">Set up a store for your group</a>
             </Link>
             <p className="cta-note">
-              Fundraisers, reunions, sports teams, clubs, and staff orders.
+              Businesses, school districts, sports teams, tournaments,
+              fundraisers, and more.
             </p>
           </div>
         </div>
@@ -266,10 +279,18 @@ const TeamStoresStyles = styled.section`
     color: ${theme.color.textMuted};
   }
 
+  /* The wider half was the screenshot, at 44.5rem against 24rem of text — but
+     this column holds a heading, three title-and-body rows, a button and a
+     note, nearly twice what the intro block above carries in a column of
+     similar width. The picture is supporting evidence; the text is the point.
+
+     The top margin is larger than the 3.5rem above the steps on purpose. This
+     is where the section turns from how a store works to what goes in one, and
+     at matching gaps the three blocks read as one undifferentiated stack. */
   .details {
-    margin: 4rem 0 0;
+    margin: 5.5rem 0 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 28rem);
     align-items: center;
     gap: 3.5rem;
   }
@@ -288,12 +309,14 @@ const TeamStoresStyles = styled.section`
     list-style-type: none;
   }
 
+  /* Separators between the items, not a rule around every one. A border on
+     each plus one under the last put four hairlines into a short column and
+     turned the list into something that read as a table. */
   .details-content ul li {
     padding: 1rem 0;
-    border-top: 1px solid ${theme.color.border};
 
-    &:last-child {
-      border-bottom: 1px solid ${theme.color.border};
+    & + li {
+      border-top: 1px solid ${theme.color.border};
     }
   }
 
@@ -304,7 +327,11 @@ const TeamStoresStyles = styled.section`
     color: ${theme.color.text};
   }
 
-  .details-content p {
+  /* Scoped to the list. As a bare element selector inside .details it also
+     caught cta-note and beat it on specificity — a class plus an element
+     outranks a class alone — so the note's own size, margin, colour and
+     leading were silently discarded. */
+  .details-content ul p {
     margin: 0.375rem 0 0;
     font-size: 0.9375rem;
     line-height: 1.6;
@@ -334,8 +361,10 @@ const TeamStoresStyles = styled.section`
   }
 
   .cta-note {
-    margin: 0.75rem 0 0;
-    font-size: 0.8125rem;
+    margin: 1.25rem 0 0;
+    font-size: 0.75rem;
+    font-style: italic;
+    line-height: 1.5;
     color: ${theme.color.textMuted};
   }
 
@@ -365,6 +394,7 @@ const TeamStoresStyles = styled.section`
     }
 
     .cta {
+      margin-top: 2.25rem;
       width: 100%;
       justify-content: center;
     }
