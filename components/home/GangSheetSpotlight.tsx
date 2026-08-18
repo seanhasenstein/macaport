@@ -1,30 +1,7 @@
 import styled from 'styled-components';
 import BrowserFrame from '../ui/BrowserFrame';
-import {
-  GANG_SHEET,
-  PRICE_PER_INCH_CENTS,
-  builderLink,
-  formatCents,
-  sheetPriceCents,
-} from '../../config/gangSheets';
-import { theme, reducedMotion } from '../../styles/theme';
-
-// Colours for the pricing callout, the only dark surface on the homepage.
-// They are local because the theme's ramps are built for light grounds and
-// both run the wrong way here.
-//
-// Brand green does not survive the callout: #0d6b2b on #171717 is 2.69:1,
-// under the 3:1 WCAG asks for a control's edge, so the button blurred into the
-// panel it sat in. The usable band above it is narrow — brighten much further
-// and the white label starts failing its own 4.5:1 (#118a3b is already 4.45)
-// — so these two are close to the only pair clearing both in both states.
-const BRAND_ON_DARK = '#0f7d33'; // 3.42:1 on the callout, 5.25:1 under white
-const BRAND_ON_DARK_HOVER = '#108438'; // 3.74:1 and 4.79:1
-
-// Detail text. textMuted is 3.78:1 against near-black and fails AA at the 15px
-// this is set in — the tokens named "muted" and "subtle" are chosen to recede
-// from white, and on dark they recede until they stop being readable.
-const TEXT_ON_DARK = '#d4d4d4';
+import GangSheetCalculator from './GangSheetCalculator';
+import { theme } from '../../styles/theme';
 
 const steps = [
   {
@@ -82,26 +59,26 @@ export default function GangSheetSpotlight() {
           ))}
         </ol>
 
-        <div className="callout">
-          <div className="pricing">
-            <p className="price">
-              {formatCents(PRICE_PER_INCH_CENTS)}
-              <span> per inch of length</span>
-            </p>
-            <p className="price-detail">
-              {GANG_SHEET.widthInches}&quot; wide, {GANG_SHEET.minLengthInches}
-              &quot; to {GANG_SHEET.maxLengthInches}&quot; long. A{' '}
-              {GANG_SHEET.widthInches}&quot; &times; {GANG_SHEET.presets[1]}
-              &quot; sheet is {formatCents(sheetPriceCents(GANG_SHEET.presets[1]))}.
-              Order as many sheets as you need.
-            </p>
-            <p className="price-detail muted">
-              Free store pickup, or shipping at checkout.
-            </p>
-          </div>
-          <a className="cta" href={builderLink(GANG_SHEET.presets[1])}>
-            Build a gang sheet
-          </a>
+        {/* The same card as the hero, not a static restatement of it. The
+            price here now responds to the size someone picks, and its button
+            carries that length into the builder — the old callout always sent
+            24 inches whatever it said above the button. */}
+        <div className="closer">
+          {/* Opens a sequence rather than labelling a fact. Nothing in a static
+              read of the block's own labels says the chips are clickable, and
+              "what a sheet costs" framed it as a reference table when it is
+              actually the way into the builder. The second line says what
+              happens after the button, which connects it to step 01. */}
+          <h3 className="closer-heading">Build a gang sheet</h3>
+          <p className="closer-lede">
+            Sheets are priced by the inch of length. Your size carries into the
+            builder, where you add your artwork.
+          </p>
+          <GangSheetCalculator
+            instanceId="spotlight"
+            layout="wide"
+            showLearnMore={false}
+          />
         </div>
       </div>
     </SpotlightStyles>
@@ -208,79 +185,23 @@ const SpotlightStyles = styled.section`
     color: ${theme.color.textMuted};
   }
 
-  .callout {
+  .closer {
     margin: 3.5rem 0 0;
-    padding: 2.25rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 2.5rem;
-    background-color: ${theme.color.text};
-    border-radius: ${theme.radius.lg};
   }
 
-  .pricing {
-    max-width: 34rem;
-  }
-
-  .price {
+  .closer-heading {
     margin: 0;
-    font-size: 2.25rem;
+    font-size: 1.375rem;
     font-weight: 700;
-    color: ${theme.color.surface};
-    letter-spacing: -0.028em;
-    font-variant-numeric: tabular-nums;
-
-    span {
-      margin: 0 0 0 0.5rem;
-      font-size: 1rem;
-      font-weight: 500;
-      color: ${theme.color.textSubtle};
-      letter-spacing: 0;
-    }
+    letter-spacing: -0.02em;
+    color: ${theme.color.text};
   }
 
-  .price-detail {
-    margin: 0.75rem 0 0;
+  .closer-lede {
+    margin: 0.5rem 0 1.25rem;
     font-size: 0.9375rem;
     line-height: 1.6;
-    color: ${TEXT_ON_DARK};
-    font-variant-numeric: tabular-nums;
-
-    /* textSubtle, which is lighter than textMuted and therefore the more
-       legible of the two here — the ramp inverts on a dark ground. */
-    &.muted {
-      margin-top: 0.375rem;
-      color: ${theme.color.textSubtle};
-    }
-  }
-
-  .cta {
-    padding: 0.875rem 1.75rem;
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    background-color: ${BRAND_ON_DARK};
-    color: ${theme.color.onBrand};
-    font-size: 0.9375rem;
-    font-weight: 600;
-    border-radius: ${theme.radius.md};
-    transition: background-color 150ms ease;
-    ${reducedMotion}
-
-    /* Brightens where every other button on the site darkens. That is not an
-       inconsistency but the same rule applied to an inverted ground: on white,
-       more prominent means darker; on near-black it means lighter. */
-    &:hover {
-      background-color: ${BRAND_ON_DARK_HOVER};
-    }
-
-    &:focus-visible {
-      outline: 2px solid transparent;
-      outline-offset: 2px;
-      box-shadow: 0 0 0 2px ${theme.color.text},
-        0 0 0 4px ${theme.color.surface};
-    }
+    color: ${theme.color.textMuted};
   }
 
   @media (max-width: 900px) {
@@ -297,25 +218,5 @@ const SpotlightStyles = styled.section`
       gap: 1.75rem;
     }
 
-    .callout {
-      padding: 1.75rem;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 1.5rem;
-    }
-
-    .price {
-      font-size: 1.875rem;
-
-      span {
-        display: block;
-        margin: 0.25rem 0 0;
-      }
-    }
-
-    .cta {
-      width: 100%;
-      justify-content: center;
-    }
   }
 `;

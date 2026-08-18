@@ -53,7 +53,7 @@ export default function Hero() {
         </div>
 
         <div className="calculator">
-          <GangSheetCalculator />
+          <GangSheetCalculator instanceId="hero" />
         </div>
       </div>
     </HeroStyles>
