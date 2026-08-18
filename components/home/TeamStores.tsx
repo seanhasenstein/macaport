@@ -128,7 +128,11 @@ export default function TeamStores() {
                 </li>
               ))}
             </ul>
-            <Link href="/contact">
+            {/* The only section CTA that was landing on a bare form. Every
+                other one preselects its path, so a lead arrived with the
+                right follow-up questions already answered instead of as an
+                unclassified message. */}
+            <Link href="/contact?about=team-store">
               <a className="cta">Set up a store for your group</a>
             </Link>
             <p className="cta-note">
