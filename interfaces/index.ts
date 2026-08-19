@@ -270,13 +270,86 @@ export interface CheckoutForm {
   note?: string;
 }
 
+export type InquiryType =
+  | 'apparel'
+  | 'team-store'
+  | 'gang-sheets'
+  | 'onsite'
+  | 'existing'
+  | 'missed-deadline'
+  | 'other';
+
 export interface ContactFormValues {
+  inquiryType: InquiryType | '';
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
+  organization: string;
+  // Shared by both paths: what you want printed, or what you want the store
+  // to sell. Same option list either way, so it's one field with two labels.
+  products: string[];
+  // Keyed by product id, so only the items actually selected carry a number.
+  quantities: Record<string, string>;
+  // Free text, only asked for when "Something else" is one of the products.
+  productOther: string;
+  // Store name reuses `organization`; this is the order number alone.
+  orderNumber: string;
+  // How the garments get decorated. Deliberately separate from `products` —
+  // embroidery is a process, not a thing you can order a quantity of.
+  decoration: string;
+  // Multi-select: one order can mix fabrics, and a store can offer more than
+  // one way of getting the order to people.
+  fabric: string[];
+  colors: string;
+  artwork: string;
+  delivery: string;
+  shipping: string[];
+  neededBy: string;
+  groupSize: string;
+  // Onsite printing. Dates and hours are free text on purpose: "March 14-16",
+  // "every Saturday in June" and "8am until the final" are all real answers,
+  // and a date picker can express none of them.
+  personalization: string[];
+  personalizationOther: string;
+  schedule: string;
+  sizeMix: string[];
+  eventName: string;
+  eventDates: string;
+  eventHours: string;
+  venue: string;
+  venueSetting: string;
+  power: string;
+  whoPays: string;
+  openTiming: string;
+  storeDuration: string;
   message: string;
   honeypot: string;
+}
+
+// A contact enquiry as it is kept, rather than as it is emailed. The emails
+// remain the way anyone actually reads these; this exists so that a lead is not
+// held solely inside a mail transaction that has already completed.
+export interface ContactMessage {
+  _id: string;
+  // The same reference the customer is given in their confirmation, so the
+  // number we print in an email finally resolves to something.
+  referenceId: string;
+  // A real Date, not the long "August 15, 2026 at 9:00am (CT)" string the
+  // emails carry. That one is formatted for reading in a sentence and is
+  // useless for sorting or for a range query.
+  submittedAt: Date;
+  inquiryType: string;
+  // Everything they filled in, minus the honeypot, which is only ever empty by
+  // the time a submission reaches here and is noise in a stored record.
+  submission: Omit<ContactFormValues, 'honeypot'>;
+  // Whether each email was handed to Mailgun without being rejected. Not proof
+  // it arrived — nothing here can know that — but a false is a lead that
+  // definitely did not reach anyone, which is the case worth finding.
+  delivery: {
+    notification: boolean;
+    confirmation: boolean;
+  };
 }
 
 export interface Address {

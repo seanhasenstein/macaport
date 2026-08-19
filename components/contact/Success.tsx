@@ -1,136 +1,291 @@
 import Link from 'next/link';
 import styled from 'styled-components';
+import { CheckIcon } from '@heroicons/react/20/solid';
+import { ContactFormValues } from '../../interfaces';
+import { GANG_SHEET } from '../../config/gangSheets';
+import { nextStep } from '../../utils/contact';
+import {
+  theme,
+  badge,
+  focusRingNeutral,
+  gridBackdrop,
+  GRID_FADE_SIDES,
+  reducedMotion,
+} from '../../styles/theme';
 
-export function Success() {
+type Destination = {
+  text: string;
+  href: string;
+  external?: boolean;
+};
+
+// One action per path, and only where a real one exists. A list of links after
+// someone has asked a question is a change of subject: they wanted a reply, not
+// three other pages. Gang sheets is the only exception, because the builder
+// needs no account and there is nothing to wait for.
+const PRIMARY_ACTIONS: Record<string, Destination> = {
+  'gang-sheets': {
+    text: 'Build a gang sheet',
+    href: GANG_SHEET.builderUrl,
+    external: true,
+  },
+};
+
+export function Success({
+  values,
+  referenceId,
+  onReset,
+}: {
+  values: ContactFormValues;
+  referenceId?: string;
+  onReset: () => void;
+}) {
+  const primary = PRIMARY_ACTIONS[values.inquiryType];
+
   return (
     <SuccessStyles>
-      <div className="wrapper">
-        <div className="content">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            className="icon"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <h3>Message Sent!</h3>
+      <div className="card">
+        <p className="badge">
+          <CheckIcon aria-hidden="true" />
+          Message sent
+        </p>
+        <h1>{values.firstName ? `Thanks, ${values.firstName}.` : 'Thanks.'}</h1>
+        <p className="lede">{nextStep(values.inquiryType)}</p>
+
+        {/* The confirmation email is the durable record, so the screen's job is
+            to hand off to it. Naming it matters twice over: an unannounced
+            email is one nobody goes looking for if it lands in spam, and the
+            address shown here is the last moment a typo can be caught. */}
+        <div className="handoff">
           <p>
-            Thank you for contacting Macaport. We will be with you as soon as we
-            can.
+            We have emailed a copy to <strong>{values.email}</strong>. It has
+            everything you sent, and a reply goes straight to us.
           </p>
+          {/* A button, not a link to /contact. This screen is a state of that
+              page rather than a route of its own, so linking to it navigated
+              to where they already were: the component never unmounted, the
+              status stayed SUCCESS, and the click did nothing at all. */}
+          <p className="correction">
+            Wrong address?{' '}
+            <button type="button" onClick={onReset}>
+              Send another message
+            </button>
+            .
+          </p>
+        </div>
+
+        {/* Going home is an exit, not the thing we want them to do, so it stays
+            a link on every path. A lone outlined button reads as an action that
+            lost its emphasis; a link reads as a deliberate way out. */}
+        <div className="actions">
+          {primary ? (
+            primary.external ? (
+              <a
+                className="primary"
+                href={primary.href}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {primary.text}
+              </a>
+            ) : (
+              <Link href={primary.href}>
+                <a className="primary">{primary.text}</a>
+              </Link>
+            )
+          ) : null}
           <Link href="/">
-            <a className="button">Back to home</a>
+            <a className="quiet">
+              Back to home <span aria-hidden="true">&rarr;</span>
+            </a>
           </Link>
         </div>
+
+        {/* Out of the reading path on purpose. Nobody copies a code off a
+            screen they are about to close, but if the email goes missing this
+            is the only thing they have to quote back. */}
+        {referenceId ? (
+          <p className="reference">Reference #{referenceId}</p>
+        ) : null}
       </div>
     </SuccessStyles>
   );
 }
 
 const SuccessStyles = styled.div`
-  margin: 0 auto;
-  padding: 5rem 1.5rem;
-  width: 100%;
-  display: flex;
-  align-items: center;
+  /* Fills whatever main has, so the backdrop reaches the footer even when this
+     short screen leaves the window with room to spare. */
+  flex: 1;
+  padding: 4.5rem 1.5rem 6rem;
+  ${gridBackdrop(GRID_FADE_SIDES)}
 
-  .wrapper {
+  .card {
     margin: 0 auto;
-    padding: 0 2rem;
-    max-width: 38rem;
+    padding: 2rem;
+    max-width: 42rem;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     background-color: #fff;
-    border-radius: 0.375rem;
-    box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-      rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
-      rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
-    text-align: center;
+    border: 1px solid ${theme.color.border};
+    border-radius: ${theme.radius.lg};
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04),
+      0 12px 32px -12px rgb(0 0 0 / 0.16);
   }
 
-  .content {
-    padding: 2.5rem 0;
-    max-width: 26rem;
-    width: 100%;
-  }
-
-  .icon {
-    margin: 0;
-    height: 3rem;
-    width: 3rem;
-    color: #10b981;
-  }
-
-  h3 {
-    margin: 0.25rem 0 1rem;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #111827;
-  }
-
-  p {
-    margin: 0 0 1.5rem;
-    font-size: 1rem;
-    color: #6b7280;
-    line-height: 1.5;
-  }
-
-  .button {
-    padding: 0.75rem 2rem;
+  .badge {
+    ${badge}
+    margin: 0 0 1rem;
     display: inline-flex;
-    justify-content: center;
-    background-color: #22272f;
-    color: #fff;
-    font-size: 1rem;
-    font-weight: 500;
-    border-radius: 0.25rem;
-    text-align: center;
-    transition: all 200ms ease-in-out;
+    align-items: center;
+    gap: 0.375rem;
 
-    &:hover {
-      background-color: #323a46;
-      color: rgba(255, 255, 255, 1);
-    }
-
-    &:focus {
-      outline: 2px solid transparent;
-      outline-offset: 2px;
-      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px, #2563eb 0px 0px 0px 4px,
-        rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+    svg {
+      height: 0.875rem;
+      width: 0.875rem;
     }
   }
 
-  @media (max-width: 500px) {
-    padding: 4rem 1.5rem;
+  h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    line-height: 1.15;
+    font-weight: 700;
+    color: ${theme.color.text};
+    letter-spacing: -0.025em;
+  }
 
-    .wrapper {
-      background: transparent;
-      box-shadow: none;
-    }
+  .lede {
+    margin: 0.75rem 0 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: ${theme.color.textMuted};
+    text-wrap: pretty;
+  }
 
-    .content {
-      padding: 0;
-    }
-
-    h3 {
-      margin: 0.25rem 0 1.5rem;
-    }
+  .handoff {
+    margin: 1.75rem 0 0;
+    padding: 1rem 1.125rem;
+    background-color: ${theme.color.surfaceMuted};
+    border: 1px solid ${theme.color.border};
+    border-radius: ${theme.radius.md};
 
     p {
-      margin: 0 0 2rem;
+      margin: 0;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: ${theme.color.textMuted};
+      text-wrap: pretty;
     }
 
-    .button {
-      width: 100%;
+    strong {
+      font-weight: 600;
+      color: ${theme.color.text};
+      word-break: break-word;
+    }
+
+    .correction {
+      margin-top: 0.875rem;
+    }
+
+    a,
+    button {
+      padding: 0;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: inherit;
+      color: ${theme.color.text};
+      background: none;
+      border: none;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      cursor: pointer;
+
+      &:hover {
+        color: ${theme.color.brand};
+      }
+
+      &:focus-visible {
+        ${focusRingNeutral}
+        border-radius: ${theme.radius.sm};
+      }
+    }
+  }
+
+  .actions {
+    margin: 1.5rem 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+  }
+
+  .primary {
+    padding: 0.6875rem 1.125rem;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #fff;
+    background-color: ${theme.color.brandHover};
+    border: 1px solid ${theme.color.brandHover};
+    border-radius: ${theme.radius.md};
+    transition: background-color 150ms ease, border-color 150ms ease;
+    ${reducedMotion}
+
+    &:hover {
+      background-color: ${theme.color.brandDeep};
+      border-color: ${theme.color.brandDeep};
+    }
+
+    &:focus-visible {
+      ${focusRingNeutral}
+    }
+  }
+
+  .quiet {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: ${theme.color.text};
+    transition: color 150ms ease;
+    ${reducedMotion}
+
+    span {
+      transition: transform 150ms ease;
+      display: inline-block;
+      ${reducedMotion}
+    }
+
+    &:hover {
+      color: ${theme.color.brand};
+
+      span {
+        transform: translateX(2px);
+      }
+    }
+
+    &:focus-visible {
+      ${focusRingNeutral}
+      border-radius: ${theme.radius.sm};
+    }
+  }
+
+  .reference {
+    margin: 1.75rem 0 0;
+    padding: 1rem 0 0;
+    font-size: 0.8125rem;
+    color: ${theme.color.textSubtle};
+    border-top: 1px solid ${theme.color.border};
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 600px) {
+    padding: 3rem 1rem 4rem;
+
+    .card {
+      padding: 1.5rem 1.25rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
     }
   }
 `;

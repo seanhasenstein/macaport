@@ -1,0 +1,406 @@
+import Link from 'next/link';
+import styled from 'styled-components';
+import BrowserFrame from '../ui/BrowserFrame';
+import { theme, focusRing, reducedMotion } from '../../styles/theme';
+
+const steps = [
+  {
+    id: '01',
+    title: 'We build your store',
+    body: 'Tell us your group and send us your artwork. We go through garment options with you, set up the products, colors, and sizes, and put your logo on the store page.',
+  },
+  {
+    id: '02',
+    title: 'Everyone orders on their own',
+    body: 'Share one link. Each person picks their own size, adds their own name or number, and pays for their own order. Nobody collects cash, chases order forms, or fronts the money.',
+  },
+  {
+    id: '03',
+    title: 'We print and sort by person',
+    body: 'When the store closes we print the exact quantities ordered and bag every order by name. No guessing on sizes, no leftover inventory to unload later.',
+  },
+];
+
+const details = [
+  {
+    id: 'garments',
+    title: 'Garments and brands',
+    body: 'Basic tees and crewnecks through Nike fleece, in youth through 4XL, with the color options you want on each item.',
+  },
+  {
+    id: 'personalization',
+    title: 'Personalization',
+    body: 'Let people add a name or a number on the back of an item, priced per add on, or turn it off entirely.',
+  },
+  {
+    id: 'dates',
+    title: 'Open and close dates',
+    body: 'Pick when the store opens and closes and we print once it closes, or leave it open permanently and order on a schedule that suits you.',
+  },
+  // Three independent settings on the store, not one policy: a nominated
+  // delivery location, pickup at Macaport, and direct shipping can each be
+  // switched on or off. Worth its own row because the lede promises to take
+  // over "sorting the box when it arrives" and nothing else here says what
+  // actually happens when it does — which is the organizer's real question,
+  // since the alternative is hand delivering forty packages.
+  {
+    id: 'delivery',
+    title: 'Pickup and shipping',
+    body: 'Have everything delivered to one place for handout, picked up at Macaport by you or by each person, or shipped to each home. Offer any combination.',
+  },
+];
+
+
+export default function TeamStores() {
+  return (
+    <TeamStoresStyles id="team-stores">
+      <div className="wrapper">
+        <div className="layout">
+          <div className="intro">
+            <p className="eyebrow">Online team stores</p>
+            <h2>One link. Everyone orders for themselves.</h2>
+            <p className="lede">
+              Most of our stores are for school sports teams, clubs, and booster
+              groups. The part that usually eats an organizer&apos;s whole month
+              is collecting sizes, collecting money, and sorting the box when it
+              arrives. That is the part we take over.
+            </p>
+            <Link href="/stores">
+              <a className="secondary-cta">
+                Browse open stores
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </a>
+            </Link>
+          </div>
+
+          <div className="screenshot">
+            <BrowserFrame
+              src="/images/team-store-home-v2.webp"
+              alt="The New London Football 2026 team store, showing the date the store closes and six products with prices: a Nike tee, an Under Armour hooded sweatshirt, Nike joggers, a long sleeve, a crewneck, and a backpack"
+              width={1680}
+              height={934}
+              label="macaport.com/store"
+            />
+          </div>
+        </div>
+
+        <ol className="steps">
+          {steps.map(step => (
+            <li key={step.id}>
+              <span className="step-number" aria-hidden="true">
+                {step.id}
+              </span>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+            </li>
+          ))}
+        </ol>
+
+        <div className="details">
+          <div className="screenshot">
+            <BrowserFrame
+              src="/images/product-page-v2.webp"
+              alt="A team store product page for a New London Bulldogs Nike hooded sweatshirt, showing three color swatches, sizes XS through 4XL, and name and number fields filled in with Turner and 12"
+              width={1292}
+              height={969}
+              label="macaport.com/store/product"
+            />
+          </div>
+
+          <div className="details-content">
+            <h3 className="details-heading">You choose what goes in it</h3>
+            <ul>
+              {details.map(detail => (
+                <li key={detail.id}>
+                  <h4>{detail.title}</h4>
+                  <p>{detail.body}</p>
+                </li>
+              ))}
+            </ul>
+            {/* The only section CTA that was landing on a bare form. Every
+                other one preselects its path, so a lead arrived with the
+                right follow-up questions already answered instead of as an
+                unclassified message. */}
+            <Link href="/contact?about=team-store">
+              <a className="cta">Set up a store for your group</a>
+            </Link>
+            <p className="cta-note">
+              Businesses, school districts, sports teams, tournaments,
+              fundraisers, and more.
+            </p>
+          </div>
+        </div>
+      </div>
+    </TeamStoresStyles>
+  );
+}
+
+const TeamStoresStyles = styled.section`
+  padding: 0 1.5rem;
+  background-color: ${theme.color.surface};
+  border-bottom: 1px solid ${theme.color.border};
+  scroll-margin-top: 1.5rem;
+
+  .wrapper {
+    margin: 0 auto;
+    padding: 5rem 0;
+    width: 100%;
+    max-width: ${theme.maxWidth};
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 21rem) minmax(0, 1fr);
+    align-items: center;
+    gap: 3.5rem;
+  }
+
+  .eyebrow {
+    margin: 0 0 0.875rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: ${theme.color.brand};
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 2.25rem;
+    line-height: 1.15;
+    font-weight: 700;
+    color: ${theme.color.text};
+    letter-spacing: -0.028em;
+    text-wrap: balance;
+  }
+
+  .lede {
+    margin: 1.125rem 0 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: ${theme.color.textMuted};
+  }
+
+  /* The two actions in this section are for two different people, not one
+     person choosing. This is for someone whose group already has a store and
+     who wants to find it and order; the filled button further down is for the
+     organizer who would be setting one up. They sit at opposite ends of a long
+     section and never appear together, so an outline here competes with
+     nothing — and since the header no longer carries a stores link, this and
+     the footer are the only ways in for the first of those two people.
+
+     Outlined in full-strength brand rather than a grey hairline. A ghost
+     button at low contrast is the kind that gets scrolled past. */
+  .secondary-cta {
+    margin: 1.5rem 0 0;
+    padding: 0.8125rem 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: ${theme.color.brand};
+    background-color: transparent;
+    border: 1px solid ${theme.color.brand};
+    border-radius: ${theme.radius.md};
+    transition: background-color 150ms ease, color 150ms ease;
+    ${reducedMotion}
+
+    svg {
+      margin: 0 -0.25rem 0 0.375rem;
+      height: 1rem;
+      width: 1rem;
+    }
+
+    /* Fills on hover rather than tinting. brandSubtle against white is 1.09:1,
+       which is not a state change anyone can see — the same 2% step that was
+       doing nothing when it was a section background. Inverting to solid is
+       the conventional feedback for an outlined button and is unmistakable.
+
+       That it then resembles the filled button below is not a problem: the two
+       sit at opposite ends of the section and are never in view together. */
+    &:hover {
+      color: ${theme.color.onBrand};
+      background-color: ${theme.color.brand};
+    }
+
+    &:focus-visible {
+      ${focusRing}
+    }
+  }
+
+  .steps {
+    margin: 3.5rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2.5rem;
+    list-style-type: none;
+  }
+
+  .steps > li {
+    padding: 1.125rem 0 0;
+    /* Twelve of these run down the page across the four sections, so their
+       weight adds up fast. See borderRule in styles/theme.ts for why it is its
+       own token rather than one of the text or border tones.
+
+       The 2px is what keeps them structural at that tone — halved to 1px they
+       would join the hairlines between sections and stop grouping anything. */
+    border-top: 2px solid ${theme.color.borderRule};
+  }
+
+  .step-number {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: ${theme.color.brand};
+    font-variant-numeric: tabular-nums;
+  }
+
+  .steps h3 {
+    margin: 0.625rem 0 0;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: ${theme.color.text};
+    letter-spacing: -0.012em;
+  }
+
+  .steps p {
+    margin: 0.5rem 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: ${theme.color.textMuted};
+  }
+
+  /* The wider half was the screenshot, at 44.5rem against 24rem of text — but
+     this column holds a heading, three title-and-body rows, a button and a
+     note, nearly twice what the intro block above carries in a column of
+     similar width. The picture is supporting evidence; the text is the point.
+
+     The top margin is larger than the 3.5rem above the steps on purpose. This
+     is where the section turns from how a store works to what goes in one, and
+     at matching gaps the three blocks read as one undifferentiated stack. */
+  .details {
+    margin: 5.5rem 0 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 28rem);
+    align-items: center;
+    gap: 3.5rem;
+  }
+
+  .details-heading {
+    margin: 0;
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: ${theme.color.text};
+    letter-spacing: -0.02em;
+  }
+
+  .details-content ul {
+    margin: 1.5rem 0 0;
+    padding: 0;
+    list-style-type: none;
+  }
+
+  /* Separators between the items, not a rule around every one. A border on
+     each plus one under the last put four hairlines into a short column and
+     turned the list into something that read as a table. */
+  .details-content ul li {
+    padding: 1rem 0;
+
+    & + li {
+      border-top: 1px solid ${theme.color.border};
+    }
+  }
+
+  .details-content h4 {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: ${theme.color.text};
+  }
+
+  /* Scoped to the list. As a bare element selector inside .details it also
+     caught cta-note and beat it on specificity — a class plus an element
+     outranks a class alone — so the note's own size, margin, colour and
+     leading were silently discarded. */
+  .details-content ul p {
+    margin: 0.375rem 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: ${theme.color.textMuted};
+  }
+
+  .cta {
+    margin: 1.75rem 0 0;
+    padding: 0.875rem 1.75rem;
+    display: inline-flex;
+    align-items: center;
+    background-color: ${theme.color.brand};
+    color: ${theme.color.onBrand};
+    font-size: 0.9375rem;
+    font-weight: 600;
+    border-radius: ${theme.radius.md};
+    transition: background-color 150ms ease;
+    ${reducedMotion}
+
+    &:hover {
+      background-color: ${theme.color.brandHover};
+    }
+
+    &:focus-visible {
+      ${focusRing}
+    }
+  }
+
+  .cta-note {
+    margin: 1.25rem 0 0;
+    font-size: 0.75rem;
+    font-style: italic;
+    line-height: 1.5;
+    color: ${theme.color.textMuted};
+  }
+
+  @media (max-width: 900px) {
+    .wrapper {
+      padding: 3.5rem 0;
+    }
+
+    .layout,
+    .details {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+
+    .details {
+      margin-top: 3rem;
+    }
+
+    h2 {
+      font-size: 1.75rem;
+    }
+
+    .steps {
+      margin-top: 2.5rem;
+      grid-template-columns: 1fr;
+      gap: 1.75rem;
+    }
+
+    .cta {
+      margin-top: 2.25rem;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+`;

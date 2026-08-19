@@ -1,6 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import styled from 'styled-components';
+import { scrollToHash } from '../utils/scroll';
 
 type NavItemProps = {
   text: string;
@@ -8,10 +10,20 @@ type NavItemProps = {
 };
 
 function NavItem({ text, href }: NavItemProps) {
+  const router = useRouter();
+
+  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (scrollToHash(href, router)) event.preventDefault();
+  };
+
   return (
     <li>
       <Link href={href}>
-        <a>{text}</a>
+        {/* href is repeated so this stays a real link without JS. Next
+            overwrites it with the same value when it clones the child. */}
+        <a href={href} onClick={handleClick}>
+          {text}
+        </a>
       </Link>
     </li>
   );
@@ -19,6 +31,20 @@ function NavItem({ text, href }: NavItemProps) {
 
 export default function Header() {
   const [isOpen, setIsOpen] = React.useState(false);
+  const router = useRouter();
+
+  // Close the mobile menu once navigation lands. Without this, the "Gang
+  // Sheets" anchor scrolls the homepage while the open menu still covers it.
+  React.useEffect(() => {
+    const close = () => setIsOpen(false);
+    router.events.on('routeChangeComplete', close);
+    router.events.on('hashChangeComplete', close);
+
+    return () => {
+      router.events.off('routeChangeComplete', close);
+      router.events.off('hashChangeComplete', close);
+    };
+  }, [router.events]);
 
   return (
     <HeaderStyles>
@@ -70,12 +96,18 @@ export default function Header() {
               )}
             </button>
           </div>
+          {/* The four services first, then the two things a returning visitor
+              comes back to do. Sublimation and headwear moved to the footer: they
+              are Momentec storefronts rather than services, and they were taking
+              two of five slots while custom apparel, team stores and onsite
+              printing had none. Anchors for now; they become page links as each
+              page is built, and nothing else has to change. */}
           <ul className={isOpen ? 'open' : ''}>
-            <NavItem text="Home" href="/" />
-            <NavItem text="Stores" href="/stores" />
-            <NavItem text="Sublimation" href="/sublimation-customization" />
-            <NavItem text="Headwear" href="/headwear-customization" />
-            <NavItem text="Contact Us" href="/contact" />
+            <NavItem text="Custom Apparel" href="/#apparel" />
+            <NavItem text="Team Stores" href="/#team-stores" />
+            <NavItem text="Onsite Printing" href="/#onsite-printing" />
+            <NavItem text="Gang Sheets" href="/#gang-sheets" />
+            <NavItem text="Contact" href="/contact" />
           </ul>
         </nav>
       </div>
@@ -88,7 +120,12 @@ const HeaderStyles = styled.header`
   padding: 1.125rem 1.5rem;
   width: 100%;
   background-color: #fff;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  /* Positioned so the shadow actually paints. The next section down is
+     position: relative with its own background, which would otherwise paint
+     straight over it — the shadow was invisible at any opacity. */
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07);
 
   nav {
     margin: 0 auto;
@@ -106,7 +143,11 @@ const HeaderStyles = styled.header`
     }
 
     li {
-      padding: 0 1.75rem;
+      /* Five items at 1.75rem needed about 1010px to stay on one line, which
+         is more than the breakpoint below allowed, so between 950 and 1010 the
+         nav wrapped onto two rows. Trimmed here and the breakpoint raised, so
+         the menu takes over before the links ever have to wrap. */
+      padding: 0 1.5rem;
 
       &:last-of-type {
         padding-right: 0;
@@ -136,7 +177,7 @@ const HeaderStyles = styled.header`
     display: none;
   }
 
-  @media (max-width: 950px) {
+  @media (max-width: 1024px) {
     nav {
       flex-direction: column;
       align-items: flex-start;

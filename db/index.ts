@@ -1,4 +1,5 @@
 import { mongoClientPromise } from './connect';
+import * as contactMessage from './contactMessage';
 import * as inventoryProduct from './inventoryProduct';
 import * as order from './order';
 import * as shipping from './shipping';
@@ -14,6 +15,7 @@ async function connectToDb() {
 
 export {
   connectToDb,
+  contactMessage,
   inventoryProduct,
   order,
   shipping,

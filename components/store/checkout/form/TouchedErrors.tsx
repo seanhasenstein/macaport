@@ -14,9 +14,12 @@ export default function TouchedErrors({
   const [touchedErrors, setTouchedErrors] = React.useState<string[]>([]);
 
   React.useEffect(() => {
+    // getTouchedErrors walks these recursively at runtime, so the generics
+    // never line up with the CheckoutForm shape. Routing through unknown keeps
+    // the cast explicit without changing behaviour.
     const testing = getTouchedErrors(
       errors as FormikErrors<string>,
-      touched as FormikTouched<boolean>
+      touched as unknown as FormikTouched<boolean>
     );
     setTouchedErrors(testing || []);
   }, [errors, touched]);
