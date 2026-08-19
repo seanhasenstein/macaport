@@ -303,6 +303,18 @@ export const initialValues: ContactFormValues = {
 // Apparel needs to know what and how many, since neither can be guessed from
 // the other; a store can't be set up without knowing whose store it is.
 // Everything else is offered but optional.
+//
+// Adding or renaming anything required here needs a two-step deploy. This
+// schema runs on the server as well as in the form, and a browser tab opened
+// before a deploy keeps running the old bundle — so it posts the old body,
+// fails the new rule, and the sender gets a flat 400 reading "something went
+// wrong" with no way to tell what. Ship the endpoint accepting both shapes
+// first, then tighten it once no one can still be holding the old bundle.
+//
+// This happened on 2026-08-18: the seven-path form made inquiryType required,
+// and someone with the previous page open tried five times in 28 seconds
+// before reloading and getting through. They recovered, which is the only
+// reason nothing was lost.
 export const validationSchema = Yup.object().shape({
   inquiryType: Yup.string().required('Please tell us what this is about'),
   firstName: Yup.string().required('First name is required'),
