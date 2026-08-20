@@ -30,7 +30,9 @@ import {
   PERSONALIZATION_OPTIONS,
   SIZE_MIX_OPTIONS,
   VENUE_SETTING_OPTIONS,
-  WHO_PAYS_OPTIONS,
+  EVENT_TYPE_OPTIONS,
+  AUDIENCE_OPTIONS,
+  ONSITE_PRODUCT_OPTIONS,
   STORE_DURATION_OPTIONS,
   OTHER_PRODUCT_ID,
   PRODUCT_OPTIONS,
@@ -165,7 +167,8 @@ const TYPE_SPECIFIC: Partial<ContactFormValues> = {
   venue: '',
   venueSetting: '',
   power: '',
-  whoPays: '',
+  audience: [],
+  eventType: '',
   openTiming: '',
   storeDuration: '',
 };
@@ -509,8 +512,14 @@ export default function Contact({ presetType }: Props) {
                           <>
                             <FieldItem
                               name="eventName"
-                              label="What is the event?"
+                              label="Event name"
                               placeholder="e.g. Lincoln Invitational"
+                            />
+                            <SelectItem
+                              name="eventType"
+                              label="What kind of event is it?"
+                              note="Decides how much stock to bring and how fast we need to move."
+                              options={EVENT_TYPE_OPTIONS}
                             />
                             <FieldItem
                               name="organization"
@@ -546,19 +555,19 @@ export default function Contact({ presetType }: Props) {
                               placeholder="e.g. Lincoln High School, New London"
                               optional
                             />
-                            <SelectItem
-                              name="whoPays"
-                              label="Who is paying?"
-                              note="This changes the day more than anything else here."
+                            <CheckboxGroup
+                              name="audience"
+                              label="Who is it for?"
+                              note="Tick every group you expect. A tournament with boys and girls divisions needs both."
                               optional
-                              options={WHO_PAYS_OPTIONS}
+                              options={AUDIENCE_OPTIONS}
                             />
                             <CheckboxGroup
                               name="products"
                               label="What would you like us to print on?"
                               note="An idea is enough. We can talk through what works for the day."
                               optional
-                              options={PRODUCT_OPTIONS}
+                              options={ONSITE_PRODUCT_OPTIONS}
                             />
                             {values.products.includes(OTHER_PRODUCT_ID) && (
                               <FieldItem
@@ -873,10 +882,19 @@ const ContactStyles = styled.div`
     margin-top: 0;
   }
 
+  /* auto-fit alone was not enough. A 10rem minimum needs 424px of viewport to
+     stay in one column, so it held on a 390px iPhone and split into two on a
+     430px Pro Max — first and last name side by side in about 150px each. */
   .grid-cols-2 {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
     gap: 0 1rem;
+  }
+
+  @media (max-width: 600px) {
+    .grid-cols-2 {
+      grid-template-columns: 1fr;
+    }
   }
 
   .builder-note {

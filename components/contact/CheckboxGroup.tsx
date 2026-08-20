@@ -318,6 +318,16 @@ const CheckboxGroupStyles = styled.fieldset<{
     color: ${theme.color.danger};
   }
 
+  /* One per row on a phone, whatever the desktop rule decided. The exactly-four
+     case is a fixed two-column grid, so without this it stayed two-up at every
+     width — two checkboxes and their labels in 302px of an iPhone. Matches the
+     600px the contact card itself breaks at. */
+  @media (max-width: 600px) {
+    .options {
+      grid-template-columns: 1fr;
+    }
+  }
+
   @media (max-width: 500px) {
     .option {
       font-size: 1rem;

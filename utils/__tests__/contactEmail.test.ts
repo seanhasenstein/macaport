@@ -6,7 +6,12 @@ import {
 } from '../email';
 import { formatDateValue } from '../index';
 import { ContactFormValues, InquiryType } from '../../interfaces';
-import { initialValues } from '../contact';
+import {
+  initialValues,
+  ONSITE_PRODUCT_OPTIONS,
+  PRODUCT_OPTIONS,
+  SIZE_MIX_OPTIONS,
+} from '../contact';
 
 const ID = 'ABC123';
 const DATE = 'August 12, 2026 at 9:00am (CT)';
@@ -44,7 +49,7 @@ describe('contact form notification email', () => {
     expect(text).toContain('About: A new custom apparel order');
     // The quantity belongs beside the item it counts, and a range survives.
     expect(text).toContain(
-      'Products: T-shirts (24), Hoodies & crewnecks (20-40)'
+      'Products: T-shirts (24), Hoodies (20-40)'
     );
     expect(text).toContain('Printed or embroidered: Embroidered');
     expect(text).toContain('Artwork ready: I have something rough');
@@ -91,7 +96,7 @@ describe('contact form notification email', () => {
       'How people get their orders: Individual pickup, Group pickup, Ship to each person'
     );
     // Quantities are meaningless for a store, so no number is invented.
-    expect(text).toContain('Products: Hoodies & crewnecks\n');
+    expect(text).toContain('Products: Hoodies\n');
   });
 
   it('renders an existing order enquiry with its reference', () => {
@@ -866,7 +871,6 @@ describe('the onsite printing path', () => {
       venue: 'Lincoln High School, New London',
       venueSetting: 'Indoor',
       power: 'Yes, there is power',
-      whoPays: 'Attendees pay for their own',
       groupSize: '300',
       products: ['tshirts', 'hoodies'],
       ...o,
@@ -881,8 +885,7 @@ describe('the onsite printing path', () => {
     expect(text).toContain('Venue: Lincoln High School, New London');
     expect(text).toContain('Indoor or outdoor: Indoor');
     expect(text).toContain('Power on site: Yes, there is power');
-    expect(text).toContain('Who pays: Attendees pay for their own');
-  });
+      });
 
   it('calls the head count attendance, not group size', () => {
     // On a team store the same field is the size of the group ordering. At an
@@ -935,13 +938,13 @@ describe('what to stock for an event', () => {
         inquiryType: 'onsite',
         eventName: 'Lincoln Invitational',
         eventDates: 'March 14-16',
-        sizeMix: ['adult', 'womens', 'youth'],
+        sizeMix: ['adult', 'youth'],
       }),
       ID,
       DATE
     );
 
-    expect(text).toContain("Sizes to bring: Adult unisex, Women's cuts, Youth");
+    expect(text).toContain('Sizes to bring: Adult unisex, Youth');
     expect(text).not.toContain('womens');
   });
 
@@ -1062,7 +1065,6 @@ describe('how the notification is ordered', () => {
       eventHours: 'Fri 4-9pm',
       venue: 'Lincoln High School',
       schedule: 'example.com/schedule',
-      whoPays: 'A mix of both',
       products: ['tshirts'],
       sizeMix: ['youth'],
       personalization: ['names'],
@@ -1077,5 +1079,47 @@ describe('how the notification is ordered', () => {
     expect(at('Schedule:')).toBeLessThan(at('Products:'));
     expect(at('Products:')).toBeLessThan(at('Sizes to bring:'));
     expect(at('Sizes to bring:')).toBeLessThan(at('Personalization:'));
+  });
+});
+
+// Nick's changes on 2026-08-19: a shorter print list, no women's cuts to stock,
+// no question about money, and two new facts that decide what comes off the van.
+describe('the onsite questions after the second pass', () => {
+  it('carries the event type and who the day is for', () => {
+    const { text } = generate({
+      inquiryType: 'onsite',
+      eventName: 'Lincoln Invitational',
+      eventDates: 'March 14-16',
+      eventType: 'Tournament or meet',
+      audience: ['boys', 'girls'],
+    });
+
+    expect(text).toContain('Event type: Tournament or meet');
+    expect(text).toContain('Who it is for: Boys, Girls');
+  });
+
+  it('offers only what can be printed at a venue', () => {
+    expect(ONSITE_PRODUCT_OPTIONS.map(option => option.id)).toEqual([
+      'tshirts',
+      'long-sleeve',
+      'hoodies',
+    ]);
+    // The quote form still offers the full catalogue; this is the shorter list.
+    expect(PRODUCT_OPTIONS.length).toBeGreaterThan(
+      ONSITE_PRODUCT_OPTIONS.length
+    );
+  });
+
+  it('no longer asks who is paying', () => {
+    const { text } = generate({
+      inquiryType: 'onsite',
+      eventName: 'Lincoln Invitational',
+    });
+
+    expect(text).not.toContain('Who pays');
+  });
+
+  it('stocks adult and youth only', () => {
+    expect(SIZE_MIX_OPTIONS.map(option => option.id)).toEqual(['adult', 'youth']);
   });
 });

@@ -10,6 +10,7 @@ import {
   SHIPPING_OPTIONS,
   PERSONALIZATION_OPTIONS,
   SIZE_MIX_OPTIONS,
+  AUDIENCE_OPTIONS,
   inquiryLabel,
   joinLabels,
   productLabel,
@@ -137,7 +138,8 @@ interface Message {
   venue?: string;
   venueSetting?: string;
   power?: string;
-  whoPays?: string;
+  eventType?: string;
+  audience?: string[];
   firstName: string;
   lastName: string;
   email: string;
@@ -383,6 +385,7 @@ function inquiryDetails(input: EmailParams) {
     },
     { label: 'Order number', value: input.orderNumber ?? '' },
     { label: 'Event', value: input.eventName ?? '' },
+    { label: 'Event type', value: input.eventType ?? '' },
     { label: 'Dates', value: input.eventDates ?? '' },
     // "Event times", not "Hours needed": the field asks when their day runs,
     // and calling it hours needed reads as hours Macaport agreed to be there.
@@ -391,7 +394,10 @@ function inquiryDetails(input: EmailParams) {
     { label: 'Indoor or outdoor', value: input.venueSetting ?? '' },
     { label: 'Power on site', value: input.power ?? '' },
     { label: 'Schedule', value: input.schedule ?? '' },
-    { label: 'Who pays', value: input.whoPays ?? '' },
+    {
+      label: 'Who it is for',
+      value: joinLabels(AUDIENCE_OPTIONS, input.audience),
+    },
     {
       label: 'Products',
       // "T-shirts (24), Hats (12)" — the quantity belongs beside the item it
