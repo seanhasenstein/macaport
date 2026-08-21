@@ -230,8 +230,13 @@ export default function Header() {
               top-level slot: six items wrap on the narrow half of the desktop
               range, which is what the padding below was already fighting.
 
-              Onsite printing moved into the homepage at Nick's request. It is
-              still in the footer and still a contact path. */}
+              Onsite printing came out at Nick's request, and the reason
+              matters: he can only staff so many events, and weekend
+              availability is the limit. Leaving it out of the nav is demand
+              management rather than an oversight, so do not put it back
+              because the other services are here. It stays in the footer, in
+              the homepage section, and as a contact path — reachable by
+              anyone actually looking for it. */}
           <ul className={isOpen ? 'open' : ''}>
             <NavItem text="Custom Apparel" href="/#apparel" />
             <NavItem text="Team Stores" href="/#team-stores" />
