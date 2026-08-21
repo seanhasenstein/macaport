@@ -315,12 +315,17 @@ export interface ContactFormValues {
   schedule: string;
   sizeMix: string[];
   eventName: string;
+  // What kind of day it is, and who is there. Both decide what comes off the
+  // van: a weekend fair needs different stock from a one-day meet, and boys
+  // and girls divisions need different cuts. Replaced whoPays, which asked
+  // about money the terms cannot yet answer.
+  eventType: string;
+  audience: string[];
   eventDates: string;
   eventHours: string;
   venue: string;
   venueSetting: string;
   power: string;
-  whoPays: string;
   openTiming: string;
   storeDuration: string;
   message: string;

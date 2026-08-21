@@ -22,7 +22,12 @@ export const INQUIRY_OPTIONS: { value: InquiryType; label: string }[] = [
 export const PRODUCT_OPTIONS = [
   { id: 'tshirts', label: 'T-shirts' },
   { id: 'long-sleeve', label: 'Long sleeve tees' },
-  { id: 'hoodies', label: 'Hoodies & crewnecks' },
+  { id: 'hoodies', label: 'Hoodies' },
+  // Split out when the onsite list was narrowed: an event brings hoodies, and
+  // pairing the two in one label meant the shorter list could not offer one
+  // without implying the other. The homepage garment list has always named
+  // them separately.
+  { id: 'crewnecks', label: 'Crewnecks' },
   { id: 'polos', label: 'Polos' },
   { id: 'quarter-zips', label: 'Quarter zips' },
   { id: 'jackets', label: 'Jackets' },
@@ -105,17 +110,6 @@ export const SHIPPING_OPTIONS = [
   },
 ];
 
-// Three states rather than a yes/no. "Needs design help" is a different job
-// from "print this file", and knowing which one up front saves the exchange
-// that would otherwise establish it.
-// Who is buying decides the whole shape of the job: a quantity bought up front
-// is one invoice and a known number, while attendees paying individually is a
-// retail day with stock to guess at.
-// Nick asked for "gender". Taken as a stocking question rather than a
-// demographic one, which is what it is for: these are the size chart
-// categories a blank is ordered under, and the answer decides what comes off
-// the van. Asked as gender it invites a puzzled answer from an organizer who
-// cannot see why it matters; asked as what to bring, it gets a useful one.
 // Individual items carrying a person's own name, number or result. The store
 // platform has supported this since the beginning — CartItem carries
 // personalizationAddons — but the form only ever mentioned it in passing
@@ -127,17 +121,48 @@ export const PERSONALIZATION_OPTIONS = [
   { id: 'other', label: 'Something else' },
 ];
 
-export const SIZE_MIX_OPTIONS = [
-  { id: 'adult', label: 'Adult unisex' },
-  { id: 'womens', label: "Women's cuts" },
-  { id: 'youth', label: 'Youth' },
+// What Macaport is willing to print at an event, which is a much shorter list
+// than the catalogue it will quote for. A press at a venue has one substrate
+// loaded at a time and no room to stock a range, so offering the full list here
+// would take orders nobody can fill on the day.
+export const ONSITE_PRODUCT_OPTIONS = PRODUCT_OPTIONS.filter(option =>
+  ['tshirts', 'long-sleeve', 'hoodies'].includes(option.id)
+);
+
+// What kind of day it is. Decides how much stock to bring and how fast the
+// press has to move: a one-day tournament with finals is a different job from
+// a fair running all weekend.
+export const EVENT_TYPE_OPTIONS = [
+  'Tournament or meet',
+  'A single game or match',
+  'Fair, festival, or market',
+  'School event',
+  'Camp or clinic',
+  'Something else',
 ];
 
-export const WHO_PAYS_OPTIONS = [
-  'We buy a quantity up front',
-  'Attendees pay for their own',
-  'A mix of both',
-  'Not sure yet',
+// Sizing and cut, which the size mix question alone cannot answer. Ticking
+// more than one is normal — a tournament with boys and girls divisions needs
+// both, and knowing that before the day is the difference between bringing the
+// right stock and guessing.
+// No "Mixed". Ticking boys and girls, or men and women, already says it, and a
+// catch-all beside the things it is a catch-all for invites someone to pick it
+// instead of the two specifics — which is strictly less information. Four also
+// lays out two by two rather than three and a stranded fourth.
+export const AUDIENCE_OPTIONS = [
+  { id: 'boys', label: 'Boys' },
+  { id: 'girls', label: 'Girls' },
+  { id: 'men', label: 'Men' },
+  { id: 'women', label: 'Women' },
+];
+
+// Sizes to stock, now that AUDIENCE_OPTIONS carries who the day is for.
+// Women's cuts came out at Nick's request: at an event there is no room to
+// bring a second cut of every blank, so the realistic answer is adult unisex
+// and youth, and the cut conversation happens per job instead.
+export const SIZE_MIX_OPTIONS = [
+  { id: 'adult', label: 'Adult unisex' },
+  { id: 'youth', label: 'Youth' },
 ];
 
 export const VENUE_SETTING_OPTIONS = ['Indoor', 'Outdoor', 'Both', 'Not sure yet'];
@@ -150,6 +175,9 @@ export const POWER_OPTIONS = [
   'Not sure yet',
 ];
 
+// Three states rather than a yes/no. "Needs design help" is a different job
+// from "print this file", and knowing which one up front saves the exchange
+// that would otherwise establish it.
 export const ARTWORK_OPTIONS = [
   'Yes, print-ready',
   'I have something rough',
@@ -293,7 +321,8 @@ export const initialValues: ContactFormValues = {
   venue: '',
   venueSetting: '',
   power: '',
-  whoPays: '',
+  audience: [],
+  eventType: '',
   openTiming: '',
   storeDuration: '',
   message: '',
@@ -303,6 +332,18 @@ export const initialValues: ContactFormValues = {
 // Apparel needs to know what and how many, since neither can be guessed from
 // the other; a store can't be set up without knowing whose store it is.
 // Everything else is offered but optional.
+//
+// Adding or renaming anything required here needs a two-step deploy. This
+// schema runs on the server as well as in the form, and a browser tab opened
+// before a deploy keeps running the old bundle — so it posts the old body,
+// fails the new rule, and the sender gets a flat 400 reading "something went
+// wrong" with no way to tell what. Ship the endpoint accepting both shapes
+// first, then tighten it once no one can still be holding the old bundle.
+//
+// This happened on 2026-08-18: the seven-path form made inquiryType required,
+// and someone with the previous page open tried five times in 28 seconds
+// before reloading and getting through. They recovered, which is the only
+// reason nothing was lost.
 export const validationSchema = Yup.object().shape({
   inquiryType: Yup.string().required('Please tell us what this is about'),
   firstName: Yup.string().required('First name is required'),
