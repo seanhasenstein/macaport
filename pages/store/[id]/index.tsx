@@ -53,18 +53,24 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
     return { props: { store } };
   } catch (error) {
-    // KNOWN BROKEN — do not trust this catch. Next requires props to be JSON
-    // serializable and an Error is not, so returning it here throws during
-    // serialization and the request 500s anyway. The Props type below says
-    // `error?: string`, which is what this was meant to be.
+    // A string, not the Error. Next requires props to be JSON serializable, so
+    // returning the Error threw during serialization and the request 500d
+    // before the component — and its error state — ever ran.
     //
-    // The same pattern is in checkout, cart, product, and all three demo
-    // pages. Since pages/500.tsx exists these at least land on a branded page
-    // rather than Vercel's, but the intended in-page error state has never
-    // rendered. Fix is what pages/stores.tsx now does: return a serializable
-    // flag and render a failure state that is distinct from the empty state.
+    // This page is the only one of seven fixed. product, cart, checkout and
+    // the three demo pages still return the Error and still 500 on a database
+    // they cannot reach; cart's guard is commented out with a TODO and
+    // checkout has none at all. They were left because in four or five years
+    // the database has never been unreachable in production, and the branded
+    // pages/500.tsx now catches all of them, so what is left is the difference
+    // between a decent error page and a slightly better one — not worth
+    // editing checkout for. Fix one when you are in it for another reason.
+    // This function and the guard below are the pattern; pages/stores.tsx is
+    // the other.
+    console.error('Store homepage could not load', error);
+
     return {
-      props: { error },
+      props: { error: 'unavailable' },
     };
   }
 };
@@ -75,8 +81,6 @@ type Props = {
 };
 
 export default function StoreHomepage(props: Props) {
-  const hasCloseDate = !!props.store.closeDate;
-
   const {
     alreadyUsed: alreadyUsedForSheboyganLutheranStaff,
     isEligible: isEligibleForSheboyganLutheranStaff,
@@ -92,14 +96,28 @@ export default function StoreHomepage(props: Props) {
     item => item.itemTotal === 0 && item.quantity === 1
   );
 
-  const storeId = props.store._id;
-
   // teacher appreciation
   const {
     email: teacherAppreciationEmail,
     isEligible: isEligibleForTeacherAppreciation,
     alreadyUsed: alreadyUsedForTeacherAppreciation,
   } = useTeacherAppreciation();
+
+  // Below every hook, above every read of props.store. It used to sit further
+  // down still, past half a dozen reads of a store that does not exist when
+  // the page failed to load — so the component threw before it could reach its
+  // own error state.
+  //
+  // It cannot move above the hooks either. Next reuses this component when you
+  // navigate from one store to another, so props.error can flip without a
+  // remount, and returning early before the hooks would render fewer hooks
+  // than the previous render. React throws on that.
+  if (props.error || !props.store) {
+    return <StoreHomepageError />;
+  }
+
+  const hasCloseDate = !!props.store.closeDate;
+  const storeId = props.store._id;
   const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
   const teacherAppreciationProductId = props.store.products[0]?.id;
   const teacherAppreciationProductLink = `/store/${storeId}/product?productId=${teacherAppreciationProductId}`;
@@ -113,10 +131,6 @@ export default function StoreHomepage(props: Props) {
   // switch fitness
   const isSwitchFitness = !!props.store.meta?.isSwitchFitness;
   const switchFitnessDiscountId = props.store.meta?.switchFitnessDiscountId;
-
-  if (props.error) {
-    return <StoreHomepageError />;
-  }
 
   return (
     <StoreLayout title={`${props.store.name}`}>
