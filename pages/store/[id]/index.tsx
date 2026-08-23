@@ -53,6 +53,16 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
     return { props: { store } };
   } catch (error) {
+    // KNOWN BROKEN — do not trust this catch. Next requires props to be JSON
+    // serializable and an Error is not, so returning it here throws during
+    // serialization and the request 500s anyway. The Props type below says
+    // `error?: string`, which is what this was meant to be.
+    //
+    // The same pattern is in checkout, cart, product, and all three demo
+    // pages. Since pages/500.tsx exists these at least land on a branded page
+    // rather than Vercel's, but the intended in-page error state has never
+    // rendered. Fix is what pages/stores.tsx now does: return a serializable
+    // flag and render a failure state that is distinct from the empty state.
     return {
       props: { error },
     };
