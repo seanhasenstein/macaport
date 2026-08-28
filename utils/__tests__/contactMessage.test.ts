@@ -3,7 +3,7 @@ import {
   createContactMessage,
   markDelivered,
 } from '../../db/contactMessage';
-import { ContactFormValues } from '../../interfaces';
+import { ContactFormValues, ContactRequestMeta } from '../../interfaces';
 import { initialValues } from '../contact';
 
 const REFERENCE = '8FK2QP';
@@ -16,6 +16,15 @@ const submission = (o: Partial<ContactFormValues> = {}): ContactFormValues => ({
   email: 'sam@example.com',
   phone: '(920) 555-0134',
   message: 'Anything else you should know.',
+  ...o,
+});
+
+const meta = (o: Partial<ContactRequestMeta> = {}): ContactRequestMeta => ({
+  ip: '198.51.100.7',
+  userAgent: 'Mozilla/5.0 (Macintosh)',
+  referer: 'https://www.macaport.com/',
+  acceptLanguage: 'en-US,en;q=0.9',
+  durationMs: 184000,
   ...o,
 });
 
@@ -37,14 +46,14 @@ describe('the stored contact enquiry', () => {
     // Without this the number printed in both emails refers to nothing, and an
     // enquiry chased by reference can only be found by searching a mailbox.
     const { db, insertOne } = fakeDb();
-    await createContactMessage(db, submission(), REFERENCE, SUBMITTED_AT);
+    await createContactMessage(db, submission(), REFERENCE, SUBMITTED_AT, meta());
 
     expect(insertOne.mock.calls[0][0].referenceId).toBe(REFERENCE);
   });
 
   it('stores a real date rather than the string the emails read from', async () => {
     const { db, insertOne } = fakeDb();
-    await createContactMessage(db, submission(), REFERENCE, SUBMITTED_AT);
+    await createContactMessage(db, submission(), REFERENCE, SUBMITTED_AT, meta());
 
     expect(insertOne.mock.calls[0][0].submittedAt).toEqual(SUBMITTED_AT);
   });
@@ -58,7 +67,8 @@ describe('the stored contact enquiry', () => {
       db,
       submission({ honeypot: 'http://spam.example' }),
       REFERENCE,
-      SUBMITTED_AT
+      SUBMITTED_AT,
+      meta()
     );
 
     const doc = insertOne.mock.calls[0][0];
@@ -73,7 +83,8 @@ describe('the stored contact enquiry', () => {
       db,
       submission({ inquiryType: 'onsite', eventName: 'Lincoln Invitational' }),
       REFERENCE,
-      SUBMITTED_AT
+      SUBMITTED_AT,
+      meta()
     );
 
     const doc = insertOne.mock.calls[0][0];
@@ -88,12 +99,47 @@ describe('the stored contact enquiry', () => {
     // survives a crash mid-send — and a notification still false is exactly
     // the lead worth going to look for.
     const { db, insertOne } = fakeDb();
-    await createContactMessage(db, submission(), REFERENCE, SUBMITTED_AT);
+    await createContactMessage(db, submission(), REFERENCE, SUBMITTED_AT, meta());
 
     expect(insertOne.mock.calls[0][0].delivery).toEqual({
       notification: false,
       confirmation: false,
     });
+  });
+
+  it('keeps what the request carried, apart from what the customer typed', async () => {
+    // The separation is the point. Nobody answered any of this, and a reader
+    // finding it under `submission` would take it for something they had.
+    const { db, insertOne } = fakeDb();
+    await createContactMessage(
+      db,
+      submission(),
+      REFERENCE,
+      SUBMITTED_AT,
+      meta({ ip: '203.0.113.4' })
+    );
+
+    const doc = insertOne.mock.calls[0][0];
+
+    expect(doc.meta.ip).toBe('203.0.113.4');
+    expect(doc.submission).not.toHaveProperty('ip');
+    expect(doc.submission).not.toHaveProperty('meta');
+  });
+
+  it('keeps the address readable rather than hashed', async () => {
+    // Deliberate, and worth a test so it cannot be quietly "improved" later.
+    // The use of an address is placing it and matching it against other
+    // enquiries, and neither survives being made unreadable.
+    const { db, insertOne } = fakeDb();
+    await createContactMessage(
+      db,
+      submission(),
+      REFERENCE,
+      SUBMITTED_AT,
+      meta({ ip: '203.0.113.4' })
+    );
+
+    expect(insertOne.mock.calls[0][0].meta.ip).toBe('203.0.113.4');
   });
 
   it('marks one email without disturbing the other', async () => {

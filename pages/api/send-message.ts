@@ -11,8 +11,9 @@ import {
   generateCustomerConfirmationEmail,
 } from '../../utils/email';
 import { validationSchema } from '../../utils/contact';
-import { clientIp, rateLimit } from '../../utils/rateLimit';
-import { ContactFormValues } from 'interfaces';
+import { rateLimit } from '../../utils/rateLimit';
+import { requestMeta } from '../../utils/requestMeta';
+import { ContactFormValues, ContactRequestMeta } from 'interfaces';
 
 interface ExtendedRequest extends NextApiRequest {
   body: ContactFormValues;
@@ -35,14 +36,19 @@ const WINDOW_MS = 10 * 60 * 1000;
 // Fail-open, for the same reason utils/internalRequest is: a database that is
 // down, paused, or misconfigured must not cost the lead this exists to protect.
 // A record that cannot be written is logged and the emails go out regardless.
-async function recordSubmission(values: ContactFormValues, referenceId: string) {
+async function recordSubmission(
+  values: ContactFormValues,
+  referenceId: string,
+  meta: ContactRequestMeta
+) {
   try {
     const db = await connectToDb();
     await contactMessage.createContactMessage(
       db,
       values,
       referenceId,
-      new Date()
+      new Date(),
+      meta
     );
 
     return db;
@@ -89,11 +95,23 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Read once and passed down, so the address the rate limit is keyed on and
+  // the address written to the record are the same answer rather than two
+  // calls that could drift.
+  const meta = requestMeta(req);
+
   // The form checks this before it submits, but that only stops a bot driving
   // the page. Anything posting straight at this endpoint skipped that check
   // entirely, which made the honeypot decorative. Answers 200 rather than an
   // error so a bot learns nothing from the response.
   if (req.body?.honeypot) {
+    // Logged, because silently absorbing these means nobody knows whether the
+    // form takes one of these a month or a thousand — and that number is what
+    // decides whether anything more than a honeypot is warranted. The trap
+    // value itself is deliberately not logged: it is attacker-written text.
+    console.warn(
+      `Contact form honeypot tripped from ${meta.ip} (${meta.userAgent || 'no user agent'})`
+    );
     return res.status(200).json({ success: true });
   }
 
@@ -101,7 +119,7 @@ export default async function handler(
   // the caller supplies, so without a ceiling it will relay attacker-written
   // text from a domain Macaport has spent its sending reputation on.
   const limit = rateLimit({
-    key: clientIp(req),
+    key: meta.ip,
     limit: LIMIT,
     windowMs: WINDOW_MS,
   });
@@ -130,7 +148,7 @@ export default async function handler(
 
     // Kept before either email goes out, so the enquiry exists somewhere other
     // than inside a mail transaction that has already finished.
-    const db = await recordSubmission(req.body, id);
+    const db = await recordSubmission(req.body, id, meta);
 
     const { text, html } = generateContactFormEmail(req.body, id, timestamp);
 

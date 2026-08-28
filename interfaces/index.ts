@@ -332,6 +332,48 @@ export interface ContactFormValues {
   honeypot: string;
 }
 
+// What the request itself carried, as opposed to what the customer typed.
+// Deliberately not folded into `submission` for that reason: nobody answered
+// any of it, and mixing the two would let a value nobody supplied be read back
+// later as though they had.
+//
+// This exists to tell a real enquiry from a fabricated one. Every field is read
+// from a header rather than the body — the single exception is documented on
+// `durationMs` — so the form cannot decide what lands here.
+export interface ContactRequestMeta {
+  // Best available client address, from clientIp in utils/rateLimit.
+  //
+  // Stored raw rather than hashed or encrypted, which is a deliberate choice
+  // and worth stating: the entire use of an address is looking at it — placing
+  // it, and matching it against other enquiries — and none of that survives
+  // being made unreadable. A hash would still match duplicates but could no
+  // longer be placed, and application-level encryption would put the key
+  // beside the data and buy nothing. Atlas already encrypts at rest.
+  //
+  // The privacy control here is retention, not encryption. See the note above
+  // createContactMessage in db/contactMessage.ts.
+  ip: string;
+  userAgent: string;
+  // Where they arrived from, and what their browser asks to be served. An
+  // enquiry with no referrer at all reached /contact directly rather than from
+  // a search or a link, and a US business whose browser prefers a non-US
+  // locale is worth reading twice.
+  referer: string;
+  acceptLanguage: string;
+  // Milliseconds between the form rendering and the submission landing, as
+  // measured by the browser.
+  //
+  // Client-supplied, and so forgeable by anything that bothers to forge it —
+  // which is the honest limit of this field. It is kept anyway because a form
+  // with this many questions completed in under a couple of seconds was not
+  // completed by a person, and the scripts that submit that fast are generally
+  // not the ones paying attention to headers.
+  //
+  // Null when the browser sent nothing usable, which includes every request
+  // from a bundle older than this field.
+  durationMs: number | null;
+}
+
 // A contact enquiry as it is kept, rather than as it is emailed. The emails
 // remain the way anyone actually reads these; this exists so that a lead is not
 // held solely inside a mail transaction that has already completed.
@@ -355,6 +397,9 @@ export interface ContactMessage {
     notification: boolean;
     confirmation: boolean;
   };
+  // Absent on every enquiry stored before this existed, so anything reading it
+  // has to cope with it missing rather than assume a gap means a clean record.
+  meta?: ContactRequestMeta;
 }
 
 export interface Address {

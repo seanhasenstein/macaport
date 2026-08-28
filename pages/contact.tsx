@@ -227,6 +227,12 @@ export default function Contact({ presetType }: Props) {
   const [referenceId, setReferenceId] = React.useState<string>();
   const [throttled, setThrottled] = React.useState(false);
 
+  // Stamped when the page first renders and sent as a header on submit, so the
+  // record can say how long the form took to fill in. A ref rather than state:
+  // nothing renders from it, and it must not reset on every keystroke.
+  // ContactRequestMeta.durationMs covers what the number is worth.
+  const startedAt = React.useRef(Date.now());
+
   // The success screen is far shorter than the form it replaces, so the browser
   // clamps the old scroll position to the new page height instead of resetting
   // it. After a long form that lands somewhere near the footer, with the
@@ -251,6 +257,10 @@ export default function Contact({ presetType }: Props) {
     setThrottled(false);
     setReferenceId(undefined);
     setStatus('IDLE');
+    // Restarted here, or a correction sent two minutes after a successful
+    // submission would be recorded as having taken however long the original
+    // did plus the time spent reading the success screen.
+    startedAt.current = Date.now();
   };
 
   const handleSubmit = async (values: ContactFormValues) => {
@@ -261,6 +271,12 @@ export default function Contact({ presetType }: Props) {
       body: JSON.stringify(values),
       headers: {
         'Content-Type': 'application/json',
+        // A header rather than a field on the body, for two reasons. The body
+        // is validated as ContactFormValues and stored wholesale as what the
+        // customer said, and this is neither. And the schema it is checked
+        // against is shared with the server, where an extra key is one more
+        // thing that has to stay in step across a deploy.
+        'x-form-duration': String(Date.now() - startedAt.current),
       },
     });
 
