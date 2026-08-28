@@ -17,6 +17,7 @@ import ServerError from 'components/contact/ServerError';
 import { FieldItem } from 'components/contact/FieldItem';
 import { SelectItem } from 'components/contact/SelectItem';
 import { CheckboxGroup } from 'components/contact/CheckboxGroup';
+import { ClearShipToAddress } from 'components/contact/ClearShipToAddress';
 import { ContactFormValues, InquiryType } from 'interfaces';
 import {
   ARTWORK_OPTIONS,
@@ -334,6 +335,7 @@ export default function Contact({ presetType }: Props) {
                       <p className="lede">{heading.blurb}</p>
                       <Form noValidate>
                         <SyncInquiryType />
+                        <ClearShipToAddress />
                         <SelectItem
                           name="inquiryType"
                           label="What is this about?"
