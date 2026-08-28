@@ -36,6 +36,7 @@ import {
   STORE_DURATION_OPTIONS,
   OTHER_PRODUCT_ID,
   PRODUCT_OPTIONS,
+  SHIPPED_TO_ME,
   formatPhoneInput,
   initialValues,
   isInquiryType,
@@ -146,6 +147,7 @@ const DEFAULT_HEADING = {
 // quantities attached to a gang sheet enquiry.
 const TYPE_SPECIFIC: Partial<ContactFormValues> = {
   organization: '',
+  website: '',
   products: [],
   quantities: {},
   productOther: '',
@@ -155,6 +157,7 @@ const TYPE_SPECIFIC: Partial<ContactFormValues> = {
   colors: '',
   artwork: '',
   delivery: '',
+  shipToAddress: '',
   shipping: [],
   neededBy: '',
   groupSize: '',
@@ -423,9 +426,33 @@ export default function Contact({ presetType }: Props) {
                                   options={DELIVERY_OPTIONS}
                                   optional
                                 />
+                                {/* Only once shipping is the answer. Asking
+                                    everyone for an address they may not need to
+                                    give is the kind of field that makes a form
+                                    feel like a checkout. */}
+                                {values.delivery === SHIPPED_TO_ME && (
+                                  <FieldItem
+                                    name="shipToAddress"
+                                    label="Where should it ship?"
+                                    note="City and state are enough at this stage. It is what freight is quoted from."
+                                    placeholder="123 Main St, New London, WI 54961"
+                                    // One line rather than a textarea, so it
+                                    // sits with the fields around it instead of
+                                    // opening a message-sized box for an
+                                    // address. Autofill does most of the typing.
+                                    autoComplete="street-address"
+                                    optional
+                                  />
+                                )}
                                 <FieldItem
                                   name="organization"
                                   label="Team or organization"
+                                  optional
+                                />
+                                <FieldItem
+                                  name="website"
+                                  label="Website"
+                                  placeholder="e.g. example.com"
                                   optional
                                 />
                               </div>

@@ -63,6 +63,54 @@ describe('contact form notification email', () => {
     expect(html).toContain('>Printed or embroidered</div>');
   });
 
+  it('carries the answers a lead gets checked against', () => {
+    // A website and a ship-to address are on the form to be read before anyone
+    // quotes. An email that drops them means the check happens by opening the
+    // database instead, which is the same as it not happening.
+    const { text, html } = generate({
+      inquiryType: 'apparel',
+      products: ['tshirts'],
+      quantities: { tshirts: '130' },
+      organization: 'New London Rec',
+      website: 'newlondonrec.com',
+      delivery: 'Shipped to me',
+      shipToAddress: '123 Main St, New London, WI 54961',
+    });
+
+    expect(text).toContain('Website: newlondonrec.com');
+    expect(text).toContain('Ship to: 123 Main St, New London, WI 54961');
+    expect(html).toContain('>Ship to</div>');
+  });
+
+  it('leaves out an address once the order is being collected', () => {
+    // The address field only appears on the form after delivery says shipped,
+    // but changing that answer back to pickup unmounts the input without
+    // clearing what was typed into it. The value has to be set here for this to
+    // test anything — without it the row is empty for the wrong reason.
+    const { text } = generate({
+      inquiryType: 'apparel',
+      products: ['tshirts'],
+      quantities: { tshirts: '24' },
+      delivery: 'Free pickup at Macaport in New London',
+      shipToAddress: '123 Main St, New London, WI 54961',
+    });
+
+    expect(text).toContain('Pickup or shipping: Free pickup');
+    expect(text).not.toContain('Ship to:');
+    expect(text).not.toContain('123 Main St');
+  });
+
+  it('leaves out the rows nobody filled in', () => {
+    const { text } = generate({
+      inquiryType: 'apparel',
+      products: ['tshirts'],
+      quantities: { tshirts: '24' },
+    });
+
+    expect(text).not.toContain('Ship to:');
+    expect(text).not.toContain('Website:');
+  });
+
   it('resolves ids to labels rather than leaking them', () => {
     const { text } = generate({
       inquiryType: 'apparel',

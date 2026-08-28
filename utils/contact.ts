@@ -184,11 +184,16 @@ export const ARTWORK_OPTIONS = [
   'No, I need help with design',
 ];
 
+// Named rather than repeated, because the form reveals the address field by
+// comparing against it. Two copies of the same string would let the option be
+// reworded and quietly take the address question with it.
+export const SHIPPED_TO_ME = 'Shipped to me';
+
 export const DELIVERY_OPTIONS = [
   // "Local" leaves both who and where unsaid, in the one option where a lead
   // needs to judge whether collecting is realistic for them.
   'Free pickup at Macaport in New London',
-  'Shipped to me',
+  SHIPPED_TO_ME,
   'Not sure yet',
 ];
 
@@ -299,6 +304,7 @@ export const initialValues: ContactFormValues = {
   email: '',
   phone: '',
   organization: '',
+  website: '',
   products: [],
   quantities: {},
   productOther: '',
@@ -308,6 +314,7 @@ export const initialValues: ContactFormValues = {
   colors: '',
   artwork: '',
   delivery: '',
+  shipToAddress: '',
   shipping: [],
   neededBy: '',
   groupSize: '',
@@ -426,4 +433,14 @@ export const validationSchema = Yup.object().shape({
     then: Yup.string().required('Please tell us what you have in mind'),
   }),
   message: Yup.string().required('A message is required'),
+  // shipToAddress and website are deliberately absent, which is to say
+  // optional. Two reasons, and the first is the two-step rule above: making the
+  // address required when delivery says "shipped" would 400 anyone holding a
+  // bundle that predates the field, on a path where they can still pick that
+  // option. Tighten it in a later deploy if it earns it.
+  //
+  // The second is that for the purpose these were added for, an unanswered
+  // question is itself an answer. A real buyer types an address without
+  // thinking about it; requiring one only means a fabricated enquiry supplies a
+  // fabricated address, which is worth strictly less than the blank.
 });

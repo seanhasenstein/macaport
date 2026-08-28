@@ -15,6 +15,7 @@ import {
   joinLabels,
   productLabel,
   OTHER_PRODUCT_ID,
+  SHIPPED_TO_ME,
 } from './contact';
 import { Order } from '../interfaces';
 
@@ -145,6 +146,8 @@ interface Message {
   email: string;
   phone: string;
   organization?: string;
+  website?: string;
+  shipToAddress?: string;
   products?: string[];
   quantities?: Record<string, string>;
   productOther?: string;
@@ -383,6 +386,7 @@ function inquiryDetails(input: EmailParams) {
         ORGANIZATION_LABELS[input.inquiryType ?? ''] ?? 'Organization',
       value: input.organization ?? '',
     },
+    { label: 'Website', value: input.website ?? '' },
     { label: 'Order number', value: input.orderNumber ?? '' },
     { label: 'Event', value: input.eventName ?? '' },
     { label: 'Event type', value: input.eventType ?? '' },
@@ -442,6 +446,18 @@ function inquiryDetails(input: EmailParams) {
     { label: 'Garment colors', value: input.colors ?? '' },
     { label: 'Needed by', value: formatDateValue(input.neededBy) },
     { label: 'Pickup or shipping', value: input.delivery ?? '' },
+    {
+      label: 'Ship to',
+      // Sits directly under the answer that reveals it on the form, so the
+      // email reads in the order it was filled in — and is guarded the same way
+      // "Also looking for" is. The field only appears once delivery says
+      // shipped, but changing that answer back to pickup unmounts the input
+      // without clearing what was typed into it. Ungated, an order being
+      // collected in New London arrives carrying a shipping address, which is
+      // the one row here capable of sending a box to the wrong place.
+      value:
+        input.delivery === SHIPPED_TO_ME ? input.shipToAddress ?? '' : '',
+    },
     {
       label: 'How people get their orders',
       value: joinLabels(SHIPPING_OPTIONS, input.shipping),

@@ -286,6 +286,16 @@ export interface ContactFormValues {
   email: string;
   phone: string;
   organization: string;
+  // A company's own web address. Optional on purpose, and its value is in
+  // whether someone bothers rather than in the answer itself: a real business
+  // types it without thinking, and a fabricated one leaves it blank or gives a
+  // domain that does not resolve.
+  website: string;
+  // No budget field, which was considered and dropped rather than overlooked.
+  // It told us nothing a fabricated enquiry could not type for free — unlike a
+  // website, which has to resolve, or an address, which can be checked — and
+  // asking a customer what they will spend when they came to find out what it
+  // costs is the kind of question that loses the ones who are still deciding.
   // Shared by both paths: what you want printed, or what you want the store
   // to sell. Same option list either way, so it's one field with two labels.
   products: string[];
@@ -304,6 +314,10 @@ export interface ContactFormValues {
   colors: string;
   artwork: string;
   delivery: string;
+  // Where it goes, asked only once `delivery` says it is being shipped. One
+  // textarea rather than five address fields: this is a quote request and not
+  // a checkout, so the address is here to be read rather than parsed.
+  shipToAddress: string;
   shipping: string[];
   neededBy: string;
   groupSize: string;
