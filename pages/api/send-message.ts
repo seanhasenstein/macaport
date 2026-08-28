@@ -10,7 +10,7 @@ import {
   generateContactFormEmail,
   generateCustomerConfirmationEmail,
 } from '../../utils/email';
-import { validationSchema } from '../../utils/contact';
+import { normalizeSubmission, validationSchema } from '../../utils/contact';
 import { rateLimit } from '../../utils/rateLimit';
 import { requestMeta } from '../../utils/requestMeta';
 import { ContactFormValues, ContactRequestMeta } from 'interfaces';
@@ -139,6 +139,13 @@ export default async function handler(
     return res.status(400).json({ error: 'Invalid submission' });
   }
 
+  // Everything below reads from this rather than req.body, so the record and
+  // both emails carry the same answers. Normalising after validation and not
+  // before is deliberate: the schema should judge what was actually sent, and
+  // an address that is only valid once it has been trimmed is not one this
+  // endpoint should quietly accept.
+  const values = normalizeSubmission(req.body);
+
   try {
     const id = createContactReference();
     const zonedDate = utcToZonedTime(new Date(), 'America/Chicago');
@@ -148,9 +155,9 @@ export default async function handler(
 
     // Kept before either email goes out, so the enquiry exists somewhere other
     // than inside a mail transaction that has already finished.
-    const db = await recordSubmission(req.body, id, meta);
+    const db = await recordSubmission(values, id, meta);
 
-    const { text, html } = generateContactFormEmail(req.body, id, timestamp);
+    const { text, html } = generateContactFormEmail(values, id, timestamp);
 
     const toField = process.env.CONTACT_FORM_TO;
     let formattedToField;
@@ -166,8 +173,8 @@ export default async function handler(
       from: `Macaport Contact Form <${process.env.CONTACT_FORM_FROM}>`,
       // Says what it is and who from, so it can be triaged from the inbox list
       // without opening it.
-      subject: contactSubject(req.body, id),
-      replyTo: req.body.email,
+      subject: contactSubject(values, id),
+      replyTo: values.email,
       text,
       html,
     });
@@ -180,15 +187,15 @@ export default async function handler(
     // screen that makes someone submit all over again.
     try {
       const confirmation = generateCustomerConfirmationEmail(
-        req.body,
+        values,
         id,
         timestamp
       );
 
       await sendEmail({
-        to: req.body.email,
+        to: values.email,
         from: `Macaport <${process.env.CONTACT_FORM_FROM}>`,
-        subject: customerSubject(req.body, id),
+        subject: customerSubject(values, id),
         // Replies go to Macaport, so a correction lands in this thread rather
         // than arriving as a second, competing enquiry.
         replyTo: Array.isArray(formattedToField)

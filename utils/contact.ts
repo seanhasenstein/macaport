@@ -297,6 +297,37 @@ export const isInquiryType = (value: unknown): value is InquiryType =>
 export const inquiryLabel = (value: string) =>
   INQUIRY_OPTIONS.find(option => option.value === value)?.label ?? value;
 
+// One canonical shape for the fields a lead gets matched on, mirroring what
+// submit-order.ts already does to a checkout's customer details.
+//
+// The point is that the two collections agree. The useful question about a new
+// enquiry is often whether this person has bought from Macaport before, and a
+// known repeat customer is close to the strongest legitimacy signal there is —
+// but that lookup fails on formatting alone when contactMessages holds
+// "(920) 555-0134" and orders holds "9205550134", or when one side kept the
+// capitals someone's keyboard put on their email address.
+//
+// Nothing here costs a reader anything: the emails call formatPhoneNumber when
+// they render, so a stored phone of raw digits still arrives as (920) 555-0134.
+//
+// Runs on the server rather than in the form, so a request posted straight at
+// the endpoint cannot skip it. Everything is coerced through String first
+// because Yup casts on validate without rewriting the body — a phone posted as
+// a number validates fine and would then throw here on .replace.
+export function normalizeSubmission(
+  values: ContactFormValues
+): ContactFormValues {
+  const text = (value: unknown) => String(value ?? '').trim();
+
+  return {
+    ...values,
+    firstName: text(values.firstName),
+    lastName: text(values.lastName),
+    email: text(values.email).toLowerCase(),
+    phone: removeNonDigits(text(values.phone)),
+  };
+}
+
 export const initialValues: ContactFormValues = {
   inquiryType: '',
   firstName: '',
