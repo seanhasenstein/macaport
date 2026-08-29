@@ -184,11 +184,16 @@ export const ARTWORK_OPTIONS = [
   'No, I need help with design',
 ];
 
+// Named rather than repeated, because the form reveals the address field by
+// comparing against it. Two copies of the same string would let the option be
+// reworded and quietly take the address question with it.
+export const SHIPPED_TO_ME = 'Shipped to me';
+
 export const DELIVERY_OPTIONS = [
   // "Local" leaves both who and where unsaid, in the one option where a lead
   // needs to judge whether collecting is realistic for them.
   'Free pickup at Macaport in New London',
-  'Shipped to me',
+  SHIPPED_TO_ME,
   'Not sure yet',
 ];
 
@@ -292,6 +297,37 @@ export const isInquiryType = (value: unknown): value is InquiryType =>
 export const inquiryLabel = (value: string) =>
   INQUIRY_OPTIONS.find(option => option.value === value)?.label ?? value;
 
+// One canonical shape for the fields a lead gets matched on, mirroring what
+// submit-order.ts already does to a checkout's customer details.
+//
+// The point is that the two collections agree. The useful question about a new
+// enquiry is often whether this person has bought from Macaport before, and a
+// known repeat customer is close to the strongest legitimacy signal there is —
+// but that lookup fails on formatting alone when contactMessages holds
+// "(920) 555-0134" and orders holds "9205550134", or when one side kept the
+// capitals someone's keyboard put on their email address.
+//
+// Nothing here costs a reader anything: the emails call formatPhoneNumber when
+// they render, so a stored phone of raw digits still arrives as (920) 555-0134.
+//
+// Runs on the server rather than in the form, so a request posted straight at
+// the endpoint cannot skip it. Everything is coerced through String first
+// because Yup casts on validate without rewriting the body — a phone posted as
+// a number validates fine and would then throw here on .replace.
+export function normalizeSubmission(
+  values: ContactFormValues
+): ContactFormValues {
+  const text = (value: unknown) => String(value ?? '').trim();
+
+  return {
+    ...values,
+    firstName: text(values.firstName),
+    lastName: text(values.lastName),
+    email: text(values.email).toLowerCase(),
+    phone: removeNonDigits(text(values.phone)),
+  };
+}
+
 export const initialValues: ContactFormValues = {
   inquiryType: '',
   firstName: '',
@@ -299,6 +335,7 @@ export const initialValues: ContactFormValues = {
   email: '',
   phone: '',
   organization: '',
+  website: '',
   products: [],
   quantities: {},
   productOther: '',
@@ -308,6 +345,7 @@ export const initialValues: ContactFormValues = {
   colors: '',
   artwork: '',
   delivery: '',
+  shipToAddress: '',
   shipping: [],
   neededBy: '',
   groupSize: '',
@@ -426,4 +464,14 @@ export const validationSchema = Yup.object().shape({
     then: Yup.string().required('Please tell us what you have in mind'),
   }),
   message: Yup.string().required('A message is required'),
+  // shipToAddress and website are deliberately absent, which is to say
+  // optional. Two reasons, and the first is the two-step rule above: making the
+  // address required when delivery says "shipped" would 400 anyone holding a
+  // bundle that predates the field, on a path where they can still pick that
+  // option. Tighten it in a later deploy if it earns it.
+  //
+  // The second is that for the purpose these were added for, an unanswered
+  // question is itself an answer. A real buyer types an address without
+  // thinking about it; requiring one only means a fabricated enquiry supplies a
+  // fabricated address, which is worth strictly less than the blank.
 });

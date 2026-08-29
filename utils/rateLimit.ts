@@ -55,7 +55,10 @@ export function rateLimit({
   };
 }
 
-const header = (req: NextApiRequest, name: string) => {
+// Exported because utils/requestMeta reads the same way — a header that came
+// through twice is a list, and an empty one should read as absent rather than
+// as an empty string that later gets stored.
+export const requestHeader = (req: NextApiRequest, name: string) => {
   const value = req.headers[name];
   return (Array.isArray(value) ? value[0] : value)?.trim() || undefined;
 };
@@ -75,13 +78,13 @@ const header = (req: NextApiRequest, name: string) => {
  */
 export function clientIp(req: NextApiRequest) {
   const trusted =
-    header(req, 'cf-connecting-ip') ??
-    header(req, 'x-vercel-forwarded-for') ??
-    header(req, 'x-real-ip');
+    requestHeader(req, 'cf-connecting-ip') ??
+    requestHeader(req, 'x-vercel-forwarded-for') ??
+    requestHeader(req, 'x-real-ip');
 
   if (trusted) return trusted;
 
-  const forwarded = header(req, 'x-forwarded-for');
+  const forwarded = requestHeader(req, 'x-forwarded-for');
   const hops = forwarded?.split(',').map(hop => hop.trim()).filter(Boolean);
   const nearest = hops?.[hops.length - 1];
 

@@ -8,42 +8,58 @@ import { StoreForStoresPage } from '../interfaces';
 import Layout from '../components/Layout';
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const db = await connectToDb();
-  const stores = await store.getStoresForStoresPage(db);
-  const activeStores = stores?.filter(s => {
-    const isActive = getStoreStatus(s.openDate, s.closeDate);
-    return isActive && s.showOnStoresPage;
-  });
+  try {
+    const db = await connectToDb();
+    const stores = await store.getStoresForStoresPage(db);
+    const activeStores = stores?.filter(s => {
+      const isActive = getStoreStatus(s.openDate, s.closeDate);
+      return isActive && s.showOnStoresPage;
+    });
 
-  const storesSortedByCloseDate = activeStores.sort((a, b) => {
-    // when both stores are permanently open, sort by name
-    if (!a.closeDate && !b.closeDate) {
+    const storesSortedByCloseDate = activeStores.sort((a, b) => {
+      // when both stores are permanently open, sort by name
+      if (!a.closeDate && !b.closeDate) {
+        if (a.name < b.name) return -1;
+        if (a.name > b.name) return 1;
+        return 0;
+      }
+      // when one store is permanently open, sort it last
+      if (!a.closeDate) return 1;
+      if (!b.closeDate) return -1;
+
+      const aDate = new Date(a.closeDate);
+      const bDate = new Date(b.closeDate);
+
+      // when store a closes before store b, sort it first
+      if (aDate < bDate) return -1;
+      // when store a closes after store b, sort it last
+      if (aDate > bDate) return 1;
+      // when both stores close on the same date, sort by name
       if (a.name < b.name) return -1;
       if (a.name > b.name) return 1;
       return 0;
-    }
-    // when one store is permanently open, sort it last
-    if (!a.closeDate) return 1;
-    if (!b.closeDate) return -1;
+    });
 
-    const aDate = new Date(a.closeDate);
-    const bDate = new Date(b.closeDate);
+    return { props: { stores: storesSortedByCloseDate, failed: false } };
+  } catch (error) {
+    // Renders the page with a failure state rather than throwing. A thrown
+    // error here becomes a 500 for the whole page, which loses the header and
+    // any way to reach us — on the one page someone visits specifically
+    // because they are trying to find their group's store.
+    //
+    // Not an empty list. The empty state says there are no active stores,
+    // which would be a lie when the database is simply unreachable, and it
+    // reads as "your store is gone" to the person least able to tell the
+    // difference. They would stop looking instead of trying again.
+    console.error('Stores page could not load its stores', error);
 
-    // when store a closes before store b, sort it first
-    if (aDate < bDate) return -1;
-    // when store a closes after store b, sort it last
-    if (aDate > bDate) return 1;
-    // when both stores close on the same date, sort by name
-    if (a.name < b.name) return -1;
-    if (a.name > b.name) return 1;
-    return 0;
-  });
-
-  return { props: { stores: storesSortedByCloseDate } };
+    return { props: { stores: [], failed: true } };
+  }
 };
 
 type Props = {
   stores: StoreForStoresPage[];
+  failed: boolean;
 };
 
 export default function Stores(props: Props) {
@@ -52,7 +68,14 @@ export default function Stores(props: Props) {
       <StoresStyles>
         <div className="wrapper">
           <h2>Current Stores</h2>
-          {(!props.stores || props.stores.length < 1) && (
+          {props.failed && (
+            <div className="empty">
+              We could not load the stores just now. This is a problem on our
+              end, not a sign your store has closed. Try again in a few
+              minutes.
+            </div>
+          )}
+          {!props.failed && (!props.stores || props.stores.length < 1) && (
             <div className="empty">There are currently no active stores.</div>
           )}
           {props.stores && props.stores.length > 0 && (
