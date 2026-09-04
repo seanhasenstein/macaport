@@ -45,6 +45,15 @@ const groups = [
         href: '/sublimation-customization',
       },
       { id: 'headwear', text: 'Headwear', href: '/headwear-customization' },
+      // Last because it is the one that leaves macaport.com. The catalog is
+      // Macaport's but it lives on ASI's ESP platform, with its own navigation
+      // and no way back here.
+      {
+        id: 'promotional-products',
+        text: 'Promotional Products',
+        href: 'https://macaport.espwebsites.com/home',
+        external: true,
+      },
     ],
   },
   // The contact links live together rather than inside Shop. Shop means the
@@ -107,12 +116,16 @@ export default function SiteFooter() {
                 <ul>
                   {group.links.map(link => (
                     <li key={link.id}>
-                      {/* The builder is a different application on its own subdomain, so
-                          it gets a plain anchor. Routed through next/link it would try to
-                          handle an absolute URL client-side and would lose target and rel. */}
+                      {/* The builder and the promotional products catalog are separate
+                          applications on their own domains, so they get a plain anchor.
+                          Routed through next/link they would try to handle an absolute
+                          URL client-side and would lose target and rel. */}
                       {link.external ? (
                         <a href={link.href} target="_blank" rel="noreferrer">
                           {link.text}
+                          {/* A new tab with no warning takes the back button
+                              away from someone who cannot see that it happened. */}
+                          <span className="sr-only"> (opens in a new tab)</span>
                         </a>
                       ) : (
                         <Link href={link.href}>
