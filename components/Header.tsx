@@ -7,14 +7,31 @@ import { scrollToHash } from '../utils/scroll';
 type NavItemProps = {
   text: string;
   href: string;
+  /** A different application on its own domain, opened in a new tab. Routed
+   *  through next/link it would try to handle an absolute URL client-side and
+   *  would lose target and rel — the same reason SiteFooter branches here. */
+  external?: boolean;
 };
 
-function NavItem({ text, href }: NavItemProps) {
+function NavItem({ text, href, external }: NavItemProps) {
   const router = useRouter();
 
   const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (scrollToHash(href, router)) event.preventDefault();
   };
+
+  if (external) {
+    return (
+      <li>
+        <a href={href} target="_blank" rel="noreferrer">
+          {text}
+          {/* A new tab with no warning takes the back button away from someone
+              who cannot see that it happened. */}
+          <span className="sr-only"> (opens in a new tab)</span>
+        </a>
+      </li>
+    );
+  }
 
   return (
     <li>
@@ -131,6 +148,10 @@ function NavDropdown({ text, items, isMobile }: DropdownProps) {
         </svg>
       </button>
       {isOpen && (
+        // Deliberately not closed when an external item is clicked. The route
+        // events above close this on navigation, and opening a new tab is not
+        // navigation — this page did not move, so a menu still showing what is
+        // on it is correct rather than stale.
         <ul className="menu">
           {items.map(item => (
             <NavItem key={item.href} {...item} />
@@ -248,6 +269,14 @@ export default function Header() {
                 { text: 'Find your store', href: '/stores' },
                 { text: 'Sublimation', href: '/sublimation-customization' },
                 { text: 'Headwear', href: '/headwear-customization' },
+                // Last because it is the one that leaves macaport.com. The
+                // catalog is Macaport's but it lives on ASI's ESP platform,
+                // with its own navigation and no way back here.
+                {
+                  text: 'Promotional Products',
+                  href: 'https://macaport.espwebsites.com/home',
+                  external: true,
+                },
               ]}
             />
             <NavItem text="Contact" href="/contact" />
