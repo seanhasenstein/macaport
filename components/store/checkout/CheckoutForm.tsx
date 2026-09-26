@@ -7,7 +7,7 @@ import { Formik, Form, Field } from 'formik';
 
 import useHasMounted from '../../../hooks/useHasMounted';
 import { useCart } from 'hooks/useCart';
-import { useSheboyganLutheranStaff } from 'hooks/useSheboyganLutheranStaff';
+import { PricedCart } from 'hooks/usePricedCart';
 
 import { formatToMoney, unitedStates } from '../../../utils';
 import { cardStyle, getCheckoutSchema, getInitialValues } from 'utils/checkout';
@@ -16,13 +16,16 @@ import FieldItem, { FieldItemStyles } from './form/FieldItem';
 import ErrorMessage from './form/ErrorMessage';
 import TouchedErrors from './form/TouchedErrors';
 
-import { CartItem, ShippingData, UseCheckoutSubmit } from 'interfaces';
+import {
+  BenefitMemberView,
+  ShippingData,
+  ShippingMethod,
+  UseCheckoutSubmit,
+} from 'interfaces';
 
 type Props = {
   storeId: string;
   storeName: string;
-  cartSubtotal: number;
-  cartTotal: number;
   allowDirectShipping: boolean;
   allowStorePickup: boolean;
   hasPrimaryShipping: boolean;
@@ -38,85 +41,58 @@ type Props = {
   groupTerm: string;
   groups: string[];
   shipping: ShippingData;
-  setVerifiedItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
-  setLowerInventoryItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
-  setOutOfStockItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
-  setShowInventoryModal: React.Dispatch<React.SetStateAction<boolean>>;
   checkout: UseCheckoutSubmit;
-  applySheboyganLutheranStaffDiscount?: boolean;
-  onlyDirectShipping: boolean;
-  shippingPrice: number;
-  shippingFreeMinimum: number;
+  // The cart as the pricing pipeline sees it, shipping method included.
+  priced: PricedCart;
+  // The verified member, if any, whose name and email prefill the form.
+  member: BenefitMemberView | null;
 };
 
 export default function CheckoutForm(props: Props) {
   const router = useRouter();
   const hasMounted = useHasMounted();
-
-  const {
-    alreadyUsed: alreadyUsedForSheboyganLutheranStaff,
-    isEligible: isEligibleForSheboyganLutheranStaff,
-    firstName: firstNameForSheboyganLutheranStaff,
-    lastName: lastNameForSheboyganLutheranStaff,
-    email: emailForSheboyganLutheranStaff,
-  } = useSheboyganLutheranStaff();
   const cart = useCart();
 
   const [initialValues] = React.useState(() =>
     getInitialValues({
       requireGroupSelection: props.requireGroupSelection,
-      hasPrimaryShipping:
-        props.hasPrimaryShipping || !!props.applySheboyganLutheranStaffDiscount,
+      hasPrimaryShipping: props.hasPrimaryShipping,
       allowDirectShipping: props.allowDirectShipping,
       allowStorePickup: props.allowStorePickup,
-      cartTotal: props.cartTotal,
-      ...(firstNameForSheboyganLutheranStaff && {
-        firstName: firstNameForSheboyganLutheranStaff,
-      }),
-      ...(lastNameForSheboyganLutheranStaff && {
-        lastName: lastNameForSheboyganLutheranStaff,
-      }),
-      ...(props.applySheboyganLutheranStaffDiscount &&
-        emailForSheboyganLutheranStaff &&
-        isEligibleForSheboyganLutheranStaff &&
-        !alreadyUsedForSheboyganLutheranStaff && {
-          email: emailForSheboyganLutheranStaff,
-        }),
+      firstName: props.member?.firstName ?? undefined,
+      lastName: props.member?.lastName ?? undefined,
+      email: props.member?.email,
     })
   );
 
-  const cartOnlyHasFreeItems =
-    !props.checkout.cartIsEmpty && props.cartTotal === 0;
+  const nothingOwed = !props.checkout.cartIsEmpty && props.priced.total === 0;
+  const freeShipping =
+    props.priced.merchandiseTotal >= props.shipping.freeMinimum;
 
-  // TODO: move this to the useCart logic (if possible)
-  // NOTE: this function is also used in CheckoutForm.tsx and should be kept in sync
-  // need to add to cart total if onlyDirectShipping is true and cartSubtotal is less than shippingFreeMinimum and applySheboyganLutheranStaffDiscount is false
-  function getOrderTotal() {
-    if (
-      props.onlyDirectShipping &&
-      props.cartSubtotal < props.shippingFreeMinimum &&
-      !props.applySheboyganLutheranStaffDiscount
-    ) {
-      return props.cartTotal + props.shippingPrice;
-    }
-    return props.cartTotal;
-  }
-
-  // only run on first render
-  // reset the shipping data in useCart when user leaves
-  // the page and then returns
+  // The cart's shipping method follows the form's, starting from whatever the
+  // form starts on. It used to be reset to Primary here regardless, which is
+  // why the sidebar and the button needed their own "add shipping back on"
+  // arithmetic for direct-only stores.
   React.useEffect(() => {
-    cart.updateShipping({
-      price: props.shipping.price,
-      freeMinimum: props.shipping.freeMinimum,
-      shippingMethod: 'Primary',
-    });
+    cart.setShippingMethod(initialValues.shippingMethod);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const chooseShipping = (
+    value: ShippingMethod,
+    setFieldValue: (field: string, value: ShippingMethod) => void
+  ) => {
+    setFieldValue('shippingMethod', value);
+    cart.setShippingMethod(value);
+  };
 
   return (
     <Formik
       initialValues={initialValues}
-      validationSchema={getCheckoutSchema(props.groupTerm)}
+      validationSchema={getCheckoutSchema(
+        props.groupTerm,
+        props.priced.total > 0
+      )}
       onSubmit={props.checkout.handleSubmit}
     >
       {({ errors, setFieldValue, touched, values }) => (
@@ -158,14 +134,10 @@ export default function CheckoutForm(props: Props) {
                 <>
                   <h4>Choose a shipping method:</h4>
                   <div className="radio-shipping-group">
-                    {props.hasPrimaryShipping ||
-                    props.applySheboyganLutheranStaffDiscount ? (
+                    {props.hasPrimaryShipping ? (
                       <div
                         className={`radio-shipping-item ${
-                          values.shippingMethod === 'Primary' ||
-                          props.applySheboyganLutheranStaffDiscount
-                            ? 'checked'
-                            : ''
+                          values.shippingMethod === 'Primary' ? 'checked' : ''
                         }`}
                       >
                         <label htmlFor="primaryShipping">
@@ -174,21 +146,12 @@ export default function CheckoutForm(props: Props) {
                             name="shippingMethod"
                             id="primaryShipping"
                             value="Primary"
-                            onChange={() => {
-                              const value = 'Primary' as const;
-                              setFieldValue('shippingMethod', value);
-                              cart.updateShipping({
-                                price: props.shipping.price,
-                                freeMinimum: props.shipping.freeMinimum,
-                                shippingMethod: value,
-                              });
-                            }}
+                            onChange={() =>
+                              chooseShipping('Primary', setFieldValue)
+                            }
                           />
                           <div className="shipping-label">
                             Pick up at {props.primaryShippingAddress.name}
-                            {props.applySheboyganLutheranStaffDiscount
-                              ? ' the high school'
-                              : ''}
                           </div>
                           <div className="shipping-price">Free</div>
                         </label>
@@ -209,15 +172,9 @@ export default function CheckoutForm(props: Props) {
                             name="shippingMethod"
                             id="storePickup"
                             value="Store Pickup"
-                            onChange={() => {
-                              const value = 'Store Pickup' as const;
-                              setFieldValue('shippingMethod', value);
-                              cart.updateShipping({
-                                price: props.shipping.price,
-                                freeMinimum: props.shipping.freeMinimum,
-                                shippingMethod: value,
-                              });
-                            }}
+                            onChange={() =>
+                              chooseShipping('Store Pickup', setFieldValue)
+                            }
                           />
                           <div className="shipping-label">
                             Pick up at Macaport{' '}
@@ -232,46 +189,39 @@ export default function CheckoutForm(props: Props) {
                       </div>
                     )}
 
-                    {props.allowDirectShipping &&
-                      !props.applySheboyganLutheranStaffDiscount && (
-                        <div
-                          className={`radio-shipping-item ${
-                            values.shippingMethod === 'Direct' ? 'checked' : ''
-                          }`}
-                        >
-                          <label htmlFor="secondaryShipping">
-                            <Field
-                              type="radio"
-                              name="shippingMethod"
-                              id="secondaryShipping"
-                              value="Direct"
-                              onChange={() => {
-                                const value = 'Direct' as const;
-                                setFieldValue('shippingMethod', value);
-                                cart.updateShipping({
-                                  price: props.shipping.price,
-                                  freeMinimum: props.shipping.freeMinimum,
-                                  shippingMethod: value,
-                                });
-                              }}
-                            />
-                            <div className="shipping-label">
-                              Ship directly to you
-                              {props.cartSubtotal >= props.shipping.freeMinimum
-                                ? ` (free with orders over ${formatToMoney(
-                                    props.shipping.freeMinimum,
-                                    true
-                                  )})`
-                                : ''}
-                            </div>
-                            <div className="shipping-price">
-                              {props.cartSubtotal >= props.shipping.freeMinimum
-                                ? 'Free'
-                                : formatToMoney(props.shipping.price, true)}
-                            </div>
-                          </label>
-                        </div>
-                      )}
+                    {props.allowDirectShipping && (
+                      <div
+                        className={`radio-shipping-item ${
+                          values.shippingMethod === 'Direct' ? 'checked' : ''
+                        }`}
+                      >
+                        <label htmlFor="secondaryShipping">
+                          <Field
+                            type="radio"
+                            name="shippingMethod"
+                            id="secondaryShipping"
+                            value="Direct"
+                            onChange={() =>
+                              chooseShipping('Direct', setFieldValue)
+                            }
+                          />
+                          <div className="shipping-label">
+                            Ship directly to you
+                            {freeShipping
+                              ? ` (free with orders over ${formatToMoney(
+                                  props.shipping.freeMinimum,
+                                  true
+                                )})`
+                              : ''}
+                          </div>
+                          <div className="shipping-price">
+                            {freeShipping
+                              ? 'Free'
+                              : formatToMoney(props.shipping.price, true)}
+                          </div>
+                        </label>
+                      </div>
+                    )}
                   </div>
                   {values.shippingMethod === 'Direct' && (
                     <div>
@@ -323,11 +273,9 @@ export default function CheckoutForm(props: Props) {
 
             <div className="section">
               <h3 className="section-title">
-                <span>
-                  {cartOnlyHasFreeItems ? 'Checkout' : 'Billing Details'}
-                </span>
+                <span>{nothingOwed ? 'Checkout' : 'Billing Details'}</span>
               </h3>
-              {!cartOnlyHasFreeItems && (
+              {!nothingOwed && (
                 <>
                   <FieldItem name="cardholderName" label="Cardholder's Name" />
                   <label htmlFor="stripeInput">Card Information</label>
@@ -370,15 +318,13 @@ export default function CheckoutForm(props: Props) {
                     </svg>
                     <span className="sr-only">Your order is empty</span>
                   </>
+                ) : router.pathname.split('/').includes('demo') ? (
+                  'This is a demo store'
                 ) : (
-                  `${
-                    router.pathname.split('/').includes('demo')
-                      ? ' This is a demo store'
-                      : `Submit your order of ${formatToMoney(
-                          getOrderTotal(),
-                          true
-                        )}`
-                  }`
+                  `Submit your order of ${formatToMoney(
+                    props.priced.total,
+                    true
+                  )}`
                 )}
               </button>
               {props.checkout.serverResponseError && (

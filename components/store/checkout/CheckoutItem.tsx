@@ -2,23 +2,13 @@ import styled from 'styled-components';
 
 import { formatToMoney } from '../../../utils';
 
-import { CartItem } from '../../../interfaces';
+import { PricedCartItem } from 'hooks/usePricedCart';
 
 type Props = {
-  item: CartItem;
-  isTeacherAppreciationStore?: boolean;
-  teacherAppreciationEmail?: string;
-  cartHasFreeItem?: boolean;
-  eligibleForTeacherAppreciation?: boolean;
+  item: PricedCartItem;
 };
 
 export default function CheckoutItem(props: Props) {
-  const renderTeacherAppreciation =
-    props.eligibleForTeacherAppreciation &&
-    props.teacherAppreciationEmail &&
-    props.cartHasFreeItem &&
-    props.item.itemTotal === 0;
-
   return (
     <CheckoutItemStyles>
       <div className="image">
@@ -29,12 +19,11 @@ export default function CheckoutItem(props: Props) {
       </div>
       <div className="name">{props.item.name}</div>
       <div className="total">{formatToMoney(props.item.itemTotal!)}</div>
-      {renderTeacherAppreciation && (
-        <div className="teacher-appreciation">
-          <div>Free Staff Appreciation Item</div>
-          <div className="email">{props.teacherAppreciationEmail}</div>
+      {props.item.adjustments.map((adjustment, index) => (
+        <div className="adjustment" key={index}>
+          <div>{adjustment.label}</div>
         </div>
-      )}
+      ))}
       <div className="details">
         <div className="detail">
           <span className="label">Color:</span>
@@ -76,7 +65,7 @@ const CheckoutItemStyles = styled.div`
   display: grid;
   grid-template-areas:
     'image name total'
-    'image teacherAppreciation teacherAppreciation'
+    'image adjustment adjustment'
     'image color .'
     'image size quantity';
   grid-template-columns: 4rem 1fr 3rem;
@@ -87,9 +76,9 @@ const CheckoutItemStyles = styled.div`
     border-top: 1px solid #e5e7eb;
   }
 
-  .teacher-appreciation {
+  .adjustment {
     margin: 0.25rem 0 0;
-    grid-area: teacherAppreciation;
+    grid-area: adjustment;
     font-size: 0.875rem;
     color: #1f2937;
     font-weight: 500;
@@ -192,7 +181,7 @@ const CheckoutItemStyles = styled.div`
   @media (max-width: 450px) {
     grid-template-areas:
       'image name'
-      'image teacherAppreciation'
+      'image adjustment'
       'image total'
       'image quantity'
       'image color'

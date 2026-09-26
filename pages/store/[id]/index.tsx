@@ -7,19 +7,17 @@ import { connectToDb, store as storeModel } from 'db';
 
 import { getUrlParameter } from 'utils';
 import { getStoreStatus } from 'utils/store';
-import { useCart } from 'hooks/useCart';
-import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
+import { getBenefitView } from 'utils/memberBenefit';
+import { membersOnlyLockout } from 'utils/benefitDisplay';
+import { usePricedCart } from 'hooks/usePricedCart';
 
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import StoreItem from '../../../components/store/home/StoreItem';
 import StoreHomepageError from 'components/store/errors/StoreHomepageError';
 import StoreAnnouncement from 'components/store/common/StoreAnnouncement';
-import TeacherAppreciation from 'components/store/home/TeacherAppreciation';
-import SheboyganLutheranStaff from 'components/store/home/SheboyganLutheranStaff';
-import SwitchFitness from 'components/store/home/SwitchFitness';
+import MemberBenefitCard from 'components/store/home/MemberBenefitCard';
 
-import { Store, StoreProduct } from '../../../interfaces';
-import { useSheboyganLutheranStaff } from 'hooks/useSheboyganLutheranStaff';
+import { BenefitView, Store, StoreProduct } from '../../../interfaces';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -52,7 +50,11 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    return { props: { store } };
+    // Built from the benefit document and this browser's session cookie, so
+    // what the page says about the member is what the server just decided.
+    const benefit = await getBenefitView(db, store, context.req);
+
+    return { props: { store, benefit } };
   } catch (error) {
     // A string, not the Error. Next requires props to be JSON serializable, so
     // returning the Error threw during serialization and the request 500d
@@ -78,31 +80,13 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
 type Props = {
   store: Store;
+  benefit?: BenefitView | null;
   error?: string;
 };
 
 export default function StoreHomepage(props: Props) {
-  const {
-    alreadyUsed: alreadyUsedForSheboyganLutheranStaff,
-    isEligible: isEligibleForSheboyganLutheranStaff,
-  } = useSheboyganLutheranStaff();
-
-  const cart = useCart({
-    sheboyganLutheranStaffEligible:
-      isEligibleForSheboyganLutheranStaff &&
-      !alreadyUsedForSheboyganLutheranStaff,
-  });
-
-  const cartHasFreeItem = cart.items.some(
-    item => item.itemTotal === 0 && item.quantity === 1
-  );
-
-  // teacher appreciation
-  const {
-    email: teacherAppreciationEmail,
-    isEligible: isEligibleForTeacherAppreciation,
-    alreadyUsed: alreadyUsedForTeacherAppreciation,
-  } = useTeacherAppreciation();
+  const benefit = props.benefit ?? null;
+  const priced = usePricedCart(benefit, null);
 
   // Below every hook, above every read of props.store. It used to sit further
   // down still, past half a dozen reads of a store that does not exist when
@@ -119,27 +103,28 @@ export default function StoreHomepage(props: Props) {
 
   const hasCloseDate = !!props.store.closeDate;
   const hasAnnouncement = !!props.store.announcement;
-  const storeId = props.store._id;
-  const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
-  const teacherAppreciationProductId = props.store.products[0]?.id;
-  const teacherAppreciationProductLink = `/store/${storeId}/product?productId=${teacherAppreciationProductId}`;
-  const eligibleForFreeItem =
-    isTeacherAppreciationStore &&
-    !cartHasFreeItem &&
-    isEligibleForTeacherAppreciation &&
-    !alreadyUsedForTeacherAppreciation &&
-    teacherAppreciationEmail !== '';
 
-  // switch fitness
-  const isSwitchFitness = !!props.store.meta?.isSwitchFitness;
-  const switchFitnessDiscountId = props.store.meta?.switchFitnessDiscountId;
+  // A members-only store shows the sign-in card and nothing else until the
+  // browser holds a verified session.
+  const locked = membersOnlyLockout(benefit);
+
+  // "Free" on a product tile when adding it would cost nothing: a free-item
+  // benefit with room left, for a product it covers.
+  const member = benefit?.member ?? null;
+  const freeItemFor = (product: StoreProduct) =>
+    !!benefit &&
+    benefit.type === 'freeItem' &&
+    !!member &&
+    member.reason === 'eligible' &&
+    (benefit.productIds === null || benefit.productIds.includes(product.id)) &&
+    member.remaining > priced.freeUnitsInCart;
 
   return (
     <StoreLayout title={`${props.store.name}`}>
       <StoreStyles
         hasCloseDate={hasCloseDate}
         hasAnnouncement={hasAnnouncement}
-        isTeacherAppreciation={isTeacherAppreciationStore}
+        hasBenefit={!!benefit}
       >
         {props.store.closeDate && (
           <div className="close-date">
@@ -183,29 +168,20 @@ export default function StoreHomepage(props: Props) {
           </div>
         ) : (
           <div className="items">
-            {props.store.teacherAppreciationId ? (
-              <TeacherAppreciation
-                teacherAppreciationId={props.store.teacherAppreciationId}
-                productLink={teacherAppreciationProductLink}
-              />
+            {benefit ? (
+              <MemberBenefitCard storeId={props.store._id} benefit={benefit} />
             ) : null}
-            {props.store.sheboyganLutheranStaffId ? (
-              <SheboyganLutheranStaff
-                sheboyganLutheranStaffId={props.store.sheboyganLutheranStaffId}
-              />
-            ) : null}
-            {isSwitchFitness && switchFitnessDiscountId ? (
-              <SwitchFitness switchFitnessId={switchFitnessDiscountId} />
-            ) : null}
-            {props.store.products.map((p: StoreProduct) => (
-              <StoreItem
-                key={p.id}
-                item={p}
-                storeId={props.store._id}
-                isDemo={false}
-                eligibleForFreeItem={eligibleForFreeItem}
-              />
-            ))}
+            {locked
+              ? null
+              : props.store.products.map((p: StoreProduct) => (
+                  <StoreItem
+                    key={p.id}
+                    item={p}
+                    storeId={props.store._id}
+                    isDemo={false}
+                    eligibleForFreeItem={freeItemFor(p)}
+                  />
+                ))}
           </div>
         )}
       </StoreStyles>
@@ -216,7 +192,7 @@ export default function StoreHomepage(props: Props) {
 const StoreStyles = styled.div<{
   hasCloseDate: boolean;
   hasAnnouncement: boolean;
-  isTeacherAppreciation: boolean;
+  hasBenefit: boolean;
 }>`
   .store-name,
   p {
@@ -311,9 +287,7 @@ const StoreStyles = styled.div<{
   }
 
   .items {
-    /* margin: 4rem auto 3rem; */
-    margin: ${props => (props.isTeacherAppreciation ? '3.5rem' : '4rem')} auto
-      3rem;
+    margin: ${props => (props.hasBenefit ? '3.5rem' : '4rem')} auto 3rem;
     padding: 0 1.5rem;
     max-width: 72rem;
     width: 100%;

@@ -13,8 +13,7 @@ import useProductImages from 'hooks/useStoreProductImages';
 import useProductSize from 'hooks/useStoreProductSize';
 import useStoreProductPersonalization from '../../../hooks/useStoreProductPersonalization';
 import useAddProductToOrder from 'hooks/useStoreProductAddToOrder';
-import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
-import { useSwitchFitnessDiscount } from 'hooks/useSwitchFitness';
+import { usePricedCart } from 'hooks/usePricedCart';
 
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import ProductPersonalization from '../../../components/store/product/personalization';
@@ -31,7 +30,9 @@ import ProductDetails from 'components/store/product/ProductDetails';
 import Sidebar from '../../../components/store/product/Sidebar';
 import Lightbox from '../../../components/store/product/Lightbox';
 
-import { Store, StoreProduct } from '../../../interfaces';
+import { BenefitView, Store, StoreProduct } from '../../../interfaces';
+import { getBenefitView } from 'utils/memberBenefit';
+import { membersOnlyLockout } from 'utils/benefitDisplay';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -65,8 +66,9 @@ export const getServerSideProps: GetServerSideProps = async context => {
     }
 
     const product = store.products.find(p => p.id === context.query.productId);
+    const benefit = await getBenefitView(db, store, context.req);
 
-    if (!product) {
+    if (!product || membersOnlyLockout(benefit)) {
       return {
         redirect: {
           permanent: false,
@@ -75,7 +77,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    return { props: { store, product } };
+    return { props: { store, product, benefit } };
   } catch (error) {
     return {
       props: { error },
@@ -86,6 +88,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
 type Props = {
   store: Store;
   product: StoreProduct;
+  benefit?: BenefitView | null;
   error?: string;
 };
 
@@ -94,31 +97,22 @@ export default function Product(props: Props) {
   const [showSidebar, setShowSidebar] = React.useState(false);
   const [showLightbox, setShowLightbox] = React.useState(false);
 
-  const { addItem, items, updateStoreSettings } = useCart();
-  const { email, isEligible, alreadyUsed } = useTeacherAppreciation();
-  const {
-    isEligible: isEligibleForSwitchFitnessDiscount,
-    alreadyUsed: alreadyUsedForSwitchFitnessDiscount,
-  } = useSwitchFitnessDiscount();
+  const { addItem, items } = useCart();
+  const priced = usePricedCart(props.benefit ?? null, null);
 
-  const isSwitchFitnessStore =
-    !!props.store.meta?.isSwitchFitness &&
-    !!props.store.meta?.switchFitnessDiscountId;
-  const applySwitchFitnessDiscount =
-    isSwitchFitnessStore &&
-    isEligibleForSwitchFitnessDiscount &&
-    !alreadyUsedForSwitchFitnessDiscount;
-
-  const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
-
-  const alreadyHaveFreeShirtInCart =
-    isTeacherAppreciationStore && items.some(item => item.price === 0);
+  // Whether adding this product would make it free: a free-item benefit the
+  // member still has room on, for a product it covers. Only the price shown
+  // in the header changes; the cart line is added at full price and the
+  // pricing pipeline takes it off, on the server as well as here.
+  const member = props.benefit?.member;
   const eligibleForFreeShirt =
-    isTeacherAppreciationStore &&
-    !!email &&
-    isEligible &&
-    !alreadyUsed &&
-    !alreadyHaveFreeShirtInCart;
+    !!props.benefit &&
+    props.benefit.type === 'freeItem' &&
+    !!member &&
+    member.reason === 'eligible' &&
+    (props.benefit.productIds === null ||
+      props.benefit.productIds.includes(props.product.id)) &&
+    member.remaining > priced.freeUnitsInCart;
 
   const productPersonalization = useStoreProductPersonalization(
     props.product.personalization.addons,
@@ -136,7 +130,6 @@ export default function Product(props: Props) {
     cartItems: items,
     productSkus: props.product.productSkus,
     selectedColor: productColor.color,
-    eligibleForFreeShirt,
   });
 
   const productImages = useProductImages({
@@ -159,7 +152,6 @@ export default function Product(props: Props) {
     personalization: productPersonalization,
     setShowSidebar,
     setSizeValidationError: productSize.setSizeValidationError,
-    eligibleForFreeShirt,
   });
 
   const handleProductReset = () => {
@@ -168,13 +160,6 @@ export default function Product(props: Props) {
     productSize.setSize(defaultSize);
     productSize.setLowInventory(false);
   };
-
-  React.useEffect(() => {
-    updateStoreSettings({
-      applySwitchFitnessDiscount,
-      isSwitchFitnessStore,
-    });
-  }, [applySwitchFitnessDiscount, isSwitchFitnessStore, updateStoreSettings]);
 
   if (props.error) {
     return <ProductPageError error={props.error} storeId={props.store._id} />;

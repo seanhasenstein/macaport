@@ -4,9 +4,6 @@ import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import { StripeCardElementChangeEvent } from '@stripe/stripe-js';
 import { CartItem, CheckoutForm, UseCheckoutSubmit } from 'interfaces';
 import { useCart } from './useCart';
-import { useTeacherAppreciation } from './useTeacherAppreciation';
-import { useSwitchFitnessDiscount } from './useSwitchFitness';
-import { useSheboyganLutheranStaff } from './useSheboyganLutheranStaff';
 
 type Props = {
   storeId: string;
@@ -19,10 +16,9 @@ type Props = {
     state: string;
     zipcode: string;
   };
-  sheboyganLutheranStaffId?: string;
-  teacherAppreciationId?: string;
-  isSwitchFitnessStore: boolean;
-  isEligibleForSheboyganLutheranStaffFromClient: boolean;
+  // What the priced cart says is owed. Decides whether a card is collected;
+  // the server decides what is charged.
+  total: number;
 };
 
 export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
@@ -40,39 +36,7 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
   const [outOfStockItems, setOutOfStockItems] = React.useState<CartItem[]>([]);
   const [showInventoryModal, setShowInventoryModal] = React.useState(false);
 
-  // TODO: should I clean this up and bring in as a prop from the parent component?
-  const {
-    email: sheboyganLutheranStaffEmail,
-    alreadyUsed: alreadyUsedForSheboyganLutheranStaff,
-    isEligible: isEligibleForSheboyganLutheranStaff,
-  } = useSheboyganLutheranStaff();
-  // TODO: should I clean this up and bring in as a prop from the parent component?
-  const { items, cartSubtotal, salesTax, cartTotal, cartIsEmpty, setItems } =
-    useCart({
-      sheboyganLutheranStaffEligible:
-        !!props.sheboyganLutheranStaffId &&
-        isEligibleForSheboyganLutheranStaff &&
-        !alreadyUsedForSheboyganLutheranStaff,
-    });
-
-  const { resetState: resetSheboyganLutheranStaffDiscountState } =
-    useSheboyganLutheranStaff();
-
-  const {
-    resetState: resetTeacherAppreciationState,
-    email: teacherAppreciationEmail,
-  } = useTeacherAppreciation();
-
-  const {
-    alreadyUsed: switchEmailAlreadyUsed,
-    isEligible: switchEmailIsEligible,
-    email: switchFitnessDiscountEmail,
-    resetState: resetSwitchFitnessDiscountState,
-  } = useSwitchFitnessDiscount();
-  const isEligibleForSwitchDiscountFromClient =
-    props.isSwitchFitnessStore &&
-    switchEmailIsEligible &&
-    !switchEmailAlreadyUsed;
+  const { items, cartIsEmpty, setItems } = useCart();
 
   const handleCardChange = (e: StripeCardElementChangeEvent) => {
     if (e.error) {
@@ -85,9 +49,9 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
   const handleSubmit = async (data: CheckoutForm) => {
     setIsSubmitting(true);
 
-    let stripePaymentMethodResult: any;
+    let paymentMethodId = '';
 
-    if (cartTotal > 0) {
+    if (props.total > 0) {
       const cardElement = elements?.getElement(CardElement);
 
       if (!stripe || !cardElement) {
@@ -99,7 +63,7 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
         return;
       }
 
-      stripePaymentMethodResult = await stripe.createPaymentMethod({
+      const result = await stripe.createPaymentMethod({
         type: 'card',
         card: cardElement,
         billing_details: {
@@ -109,54 +73,35 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
         },
       });
 
-      if (stripePaymentMethodResult.error) {
-        console.log(
-          'Stripe payment method error:',
-          stripePaymentMethodResult.error
-        );
-        setStripeError(stripePaymentMethodResult.error.message);
+      if (result.error) {
+        console.log('Stripe payment method error:', result.error);
+        setStripeError(result.error.message);
         setIsSubmitting(false);
         return;
       }
+
+      paymentMethodId = result.paymentMethod.id;
     }
 
+    // Nothing about money goes up. The server re-prices every line from the
+    // database and reads the member benefit from the session cookie, so
+    // there is nothing here a browser could change to pay less.
     const response = await fetch('/api/submit-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         storeId: props.storeId,
         storeName: props.storeName,
-        payment_method_id: stripePaymentMethodResult
-          ? stripePaymentMethodResult.paymentMethod.id
-          : '',
+        payment_method_id: paymentMethodId,
         items,
         customer: data.customer,
         group: data.group,
         shippingMethod: data.shippingMethod,
         shippingAddress:
-          data.shippingMethod === 'Direct'
-            ? data.shippingAddress
-            : data.shippingMethod === 'Primary'
+          data.shippingMethod === 'Primary'
             ? props.primaryShippingAddress
             : data.shippingAddress,
-        summary: {
-          subtotal: cartSubtotal,
-          shipping: 0,
-          salesTax,
-          total: cartTotal,
-        },
         note: data.note ?? '',
-        ...(props.teacherAppreciationId &&
-          teacherAppreciationEmail && { teacherAppreciationEmail }),
-        ...(switchFitnessDiscountEmail && { switchFitnessDiscountEmail }),
-        ...(isEligibleForSwitchDiscountFromClient && {
-          isEligibleForSwitchDiscountFromClient,
-        }),
-        ...(sheboyganLutheranStaffEmail && { sheboyganLutheranStaffEmail }),
-        ...(props.isEligibleForSheboyganLutheranStaffFromClient && {
-          isEligibleForSheboyganLutheranStaffFromClient:
-            props.isEligibleForSheboyganLutheranStaffFromClient,
-        }),
       }),
     });
 
@@ -186,22 +131,17 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
       setServerResponseError(res.error);
       console.error(res.error);
       setIsSubmitting(false);
+
+      // The member's standing changed under them (another order used the
+      // credit, or the benefit was paused). Re-run the page's server props
+      // so the totals they are looking at are true again.
+      if (res.benefitChanged) {
+        router.replace(router.asPath);
+      }
       return;
     }
 
     setServerResponseError(undefined);
-
-    if (res.resetTeacherAppreciation) {
-      resetTeacherAppreciationState();
-    }
-
-    if (res.resetSwitchFitnessDiscount) {
-      resetSwitchFitnessDiscountState();
-    }
-
-    if (res.resetSheboyganLutheranStaffDiscount) {
-      resetSheboyganLutheranStaffDiscountState();
-    }
 
     router.push(
       `/store/${props.storeId}/order-confirmation?orderId=${res.orderId}&emptyCart=true`

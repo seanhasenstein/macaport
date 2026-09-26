@@ -2,25 +2,18 @@ import React from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { CheckCircleIcon } from '@heroicons/react/20/solid';
-import {
-  CartItem as CartItemInterface,
-  ProductSku,
-  ProductSize,
-} from '../../../interfaces';
+import { ProductSku, ProductSize } from '../../../interfaces';
 import { useCart } from '../../../hooks/useCart';
 import useCartItem from 'hooks/useCartItem';
+import { PricedCartItem } from 'hooks/usePricedCart';
 import { formatToMoney } from '../../../utils';
 
 type Props = {
-  item: CartItemInterface;
+  item: PricedCartItem;
   storeId: string;
   skus: ProductSku[];
   sizes: ProductSize[];
   isDemo: boolean;
-  isTeacherAppreciationStore?: boolean;
-  teacherAppreciationEmail?: string;
-  cartHasFreeItem?: boolean;
-  eligibleForTeacherAppreciation?: boolean;
 };
 
 export default function CartItem(props: Props) {
@@ -32,12 +25,6 @@ export default function CartItem(props: Props) {
     updateItemQuantity,
     updateItemSize,
   });
-
-  const renderTeacherAppreciation =
-    props.eligibleForTeacherAppreciation &&
-    props.teacherAppreciationEmail &&
-    props.cartHasFreeItem &&
-    props.item.itemTotal === 0;
 
   return (
     <CartItemStyles personalized={props.item.personalizationAddons.length > 0}>
@@ -133,9 +120,6 @@ export default function CartItem(props: Props) {
               id="quantity"
               value={cartItem.quantity}
               onChange={cartItem.handleQuantityChange}
-              disabled={
-                props.isTeacherAppreciationStore && props.item.itemTotal === 0
-              }
             >
               {[...Array(11)].map((_v, i) => {
                 if (i === 0) return;
@@ -170,12 +154,12 @@ export default function CartItem(props: Props) {
             <span className="sr-only">Remove from cart</span>
           </button>
         </div>
-        {renderTeacherAppreciation && (
-          <div className="teacher-appreciation">
+        {props.item.adjustments.map((adjustment, index) => (
+          <div className="adjustment" key={index}>
             <CheckCircleIcon className="check-circle-icon" />
-            Free Staff Appreciation Item
+            {adjustment.label}
           </div>
-        )}
+        ))}
       </div>
     </CartItemStyles>
   );
@@ -194,14 +178,14 @@ const CartItemStyles = styled.div<{ personalized: boolean }>`
     grid-template-areas:
       'image details total'
       'image inputs button'
-      'space teacherAppreciation teacherAppreciation';
+      'space adjustment adjustment';
     grid-template-columns: 8rem 1fr 10rem;
     gap: 0 1.5rem;
   }
 
-  .teacher-appreciation {
+  .adjustment {
     margin: 1.25rem 0 0;
-    grid-area: teacherAppreciation;
+    grid-area: adjustment;
     font-size: 0.875rem;
     display: flex;
     align-items: center;
@@ -390,13 +374,13 @@ const CartItemStyles = styled.div<{ personalized: boolean }>`
       grid-template-areas:
         'image details total'
         'image inputs inputs'
-        'teacherAppreciation teacherAppreciation teacherAppreciation'
+        'adjustment adjustment adjustment'
         'button button button';
       grid-template-columns: 5rem 1fr 3rem;
       gap: 0 1rem;
     }
 
-    .teacher-appreciation {
+    .adjustment {
       justify-content: center;
     }
 
