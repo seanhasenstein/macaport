@@ -23,7 +23,11 @@
  * email are listed and dropped. Nothing is written without --apply.
  */
 const fs = require('fs');
-const { loadEnvConfig } = require('@next/env');
+// @next/env is next's own dependency, and pnpm does not hoist it to the top
+// level, so it is resolved from where next lives rather than from here.
+const { loadEnvConfig } = require(require.resolve('@next/env', {
+  paths: [require.resolve('next/package.json')],
+}));
 const { MongoClient, ObjectID } = require('mongodb');
 
 loadEnvConfig(process.cwd());
