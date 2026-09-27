@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import nc from 'next-connect';
 import { sendEmail } from '../../utils/mailgun';
 import { generateReceiptEmail } from '../../utils/email';
-import { isInternalRequest } from '../../utils/internalRequest';
+import { isInternalRequest, siteBaseUrl } from '../../utils/internalRequest';
 import { rateLimit } from '../../utils/rateLimit';
 import { Order } from '../../interfaces';
 
@@ -71,7 +71,7 @@ const handler = nc<Request, NextApiResponse>().post(async (req, res) => {
       return res.status(429).json({ error: 'Too many requests' });
     }
   }
-  const { text, html } = generateReceiptEmail(order);
+  const { text, html } = generateReceiptEmail(order, siteBaseUrl(req));
 
   const result = await sendEmail({
     to: order.customer.email,

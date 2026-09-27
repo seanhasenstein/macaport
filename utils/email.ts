@@ -14,6 +14,7 @@ import {
   SHIPPED_TO_ME,
 } from './contact';
 import { orderAdjustments } from './benefitDisplay';
+import { siteBaseUrl } from './internalRequest';
 import { Order } from '../interfaces';
 
 const FONT = `-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif`;
@@ -727,7 +728,7 @@ export function generateContactFormEmail(
   return { text, html };
 }
 
-function generateReceiptText(order: Order) {
+function generateReceiptText(order: Order, baseUrl: string) {
   return `Hi ${order.customer.firstName},\n\nThis is confirmation for your ${
     order.store.name
   } order on macaport.com. \n\nOrder #: ${order.orderId} \nName: ${
@@ -735,7 +736,7 @@ function generateReceiptText(order: Order) {
   } ${order.customer.lastName} \nEmail: ${
     order.customer.email
   } \nPhone: ${formatPhoneNumber(order.customer.phone)} \n\nOrder Summary Link:
-  ${`${process.env.API_HOST}/store/${order.store.id}/order-confirmation?orderId=${order.orderId}`}
+  ${`${baseUrl}/store/${order.store.id}/order-confirmation?orderId=${order.orderId}`}
     \n\nSubtotal: ${formatToMoney(
       order.summary.subtotal,
       true
@@ -751,7 +752,7 @@ function generateReceiptText(order: Order) {
   `;
 }
 
-function generateReceiptHtml(order: Order) {
+function generateReceiptHtml(order: Order, baseUrl: string) {
   return `<!DOCTYPE html>
   <html lang="en">
     <head>
@@ -1255,9 +1256,7 @@ function generateReceiptHtml(order: Order) {
                       >
                         <tr>
                           <td style="color: #6B7280">
-                          <div style="margin: 10px 0 0 0">For all order details and order items please <a href="${
-                            process.env.API_HOST
-                          }/store/${encodeURIComponent(
+                          <div style="margin: 10px 0 0 0">For all order details and order items please <a href="${baseUrl}/store/${encodeURIComponent(
     order.store.id
   )}/order-confirmation?orderId=${encodeURIComponent(
     order.orderId
@@ -1386,14 +1385,10 @@ function generateReceiptHtml(order: Order) {
                           You're receiving this email because you made a purchase
                         from the ${escapeHtml(
                           order.store.name
-                        )} store by <a href="${
-    process.env.API_HOST
-  }" style="color: #4338CA; text-decoration: none">Macaport LLC</a>.
+                        )} store by <a href="${baseUrl}" style="color: #4338CA; text-decoration: none">Macaport LLC</a>.
                         </p>
                         <p style="margin: 0 0 20px 0">
-                          <a href="${
-                            process.env.API_HOST
-                          }/store/${encodeURIComponent(
+                          <a href="${baseUrl}/store/${encodeURIComponent(
     order.store.id
   )}/order-confirmation?orderId=${encodeURIComponent(
     order.orderId
@@ -1416,8 +1411,39 @@ function generateReceiptHtml(order: Order) {
   `;
 }
 
-export function generateReceiptEmail(order: Order) {
-  const text = generateReceiptText(order);
-  const html = generateReceiptHtml(order);
+// baseUrl is where the links in the receipt point: the public site in
+// production, the preview or the local server elsewhere.
+export function generateReceiptEmail(order: Order, baseUrl = siteBaseUrl()) {
+  const text = generateReceiptText(order, baseUrl);
+  const html = generateReceiptHtml(order, baseUrl);
   return { text, html };
+}
+
+// The one-time code email, in the same shell as every other Macaport email
+// so it is recognisably from the same sender. The body is kept plain: a code
+// email is read for six digits and nothing else.
+export function wrapCodeEmail({
+  subject,
+  code,
+  body,
+  storeName,
+}: {
+  subject: string;
+  code: string;
+  body: string;
+  storeName: string;
+}) {
+  return shellHtml({
+    title: subject,
+    preheader: `Your code is ${code}`,
+    body: `<div style="font-family:${FONT};font-size:15px;line-height:1.6;color:#262626;">${body}</div>`,
+    footer: [
+      footerLine(
+        `You're receiving this because this address was entered on the ${escapeHtml(
+          storeName
+        )} store at macaport.com. If that wasn't you, there is nothing to do.`
+      ),
+      footerLine(MACAPORT_ADDRESS, true),
+    ].join(''),
+  });
 }

@@ -15,15 +15,23 @@
 //   1. line subtotals
 //   2. line-level adjustments (a free item)
 //   3. cart-level adjustments (a fixed discount)
-//   4. shipping, whose free threshold is measured on the result of 3
-//   5. credit, which is a payment rather than a price reduction
-//   6. sales tax on what is left after credit
+//   4. sales tax on the result of 3
+//   5. shipping, whose free threshold is measured on the result of 3
+//   6. credit, against the whole of 3 + 4 + 5
 //   7. the sub-minimum waiver
 //
-// Credit goes after discounts and the shipping threshold on purpose. A $75
-// credit against an $80 cart is still an $80 purchase: it earns free shipping
-// on the same terms as anyone else's $80, and when the client is invoiced for
-// the credit the full $80 is what Macaport was paid.
+// A discount is a price cut and a credit is a payment, and they are treated
+// the way a coupon and a gift card are everywhere else. A discount lowers
+// the price, so it lowers the tax and the free-shipping measure. A credit
+// changes nothing about the price: tax is charged on the full merchandise, a
+// $75 credit against an $80 cart still earns free shipping as an $80
+// purchase, and the credit then pays for as much of the total as it can,
+// tax and shipping included. Whoever funds the credit is invoiced for
+// exactly what it paid, with the tax already inside that figure.
+//
+// Tax on each line of an order is therefore charged exactly once: to the
+// customer on what they pay, and to the credit's funder on what the credit
+// paid. The dashboard must not add tax on top of credit used.
 //
 // Every amount is an integer number of cents.
 
@@ -121,7 +129,8 @@ export interface PricedOrder {
   // What the member has left after this order. Zero unless the benefit is a
   // credit.
   creditRemaining: Cents;
-  // merchandiseTotal minus credit: the part the customer pays tax on.
+  // What tax was charged on: the merchandise after free items and discounts.
+  // A credit does not reduce it.
   taxableAmount: Cents;
   salesTax: Cents;
   shipping: Cents;
@@ -192,16 +201,21 @@ export function priceOrder(input: PriceOrderInput): PricedOrder {
     }
   }
 
-  // 4. shipping, measured on what they bought rather than how they paid
+  // 4. tax on the price, which a credit does not change
+  const taxableAmount = merchandiseTotal;
+  const salesTax = Math.round(taxableAmount * input.taxRate);
+
+  // 5. shipping, measured on what they bought rather than how they paid
   const shipping =
     lines.length === 0 ? 0 : shippingCost(input.shipping, merchandiseTotal);
 
-  // 5. credit
+  // 6. credit, paying for as much of the whole order as it can
+  const beforeCredit = merchandiseTotal + salesTax + shipping;
   let creditApplied = 0;
   let creditRemaining = 0;
   if (benefit && benefit.type === 'credit') {
     assertCents(benefit.remaining, 'credit remaining');
-    creditApplied = Math.min(benefit.remaining, merchandiseTotal);
+    creditApplied = Math.min(benefit.remaining, beforeCredit);
     creditRemaining = benefit.remaining - creditApplied;
     if (creditApplied > 0) {
       adjustments.push({
@@ -212,12 +226,8 @@ export function priceOrder(input: PriceOrderInput): PricedOrder {
     }
   }
 
-  // 6. tax on what the customer is actually paying for
-  const taxableAmount = merchandiseTotal - creditApplied;
-  const salesTax = Math.round(taxableAmount * input.taxRate);
-
   // 7. a total Stripe would refuse is forgiven rather than topped up
-  let total = taxableAmount + salesTax + shipping;
+  let total = beforeCredit - creditApplied;
   let waived = 0;
   if (total > 0 && total < minimumCharge) {
     waived = total;

@@ -2,7 +2,10 @@ import { NextApiResponse } from 'next';
 import nc from 'next-connect';
 
 import database from '../../../middleware/db';
-import { store as storeModel, memberBenefit as benefitModel } from '../../../db';
+import {
+  store as storeModel,
+  memberBenefit as benefitModel,
+} from '../../../db';
 import {
   memberEligibility,
   normalizeEmail,
@@ -10,6 +13,7 @@ import {
 import { requestCode } from '../../../core/verification/code';
 import { codeEmail } from '../../../core/verification/email';
 import { sendEmail } from '../../../utils/mailgun';
+import { wrapCodeEmail } from '../../../utils/email';
 import { clientIp, rateLimit } from '../../../utils/rateLimit';
 import { memberBenefitSecret } from '../../../utils/memberBenefit';
 import { Request } from '../../../interfaces';
@@ -42,7 +46,9 @@ const handler = nc<ExtendedRequest, NextApiResponse>()
     const { storeId, email: rawEmail } = req.body ?? {};
 
     if (typeof storeId !== 'string' || typeof rawEmail !== 'string') {
-      return res.status(400).json({ error: 'A store and an email are required' });
+      return res
+        .status(400)
+        .json({ error: 'A store and an email are required' });
     }
 
     const email = normalizeEmail(rawEmail);
@@ -73,7 +79,9 @@ const handler = nc<ExtendedRequest, NextApiResponse>()
       : null;
 
     if (!store || !benefit) {
-      return res.status(404).json({ error: 'This store has no member benefit' });
+      return res
+        .status(404)
+        .json({ error: 'This store has no member benefit' });
     }
 
     const eligibility = memberEligibility(benefit, email);
@@ -82,7 +90,11 @@ const handler = nc<ExtendedRequest, NextApiResponse>()
     }
 
     const now = Date.now();
-    const existing = await benefitModel.getCodeRecord(req.db, benefit._id, email);
+    const existing = await benefitModel.getCodeRecord(
+      req.db,
+      benefit._id,
+      email
+    );
     const request = requestCode(existing, {
       benefitId: benefit._id,
       email,
@@ -113,7 +125,12 @@ const handler = nc<ExtendedRequest, NextApiResponse>()
       from: 'Macaport <support@macaport.com>',
       subject: message.subject,
       text: message.text,
-      html: message.html,
+      html: wrapCodeEmail({
+        subject: message.subject,
+        code: request.code,
+        body: message.html,
+        storeName: store.name,
+      }),
     });
 
     res.json({

@@ -97,7 +97,7 @@ describe('priceOrder with a credit', () => {
     remaining,
   });
 
-  it('covers part of the cart and taxes only the remainder', () => {
+  it('pays part of the order; tax is on the full price, not the remainder', () => {
     const result = priceOrder({
       lines: [line({ id: 'a', unitPrice: 8000 })],
       benefit: credit(7500),
@@ -106,17 +106,17 @@ describe('priceOrder with a credit', () => {
     });
 
     expect(result.subtotal).toBe(8000);
+    expect(result.taxableAmount).toBe(8000);
+    expect(result.salesTax).toBe(440);
     expect(result.creditApplied).toBe(7500);
     expect(result.creditRemaining).toBe(0);
-    expect(result.taxableAmount).toBe(500);
-    expect(result.salesTax).toBe(28); // 27.5 rounds up
-    expect(result.total).toBe(528);
+    expect(result.total).toBe(940);
     expect(result.adjustments).toEqual([
       { kind: 'credit', label: 'Employee Credit', amount: -7500 },
     ]);
   });
 
-  it('covers the whole cart and leaves the rest for next time', () => {
+  it('covers the whole order, tax included, and leaves the rest for next time', () => {
     const result = priceOrder({
       lines: [line({ id: 'a', unitPrice: 3000 })],
       benefit: credit(7500),
@@ -124,27 +124,26 @@ describe('priceOrder with a credit', () => {
       shipping: pickup,
     });
 
-    expect(result.creditApplied).toBe(3000);
-    expect(result.creditRemaining).toBe(4500);
-    expect(result.taxableAmount).toBe(0);
-    expect(result.salesTax).toBe(0);
+    expect(result.salesTax).toBe(165);
+    expect(result.creditApplied).toBe(3165);
+    expect(result.creditRemaining).toBe(4335);
     expect(result.total).toBe(0);
   });
 
-  it('covers exactly the cart', () => {
+  it('covers exactly the order', () => {
     const result = priceOrder({
       lines: [line({ id: 'a', unitPrice: 7500 })],
-      benefit: credit(7500),
+      benefit: credit(7913), // 7500 + 413 tax (412.5 rounds up)
       taxRate: WI,
       shipping: pickup,
     });
 
-    expect(result.creditApplied).toBe(7500);
+    expect(result.creditApplied).toBe(7913);
     expect(result.creditRemaining).toBe(0);
     expect(result.total).toBe(0);
   });
 
-  it('does not cover shipping', () => {
+  it('covers shipping too, because it is money and not a price cut', () => {
     const result = priceOrder({
       lines: [line({ id: 'a', unitPrice: 3000 })],
       benefit: credit(7500),
@@ -152,10 +151,10 @@ describe('priceOrder with a credit', () => {
       shipping: direct,
     });
 
-    expect(result.creditApplied).toBe(3000);
-    expect(result.creditRemaining).toBe(4500);
     expect(result.shipping).toBe(800);
-    expect(result.total).toBe(800);
+    expect(result.creditApplied).toBe(3000 + 165 + 800);
+    expect(result.creditRemaining).toBe(7500 - 3965);
+    expect(result.total).toBe(0);
   });
 
   it('measures the free shipping threshold before credit', () => {
@@ -169,7 +168,7 @@ describe('priceOrder with a credit', () => {
 
     expect(result.merchandiseTotal).toBe(8000);
     expect(result.shipping).toBe(0);
-    expect(result.total).toBe(528);
+    expect(result.total).toBe(940);
   });
 
   it('applies nothing and records nothing when the member has no credit left', () => {
@@ -369,20 +368,20 @@ describe('priceOrder with a free item', () => {
 
 describe('the small balance waiver', () => {
   it('forgives a total Stripe would refuse and records it', () => {
-    // $75.30 of goods with add-ons, $75 credit: 30c plus 2c tax is owed.
+    // $71.20 of goods is $75.12 with tax; a $75 credit leaves 12c owed.
     const result = priceOrder({
-      lines: [line({ id: 'a', unitPrice: 7500, addOnUnitPrice: 30 })],
+      lines: [line({ id: 'a', unitPrice: 7120 })],
       benefit: { type: 'credit', label: 'Credit', remaining: 7500 },
       taxRate: WI,
       shipping: pickup,
     });
 
-    expect(result.taxableAmount).toBe(30);
-    expect(result.salesTax).toBe(2);
-    expect(result.waived).toBe(32);
+    expect(result.salesTax).toBe(392); // 391.6
+    expect(result.creditApplied).toBe(7500);
+    expect(result.waived).toBe(12);
     expect(result.total).toBe(0);
     expect(kinds(result)).toEqual(['credit', 'waived']);
-    expect(result.adjustments[1].amount).toBe(-32);
+    expect(result.adjustments[1].amount).toBe(-12);
   });
 
   it('does not touch a total at the minimum, or a zero total', () => {
@@ -393,7 +392,7 @@ describe('the small balance waiver', () => {
     });
     const zero = priceOrder({
       lines: [line({ id: 'a', unitPrice: 2000 })],
-      benefit: { type: 'credit', label: 'Credit', remaining: 2000 },
+      benefit: { type: 'credit', label: 'Credit', remaining: 5000 },
       taxRate: WI,
       shipping: pickup,
     });

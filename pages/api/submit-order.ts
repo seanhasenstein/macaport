@@ -23,7 +23,7 @@ import {
 } from '../../utils';
 import { getStoreStatus } from '../../utils/store';
 import { verifyCartItems } from 'utils/payment';
-import { internalHeaders } from '../../utils/internalRequest';
+import { internalHeaders, siteBaseUrl } from '../../utils/internalRequest';
 import { getStoreBenefit, readMemberSession } from '../../utils/memberBenefit';
 import {
   memberEligibility,
@@ -74,9 +74,14 @@ const SHIPPING_METHODS: ShippingMethod[] = [
  * never decrement stock and never send a receipt, with the customer charged
  * and nothing anywhere saying why.
  */
-async function callInternal(path: string, body: unknown, orderId: string) {
+async function callInternal(
+  baseUrl: string,
+  path: string,
+  body: unknown,
+  orderId: string
+) {
   try {
-    const response = await fetch(`${process.env.API_HOST}${path}`, {
+    const response = await fetch(`${baseUrl}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...internalHeaders() },
       body: JSON.stringify(body),
@@ -142,9 +147,9 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
   let db: Awaited<ReturnType<typeof connectToDb>> | undefined;
 
   try {
-    if (!process.env.API_HOST) {
-      throw new Error('Environment variable API_HOST is required');
-    }
+    // Throws in production if neither API_HOST nor VERCEL_URL is set, which
+    // is the same failure the old fixed API_HOST check caught.
+    const baseUrl = siteBaseUrl(req);
 
     db = await connectToDb();
 
@@ -362,10 +367,20 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
     orderSaved = true;
 
     // 11. send email receipt
-    await callInternal('/api/send-email-receipt', { order }, order.orderId);
+    await callInternal(
+      baseUrl,
+      '/api/send-email-receipt',
+      { order },
+      order.orderId
+    );
 
     // 12. send request to subtract inventory
-    await callInternal('/api/subtract-inventory', order.items, order.orderId);
+    await callInternal(
+      baseUrl,
+      '/api/subtract-inventory',
+      order.items,
+      order.orderId
+    );
 
     res.json({ success: true, orderId: order.orderId });
   } catch (error: any) {
