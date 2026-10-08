@@ -19,6 +19,7 @@ import { useSwitchFitnessDiscount } from 'hooks/useSwitchFitness';
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import ProductPersonalization from '../../../components/store/product/personalization';
 import ProductPageError from 'components/store/errors/ProductPageError';
+import StoreAnnouncement from 'components/store/common/StoreAnnouncement';
 import SmallHeader from 'components/store/product/SmallHeader';
 import LargeHeader from 'components/store/product/LargeHeader';
 import ProductImages from 'components/store/product/ProductImages';
@@ -58,7 +59,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       return {
         redirect: {
           permanent: false,
-          destination: '/store-closed',
+          destination: `/store-closed?store=${store._id}`,
         },
       };
     }
@@ -183,6 +184,11 @@ export default function Product(props: Props) {
     <>
       <StoreLayout title={`${props.product.name} | ${props.store.name}`}>
         <ProductStyles>
+          {props.store.announcement ? (
+            <div className="announcement">
+              <StoreAnnouncement text={props.store.announcement} />
+            </div>
+          ) : null}
           <div className="wrapper">
             <SmallHeader
               productName={props.product.name}
@@ -292,6 +298,12 @@ const ProductStyles = styled.div`
 
   .section {
     margin: 2.5rem 0 0;
+  }
+
+  .announcement {
+    margin: 0 auto 2.5rem;
+    max-width: 72rem;
+    width: 100%;
   }
 
   @media (max-width: 1024px) {

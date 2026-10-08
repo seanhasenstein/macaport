@@ -56,7 +56,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       return {
         redirect: {
           permanent: false,
-          destination: '/store-closed',
+          destination: `/store-closed?store=${storeResult._id}`,
         },
       };
     }
