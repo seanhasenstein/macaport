@@ -78,6 +78,28 @@ export async function getStoreById(db: Db, id: string) {
   return result;
 }
 
+// What the closed page shows for a store: its name and announcement, nothing
+// else. Undefined for an id that is malformed or matches no store, so a
+// hand-edited link falls back to the generic page instead of erroring.
+export async function getStoreAnnouncement(db: Db, id: string) {
+  if (!ObjectID.isValid(id)) {
+    return undefined;
+  }
+
+  const store: Pick<Store, 'name' | 'announcement'> | null = await db
+    .collection('stores')
+    .findOne(
+      { _id: new ObjectID(id) },
+      { projection: { _id: 0, name: 1, announcement: 1 } }
+    );
+
+  if (!store) {
+    return undefined;
+  }
+
+  return { name: store.name, announcement: store.announcement ?? null };
+}
+
 export async function getStores(db: Db, filter: Record<string, unknown> = {}) {
   const result = await db
     .collection('stores')

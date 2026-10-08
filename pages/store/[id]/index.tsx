@@ -13,6 +13,7 @@ import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import StoreItem from '../../../components/store/home/StoreItem';
 import StoreHomepageError from 'components/store/errors/StoreHomepageError';
+import StoreAnnouncement from 'components/store/common/StoreAnnouncement';
 import TeacherAppreciation from 'components/store/home/TeacherAppreciation';
 import SheboyganLutheranStaff from 'components/store/home/SheboyganLutheranStaff';
 import SwitchFitness from 'components/store/home/SwitchFitness';
@@ -46,7 +47,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
       return {
         redirect: {
           permanent: false,
-          destination: '/store-closed',
+          destination: `/store-closed?store=${store._id}`,
         },
       };
     }
@@ -117,6 +118,7 @@ export default function StoreHomepage(props: Props) {
   }
 
   const hasCloseDate = !!props.store.closeDate;
+  const hasAnnouncement = !!props.store.announcement;
   const storeId = props.store._id;
   const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
   const teacherAppreciationProductId = props.store.products[0]?.id;
@@ -136,6 +138,7 @@ export default function StoreHomepage(props: Props) {
     <StoreLayout title={`${props.store.name}`}>
       <StoreStyles
         hasCloseDate={hasCloseDate}
+        hasAnnouncement={hasAnnouncement}
         isTeacherAppreciation={isTeacherAppreciationStore}
       >
         {props.store.closeDate && (
@@ -149,6 +152,11 @@ export default function StoreHomepage(props: Props) {
             </span>
           </div>
         )}
+        {props.store.announcement ? (
+          <div className="announcement">
+            <StoreAnnouncement text={props.store.announcement} />
+          </div>
+        ) : null}
         <h2 className="store-name">
           <span>{props.store.name}</span>
         </h2>
@@ -207,6 +215,7 @@ export default function StoreHomepage(props: Props) {
 
 const StoreStyles = styled.div<{
   hasCloseDate: boolean;
+  hasAnnouncement: boolean;
   isTeacherAppreciation: boolean;
 }>`
   .store-name,
@@ -232,11 +241,17 @@ const StoreStyles = styled.div<{
       border: 2px solid #f9cdd5;
       border-radius: 0.5rem;
       box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      /* Stacked on the announcement, it takes the same width so the two
+         read as one block. Alone it stays sized to its text. */
+      ${props =>
+        props.hasAnnouncement ? 'width: 100%; max-width: 40rem;' : ''}
     }
   }
 
   .store-name {
-    margin: ${props => (props.hasCloseDate ? '2.25rem' : '4.25rem')} auto 0;
+    margin: ${props =>
+        props.hasCloseDate || props.hasAnnouncement ? '2.25rem' : '4.25rem'}
+      auto 0;
     padding: 0 1.5rem;
     font-size: 1.625rem;
     color: #111827;
@@ -288,6 +303,13 @@ const StoreStyles = styled.div<{
     }
   }
 
+  /* Sits with the close date, above the name, so the name stays the heading
+     over the products. */
+  .announcement {
+    margin: ${props => (props.hasCloseDate ? '1rem' : '3rem')} 0 0;
+    padding: 0 1.5rem;
+  }
+
   .items {
     /* margin: 4rem auto 3rem; */
     margin: ${props => (props.isTeacherAppreciation ? '3.5rem' : '4rem')} auto
@@ -311,8 +333,13 @@ const StoreStyles = styled.div<{
     .close-date {
       margin-top: 1.5rem;
     }
+    .announcement {
+      margin-top: ${props => (props.hasCloseDate ? '1rem' : '1.5rem')};
+    }
     .store-name {
-      margin: ${props => (props.hasCloseDate ? '2.25rem' : '3rem')} auto 0;
+      margin: ${props =>
+          props.hasCloseDate || props.hasAnnouncement ? '2.25rem' : '3rem'}
+        auto 0;
     }
 
     .items {
