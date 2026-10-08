@@ -235,6 +235,10 @@ export interface Store {
     createdAt: string;
   };
   showOnStoresPage: boolean;
+  // Plain text shown to customers on the store's homepage, its product pages,
+  // and the closed page once it closes. Unlike notes, which are internal and
+  // never sent to the storefront.
+  announcement?: string | null;
   createdAt: string;
   updatedAt: string;
   teacherAppreciationId: string;

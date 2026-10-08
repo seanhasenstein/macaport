@@ -1,8 +1,40 @@
+import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import NoNavLayout from '../components/store/layouts/NoNavLayout';
+import StoreAnnouncement from '../components/store/common/StoreAnnouncement';
 import styled from 'styled-components';
+import { connectToDb, store as storeModel } from '../db';
+import { getUrlParameter } from '../utils';
 
-export default function StoreClosed() {
+// The store pages send a closed store here as ?store=<id>, so the page can say
+// which store closed and repeat its announcement, which matters most now (for
+// a meet's store, "you can still buy at the meet"). Without the parameter, or
+// if the lookup fails, it is the generic closed page it always was.
+export const getServerSideProps: GetServerSideProps = async context => {
+  const id = getUrlParameter(context.query.store);
+
+  if (!id) {
+    return { props: {} };
+  }
+
+  try {
+    const db = await connectToDb();
+    const store = await storeModel.getStoreAnnouncement(db, id);
+    return { props: store ? { store } : {} };
+  } catch (error) {
+    console.error('Store closed page could not load the store', error);
+    return { props: {} };
+  }
+};
+
+type Props = {
+  store?: {
+    name: string;
+    announcement: string | null;
+  };
+};
+
+export default function StoreClosed(props: Props) {
   return (
     <NoNavLayout title="Store closed">
       <StoreClosedStyles>
@@ -22,10 +54,22 @@ export default function StoreClosed() {
           </svg>
           <h3>Store Closed</h3>
           <p>
-            The store you're looking for is closed. Please contact us with any
-            questions at{' '}
+            {props.store ? (
+              <>
+                The online store for <strong>{props.store.name}</strong> is
+                closed.
+              </>
+            ) : (
+              "The store you're looking for is closed."
+            )}{' '}
+            Please contact us with any questions at{' '}
             <a href="mailto:support@macaport.com">support@macaport.com</a>.
           </p>
+          {props.store?.announcement ? (
+            <div className="announcement">
+              <StoreAnnouncement text={props.store.announcement} />
+            </div>
+          ) : null}
           <Link href="/stores">
             <a className="link-button">See available stores</a>
           </Link>
@@ -82,6 +126,16 @@ const StoreClosedStyles = styled.div`
       color: #4f46e5;
       text-decoration: underline;
     }
+  }
+
+  strong {
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .announcement {
+    margin: 1.25rem 0 0;
+    width: 100%;
   }
 
   .link-button {
