@@ -120,7 +120,7 @@ const handler = nc<ExtendedRequest, NextApiResponse>()
       sender: 'Macaport',
     });
 
-    await sendEmail({
+    const delivery = await sendEmail({
       to: email,
       from: 'Macaport <support@macaport.com>',
       subject: message.subject,
@@ -137,6 +137,11 @@ const handler = nc<ExtendedRequest, NextApiResponse>()
       status: 'sent',
       resent: request.resent,
       expiresAt: request.record.expiresAt,
+      // Outside production the guard in utils/mailgun may have sent this
+      // somewhere else; the card says so rather than leaving a tester to
+      // wonder why nothing arrived.
+      deliveredTo: delivery.deliveredTo,
+      redirected: delivery.redirected,
     });
   });
 

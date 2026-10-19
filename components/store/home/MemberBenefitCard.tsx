@@ -91,11 +91,15 @@ export default function MemberBenefitCard({ storeId, benefit }: Props) {
       } else {
         setStep('code');
         setCooldownUntil(Date.now() + 30 * 1000);
-        setMessage(
-          data.resent
-            ? 'Sent again. It carries the same code as before.'
-            : undefined
-        );
+        const notes = [];
+        if (data.resent)
+          notes.push('Sent again. It carries the same code as before.');
+        if (data.redirected) {
+          notes.push(
+            `Test environment: your code was sent to ${data.deliveredTo} instead of ${email}.`
+          );
+        }
+        setMessage(notes.length ? notes.join(' ') : undefined);
       }
     } catch {
       setError('Something went wrong. Please try again.');

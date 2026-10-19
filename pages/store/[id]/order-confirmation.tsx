@@ -13,6 +13,7 @@ import {
 } from '../../../utils';
 import { useCart } from '../../../hooks/useCart';
 import { orderAdjustments } from '../../../utils/benefitDisplay';
+import { describeDelivery } from '../../../utils/mailgun';
 import NoNavLayout from '../../../components/store/layouts/NoNavLayout';
 import OrderConfirmationPageError from 'components/store/errors/OrderConfirmationPageError';
 
@@ -49,11 +50,20 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
+    // Outside production the receipt may have been redirected to a test
+    // inbox by the guard in utils/mailgun. Tell the tester, so a missing
+    // receipt is never a mystery. Null in production.
+    const delivery = describeDelivery(result.order.customer.email);
+    const receiptRedirect = delivery.redirected
+      ? delivery.deliveredTo ?? 'nowhere (EMAIL_REDIRECT_TO is not set)'
+      : null;
+
     return {
       props: {
         order: result.order,
         groupRequired: result.groupRequired,
         groupTerm: result.groupTerm,
+        receiptRedirect,
       },
     };
   } catch (error) {
@@ -70,6 +80,8 @@ type Props = {
   order: Order;
   groupRequired: boolean;
   groupTerm: string;
+  // Where the receipt actually went when the email guard redirected it.
+  receiptRedirect?: string | null;
   error?: string;
 };
 
@@ -130,6 +142,13 @@ export default function OrderConfirmation(props: Props) {
                       </a>
                       .
                     </p>
+                    {props.receiptRedirect ? (
+                      <p className="test-environment-note">
+                        Test environment: your receipt was sent to{' '}
+                        {props.receiptRedirect} instead of{' '}
+                        {props.order.customer.email}.
+                      </p>
+                    ) : null}
                   </div>
                   <div className="section order-details">
                     <div className="detail-item">
@@ -566,6 +585,16 @@ const OrderConfirmationStyles = styled.div`
 
   .addon-item {
     color: #111827;
+  }
+
+  .test-environment-note {
+    margin: 1rem 0 0;
+    padding: 0.75rem 1rem;
+    font-size: 0.8125rem;
+    color: #92400e;
+    background-color: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 0.375rem;
   }
 
   .order-summary {

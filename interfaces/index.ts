@@ -201,10 +201,20 @@ export interface Order {
     // Legacy: the single discount figure the three old programs wrote.
     discount?: number;
   };
+  // Written by the dashboard; the storefront only ever creates the initial
+  // "None" record and never updates it. `card` is what was refunded to the
+  // card in Stripe, `creditRestored` what went back onto the member's
+  // benefit, `returnedItems` which lines came back.
   refund: {
     status: 'None' | 'Partial' | 'Full';
     amount: number;
+    card?: number;
+    creditRestored?: number;
+    returnedItems?: { id: string; quantity: number }[];
+    updatedAt?: string;
   };
+  // Written by the dashboard when the order is included on a client invoice.
+  clientInvoiceId?: string | null;
   note?: string;
   // Who used what, when a member benefit was applied. The money is in
   // summary.adjustments; this is the link back to the member.

@@ -7,7 +7,7 @@
  *   node scripts/create-member-benefit.js \
  *     --store 64f1c2...            the store's _id
  *     --type credit                credit | discount | freeItem
- *     --amount 75                  dollars for credit and discount, garments for freeItem
+ *     --amount 75 or 74.99         dollars for credit and discount, garments for freeItem
  *     --name "Employee Apparel Credit"
  *     --members Employees          plural, what the people are called
  *     --csv ./members.csv          header row: email, and optionally firstName, lastName
@@ -108,13 +108,13 @@ async function main() {
   if (!Number.isFinite(amountInput) || amountInput <= 0) {
     throw new Error('--amount must be a positive number');
   }
-  // Whole dollars in, cents stored. Whole dollars because the admin types
-  // them, and because cents in an allowance is what puts a total under
-  // Stripe's minimum.
+  // Dollars and cents in (74.99), cents stored. Cents in an allowance are
+  // fine for the pipeline; the only thing they can produce is a total under
+  // Stripe's minimum, which the pipeline waives. Garments for freeItem.
   const amount =
     opts.type === 'freeItem'
       ? Math.round(amountInput)
-      : Math.round(amountInput) * 100;
+      : Math.round(amountInput * 100);
 
   const rows = parseCsv(fs.readFileSync(opts.csv, 'utf8'));
   const seen = new Set();
