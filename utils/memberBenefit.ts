@@ -89,6 +89,7 @@ export function benefitViewFor(
     access: benefit.access,
     active: benefit.active,
     copy: benefit.copy,
+    amount: benefit.amount,
     productIds: benefit.productIds ?? null,
     member,
   };

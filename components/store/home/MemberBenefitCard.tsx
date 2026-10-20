@@ -2,14 +2,51 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { CheckCircleIcon } from '@heroicons/react/20/solid';
+import { BanknotesIcon, GiftIcon, TagIcon } from '@heroicons/react/24/outline';
 
 import { BenefitView } from 'interfaces';
 import { describeRemaining } from 'utils/benefitDisplay';
 
 type Props = {
   storeId: string;
+  storeName: string;
   benefit: BenefitView;
 };
+
+const money = (cents: number) =>
+  cents % 100 === 0 ? `$${cents / 100}` : `$${(cents / 100).toFixed(2)}`;
+
+// What is on offer, in one sentence, before anyone signs in: who it is for,
+// what they get, and what happens when they press the button. A client can
+// replace it with their own instructions from the dashboard; most will not
+// need to.
+function defaultInstructions(storeName: string, benefit: BenefitView) {
+  const who = `${storeName} ${benefit.copy.memberLabel.toLowerCase()}`;
+  const what =
+    benefit.type === 'credit'
+      ? `get ${money(benefit.amount)} to spend in this store`
+      : benefit.type === 'discount'
+      ? `get ${money(benefit.amount)} off an order in this store`
+      : `get ${
+          benefit.amount === 1
+            ? 'one free item'
+            : `${benefit.amount} free items`
+        } from this store`;
+  return `${who} ${what}. Enter your work email and we'll send you a code to activate it.`;
+}
+
+// Not terms, just how it works, in the two facts people ask about. Generated
+// from the type so it is always true of the code that enforces it.
+function finePrint(benefit: BenefitView) {
+  switch (benefit.type) {
+    case 'credit':
+      return 'Use it across orders while the store is open. Anything over your credit is paid by card at checkout.';
+    case 'discount':
+      return 'One use per email. It does not cover tax or shipping.';
+    case 'freeItem':
+      return 'One per person. Add-ons like a printed name are still charged.';
+  }
+}
 
 type Step = 'email' | 'code';
 
@@ -20,7 +57,11 @@ type Step = 'email' | 'code';
 // It holds no eligibility state of its own. Verifying sets a cookie on the
 // server, and the page's props are re-fetched, so what the card shows is
 // always what the server just said.
-export default function MemberBenefitCard({ storeId, benefit }: Props) {
+export default function MemberBenefitCard({
+  storeId,
+  storeName,
+  benefit,
+}: Props) {
   const router = useRouter();
   const { copy, member } = benefit;
 
@@ -165,11 +206,25 @@ export default function MemberBenefitCard({ storeId, benefit }: Props) {
     setMessage(undefined);
   };
 
+  // The slot above the title is always filled, so a client without a logo
+  // does not look like one who forgot. Not Macaport's mark: the benefit is
+  // the client's, and the store header already carries ours. A neutral icon
+  // for the kind of benefit says what the card is at a glance.
+  const TypeIcon =
+    benefit.type === 'credit'
+      ? BanknotesIcon
+      : benefit.type === 'discount'
+      ? TagIcon
+      : GiftIcon;
   const logo = copy.logo ? (
     <div className="logo">
       <img src={copy.logo} alt="" />
     </div>
-  ) : null;
+  ) : (
+    <div className="logo logo-placeholder" aria-hidden="true">
+      <TypeIcon className="type-icon" />
+    </div>
+  );
 
   // Signed in. What they see depends on their standing, not on anything
   // this browser remembers.
@@ -282,8 +337,7 @@ export default function MemberBenefitCard({ storeId, benefit }: Props) {
       {logo}
       <h3 className="title">{copy.benefitName}</h3>
       <p className="paragraph">
-        {copy.instructions ||
-          `${copy.memberLabel}: enter your email to activate your ${copy.benefitName}.`}
+        {copy.instructions || defaultInstructions(storeName, benefit)}
       </p>
       <form onSubmit={requestCode}>
         <div className="field-item">
@@ -303,9 +357,10 @@ export default function MemberBenefitCard({ storeId, benefit }: Props) {
           />
         </div>
         <button type="submit" className="primary-button" disabled={busy}>
-          {busy ? <LoadingSpinner /> : `Activate your ${copy.benefitName}`}
+          {busy ? <LoadingSpinner /> : 'Email me a code'}
         </button>
         {error ? <div className="validation-error">{error}</div> : null}
+        <p className="fine-print">{finePrint(benefit)}</p>
       </form>
     </CardStyles>
   );
@@ -327,6 +382,22 @@ const CardStyles = styled.div`
 
   form {
     width: 100%;
+  }
+
+  .logo-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.75rem;
+    border-radius: 9999px;
+    background-color: #f3f4f6;
+    border: 1px solid #e5e7eb;
+
+    .type-icon {
+      height: 1.5rem;
+      width: 1.5rem;
+      color: #4b5563;
+    }
   }
 
   .logo {
@@ -400,7 +471,8 @@ const CardStyles = styled.div`
     margin: 1rem 0 0;
     padding: 0.75rem 1.25rem;
     width: 100%;
-    height: 2.625rem;
+    min-height: 2.625rem;
+    line-height: 1.3;
     position: relative;
     display: flex;
     justify-content: center;
@@ -486,6 +558,13 @@ const CardStyles = styled.div`
     margin: 0.75rem 0 0;
     color: #047857;
     font-size: 0.8125rem;
+  }
+
+  .fine-print {
+    margin: 1rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: #6b7280;
   }
 
   @media (min-width: 768px) {

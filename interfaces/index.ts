@@ -528,6 +528,9 @@ export interface BenefitView {
   access: BenefitAccess;
   active: boolean;
   copy: MemberBenefitCopy;
+  // Cents, or garments for freeItem: what a member starts with. Shown on the
+  // card before sign-in, so people know what is on offer before they act.
+  amount: number;
   productIds: string[] | null;
   // The verified member, when this browser holds a valid session for one.
   member: BenefitMemberView | null;

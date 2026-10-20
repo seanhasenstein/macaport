@@ -110,6 +110,7 @@ export default function StoreDemoHomepage(props: Props) {
               {benefit ? (
                 <MemberBenefitCard
                   storeId={props.store._id}
+                  storeName={props.store.name}
                   benefit={benefit}
                 />
               ) : null}
