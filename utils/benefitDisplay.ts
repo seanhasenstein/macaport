@@ -101,24 +101,73 @@ export function membersOnlyLockout(view: BenefitView | null) {
   return !!view && view.access === 'members' && !view.member;
 }
 
-// The figure a member sees on the card for each type: a credit is a
-// balance, a discount is an amount off, a free item is a count.
-export function describeRemaining(view: BenefitView) {
-  const member = view.member;
-  if (!member) return '';
+// What the card says about a signed-in member, in the three pieces it
+// shows: a state, the number they came back for, and a line of context.
+//
+// A permanent check mark was doing this job badly. A check is a success
+// signal for the moment an action completes; on every visit afterwards the
+// member is not completing anything, they are looking for their balance,
+// and the icon competed with it. A state does the same work in a word,
+// reads the same for every type, and gives the paused and used-up states a
+// marker of their own, which they had no way of showing before.
+export type BenefitStatus = {
+  tone: 'active' | 'spent' | 'paused';
+  label: string;
+  // The number, when there is one worth setting large.
+  headline: string | null;
+  detail: string;
+};
 
-  const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+export function benefitStatus(view: BenefitView): BenefitStatus | null {
+  const member = view.member;
+  if (!member) return null;
+
+  if (member.reason === 'paused') {
+    return {
+      tone: 'paused',
+      label: 'Paused',
+      headline: null,
+      detail: 'Please check back later.',
+    };
+  }
+
+  if (member.reason === 'usedUp') {
+    return {
+      tone: 'spent',
+      label: 'Used up',
+      headline: null,
+      detail: 'Anything else you order is at the regular price.',
+    };
+  }
+
+  if (member.reason !== 'eligible') return null;
 
   switch (view.type) {
     case 'credit':
-      return `You have ${money(member.remaining)} of ${money(
-        member.allowance
-      )} left to spend.`;
+      return {
+        tone: 'active',
+        label: 'Active',
+        headline: `${formatToMoney(member.remaining, true)} left`,
+        detail: `of your ${formatToMoney(member.allowance, true)} credit.`,
+      };
     case 'discount':
-      return `You have ${money(member.remaining)} off your order.`;
+      return {
+        tone: 'active',
+        label: 'Active',
+        headline: `${formatToMoney(member.remaining, true)} off`,
+        detail: 'Applied at checkout.',
+      };
     case 'freeItem':
-      return `You have ${member.remaining} free item${
-        member.remaining === 1 ? '' : 's'
-      } left.`;
+      return {
+        tone: 'active',
+        label: 'Active',
+        headline: `${member.remaining} free item${
+          member.remaining === 1 ? '' : 's'
+        } left`,
+        detail:
+          member.allowance > 1
+            ? `of your ${member.allowance}.`
+            : 'Add it to your cart and it costs nothing.',
+      };
   }
 }

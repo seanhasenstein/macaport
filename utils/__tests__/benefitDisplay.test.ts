@@ -1,6 +1,6 @@
 import {
+  benefitStatus,
   describeBenefitUse,
-  describeRemaining,
   membersOnlyLockout,
   orderAdjustments,
   splitAdjustments,
@@ -59,19 +59,66 @@ describe('members-only lockout', () => {
   });
 });
 
-describe('what a member sees as remaining', () => {
-  it('states a credit as a balance of the allowance', () => {
-    expect(describeRemaining(view({ member: member('eligible', 170) }))).toBe(
-      'You have $1.70 of $75.00 left to spend.'
-    );
+describe('the status a signed-in member sees', () => {
+  it('leads a credit with what is left, not with what it was', () => {
+    expect(benefitStatus(view({ member: member('eligible', 5100) }))).toEqual({
+      tone: 'active',
+      label: 'Active',
+      headline: '$51.00 left',
+      detail: 'of your $75.00 credit.',
+    });
   });
 
-  it('states a free item as a count', () => {
+  it('counts free items, singular when there is one', () => {
+    const free = (allowance: number, remaining: number) =>
+      benefitStatus(
+        view({
+          type: 'freeItem',
+          amount: allowance,
+          member: {
+            ...member('eligible', remaining),
+            allowance,
+            used: allowance - remaining,
+          },
+        })
+      );
+
+    expect(free(1, 1)?.headline).toBe('1 free item left');
+    expect(free(1, 1)?.detail).toBe(
+      'Add it to your cart and it costs nothing.'
+    );
+    expect(free(3, 2)?.headline).toBe('2 free items left');
+    expect(free(3, 2)?.detail).toBe('of your 3.');
+  });
+
+  it('states a discount as an amount off', () => {
     expect(
-      describeRemaining(
-        view({ type: 'freeItem', amount: 2, member: member('eligible', 2) })
+      benefitStatus(
+        view({
+          type: 'discount',
+          amount: 2500,
+          member: member('eligible', 2500),
+        })
       )
-    ).toBe('You have 2 free items left.');
+    ).toMatchObject({ headline: '$25.00 off', detail: 'Applied at checkout.' });
+  });
+
+  it('gives the spent and paused states a marker of their own', () => {
+    expect(benefitStatus(view({ member: member('usedUp', 0) }))).toEqual({
+      tone: 'spent',
+      label: 'Used up',
+      headline: null,
+      detail: 'Anything else you order is at the regular price.',
+    });
+    expect(benefitStatus(view({ member: member('paused') }))).toMatchObject({
+      tone: 'paused',
+      label: 'Paused',
+      headline: null,
+    });
+  });
+
+  it('says nothing when nobody is signed in', () => {
+    expect(benefitStatus(view())).toBeNull();
   });
 });
 

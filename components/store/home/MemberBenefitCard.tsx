@@ -5,7 +5,7 @@ import { CheckCircleIcon } from '@heroicons/react/20/solid';
 import { BanknotesIcon, GiftIcon, TagIcon } from '@heroicons/react/24/outline';
 
 import { BenefitView } from 'interfaces';
-import { describeRemaining } from 'utils/benefitDisplay';
+import { benefitStatus } from 'utils/benefitDisplay';
 
 type Props = {
   storeId: string;
@@ -227,34 +227,30 @@ export default function MemberBenefitCard({ storeId, benefit }: Props) {
   );
 
   // Signed in. What they see depends on their standing, not on anything
-  // this browser remembers.
+  // this browser remembers. The title stays the benefit's own name, the
+  // same string the signed-out card shows, so verifying does not rename
+  // the thing in front of them.
   if (member) {
-    const name = member.firstName ? `, ${member.firstName}` : '';
-    const heading =
-      member.reason === 'eligible'
-        ? `Your ${copy.benefitName} is active`
-        : member.reason === 'usedUp'
-        ? `You've used your ${copy.benefitName}`
-        : `The ${copy.benefitName} is paused`;
-    const detail =
-      member.reason === 'eligible'
-        ? describeRemaining(benefit)
-        : member.reason === 'usedUp'
-        ? 'Anything else you order is at the regular price.'
-        : 'Please check back later.';
+    const status = benefitStatus(benefit);
 
     return (
       <CardStyles>
         {logo}
-        <h3 className="title verified-title">
-          {member.reason === 'eligible' ? (
-            <CheckCircleIcon className="check-circle-icon" />
-          ) : null}
-          {heading}
-        </h3>
-        <p className="paragraph">
-          Welcome{name}. {detail}
-        </p>
+        <h3 className="title">{copy.benefitName}</h3>
+        {status ? (
+          <>
+            <span className={`status-pill ${status.tone}`}>
+              {status.tone === 'active' ? (
+                <CheckCircleIcon className="status-icon" />
+              ) : null}
+              {status.label}
+            </span>
+            {status.headline ? (
+              <p className="headline">{status.headline}</p>
+            ) : null}
+            <p className="paragraph">{status.detail}</p>
+          </>
+        ) : null}
         <div className="current-email">
           <p className="email-label">Your email</p>
           <p className="email">{member.email}</p>
@@ -415,24 +411,58 @@ const CardStyles = styled.div`
     color: #000;
     font-size: 1.125rem;
     line-height: 1.35;
+  }
 
-    /* The check flows with the text rather than sitting beside it. As a
-       flex row it was centred against the whole heading, so the moment the
-       heading wrapped — which it does for any benefit with a name of more
-       than a couple of words — the icon floated out to the left on its own,
-       off the card's centre line and away from the words it belongs to. */
-    &.verified-title {
-      font-size: 1rem;
+  /* The state, in a word. Carries its own background, so it reads as a
+     label rather than as another sentence, and it is the one element whose
+     colour changes with the state. */
+  .status-pill {
+    margin: 0.625rem 0 0;
+    padding: 0.25rem 0.625rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-radius: 9999px;
+    border: 1px solid;
 
-      .check-circle-icon {
-        margin: 0 0.3125rem 0 0;
-        height: 1.125rem;
-        width: 1.125rem;
-        /* Optically on the cap height of the text it precedes. */
-        vertical-align: -0.1875em;
-        color: #047857;
-      }
+    .status-icon {
+      height: 0.875rem;
+      width: 0.875rem;
     }
+
+    &.active {
+      color: #047857;
+      background-color: #ecfdf5;
+      border-color: #a7f3d0;
+    }
+
+    &.spent {
+      color: #4b5563;
+      background-color: #f3f4f6;
+      border-color: #e5e7eb;
+    }
+
+    &.paused {
+      color: #92400e;
+      background-color: #fffbeb;
+      border-color: #fde68a;
+    }
+  }
+
+  /* What they came back to find. */
+  .headline {
+    margin: 0.875rem 0 0;
+    font-size: 1.375rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #111827;
+  }
+
+  .headline + .paragraph {
+    margin-top: 0.25rem;
   }
 
   .paragraph {
