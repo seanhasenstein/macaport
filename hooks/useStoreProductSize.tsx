@@ -6,7 +6,6 @@ interface Params {
   cartItems: CartItem[];
   productSkus: ProductSku[];
   selectedColor: ProductColor;
-  eligibleForFreeShirt: boolean;
 }
 
 export default function useStoreProductSize(params: Params) {
@@ -48,11 +47,7 @@ export default function useStoreProductSize(params: Params) {
 
     setLowInventory(combinedInventory < 3);
 
-    const sizeCheckForFreeShirt: ProductSize = params.eligibleForFreeShirt
-      ? { ...productSku.size, price: 0 }
-      : productSku.size;
-
-    setSize(sizeCheckForFreeShirt);
+    setSize(productSku.size);
   };
 
   return {

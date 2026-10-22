@@ -6,17 +6,17 @@ import { useRouter } from 'next/router';
 import { connectToDb, store as storeModel } from 'db';
 
 import { getUrlParameter } from 'utils';
-import { useCart } from 'hooks/useCart';
-import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
+import { getBenefitView } from 'utils/memberBenefit';
+import { membersOnlyLockout } from 'utils/benefitDisplay';
+import { usePricedCart } from 'hooks/usePricedCart';
 
 import StoreLayout from '../../../../components/store/layouts/StoreLayout';
 import StoreItem from '../../../../components/store/home/StoreItem';
 import StoreHomepageError from 'components/store/errors/StoreHomepageError';
-import TeacherAppreciation from 'components/store/home/TeacherAppreciation';
-import SwitchFitness from 'components/store/home/SwitchFitness';
+import MemberBenefitCard from 'components/store/home/MemberBenefitCard';
 import DemoBanner from 'components/store/demo/banner';
 
-import { Store, StoreProduct } from '../../../../interfaces';
+import { BenefitView, Store, StoreProduct } from '../../../../interfaces';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -38,7 +38,9 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    return { props: { store } };
+    const benefit = await getBenefitView(db, store, context.req);
+
+    return { props: { store, benefit } };
   } catch (error) {
     return {
       props: { error },
@@ -48,50 +50,34 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
 type Props = {
   store: Store;
+  benefit?: BenefitView | null;
   error?: string;
 };
 
 export default function StoreDemoHomepage(props: Props) {
   const router = useRouter();
-
-  const cart = useCart();
-
-  const cartHasFreeItem = cart.items.some(
-    item => item.itemTotal === 0 && item.quantity === 1
-  );
-
-  const storeId = props.store._id;
-
-  // teacher appreciation
-  const {
-    email: teacherAppreciationEmail,
-    isEligible,
-    alreadyUsed,
-  } = useTeacherAppreciation();
-  const isTeacherAppreciationStore = !!props.store.teacherAppreciationId;
-  const teacherAppreciationProductId = props.store.products[0].id;
-  // todo: update link to demo
-  const teacherAppreciationProductLink = `/store/${storeId}/demo/product?productId=${teacherAppreciationProductId}`;
-  const eligibleForFreeItem =
-    isTeacherAppreciationStore &&
-    !cartHasFreeItem &&
-    isEligible &&
-    !alreadyUsed &&
-    teacherAppreciationEmail !== '';
-
-  // switch fitness
-  const isSwitchFitness = !!props.store.meta?.isSwitchFitness;
-  const switchFitnessDiscountId = props.store.meta?.switchFitnessDiscountId;
+  const benefit = props.benefit ?? null;
+  const priced = usePricedCart(benefit, null);
 
   if (props.error) {
     return <StoreHomepageError />;
   }
 
+  const locked = membersOnlyLockout(benefit);
+  const member = benefit?.member ?? null;
+  const freeItemFor = (product: StoreProduct) =>
+    !!benefit &&
+    benefit.type === 'freeItem' &&
+    !!member &&
+    member.reason === 'eligible' &&
+    (benefit.productIds === null || benefit.productIds.includes(product.id)) &&
+    member.remaining > priced.freeUnitsInCart;
+
   return (
     <>
       <DemoBanner />
       <StoreLayout title={`${props.store.name}`}>
-        <StoreDemoStyles isTeacherAppreciation={isTeacherAppreciationStore}>
+        <StoreDemoStyles hasBenefit={!!benefit}>
           <div className="store-header">
             <h2 className="store-name">
               <span>{props.store.name}</span>
@@ -121,24 +107,24 @@ export default function StoreDemoHomepage(props: Props) {
             </div>
           ) : (
             <div className="items">
-              {props.store.teacherAppreciationId ? (
-                <TeacherAppreciation
-                  teacherAppreciationId={props.store.teacherAppreciationId}
-                  productLink={teacherAppreciationProductLink}
-                />
-              ) : null}
-              {isSwitchFitness && switchFitnessDiscountId ? (
-                <SwitchFitness switchFitnessId={switchFitnessDiscountId} />
-              ) : null}
-              {props.store.products.map((p: StoreProduct) => (
-                <StoreItem
-                  key={p.id}
-                  item={p}
+              {benefit ? (
+                <MemberBenefitCard
                   storeId={props.store._id}
-                  isDemo={router.pathname.split('/').includes('demo')}
-                  eligibleForFreeItem={eligibleForFreeItem}
+                  storeName={props.store.name}
+                  benefit={benefit}
                 />
-              ))}
+              ) : null}
+              {locked
+                ? null
+                : props.store.products.map((p: StoreProduct) => (
+                    <StoreItem
+                      key={p.id}
+                      item={p}
+                      storeId={props.store._id}
+                      isDemo={router.pathname.split('/').includes('demo')}
+                      eligibleForFreeItem={freeItemFor(p)}
+                    />
+                  ))}
             </div>
           )}
         </StoreDemoStyles>
@@ -147,7 +133,7 @@ export default function StoreDemoHomepage(props: Props) {
   );
 }
 
-const StoreDemoStyles = styled.div<{ isTeacherAppreciation: boolean }>`
+const StoreDemoStyles = styled.div<{ hasBenefit: boolean }>`
   position: relative;
   margin: 4rem 0 0;
 
@@ -211,8 +197,7 @@ const StoreDemoStyles = styled.div<{ isTeacherAppreciation: boolean }>`
 
   .items {
     /* margin: 4rem auto 3rem; */
-    margin: ${props => (props.isTeacherAppreciation ? '3.5rem' : '4rem')} auto
-      3rem;
+    margin: ${props => (props.hasBenefit ? '3.5rem' : '4rem')} auto 3rem;
     padding: 0 1.5rem;
     max-width: 72rem;
     width: 100%;

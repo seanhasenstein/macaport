@@ -8,17 +8,17 @@ import { connectToDb, store as storeModel } from 'db';
 
 import { getStoreStatus } from 'utils/store';
 import { formatToMoney, getUrlParameter } from '../../../utils';
+import { getBenefitView } from 'utils/memberBenefit';
+import { membersOnlyLockout } from 'utils/benefitDisplay';
 import useHasMounted from '../../../hooks/useHasMounted';
 import { useCart } from '../../../hooks/useCart';
-import { useTeacherAppreciation } from 'hooks/useTeacherAppreciation';
-import { useSheboyganLutheranStaff } from 'hooks/useSheboyganLutheranStaff';
-import { useSwitchFitnessDiscount } from 'hooks/useSwitchFitness';
+import { usePricedCart } from 'hooks/usePricedCart';
 
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import CartItem from '../../../components/store/cart/CartItem';
 import LinkButton from '../../../components/store/common/LinkButton';
 
-import { CartItem as CartItemInterface, Store } from '../../../interfaces';
+import { BenefitView, Store } from '../../../interfaces';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -51,7 +51,18 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
-    return { props: { store } };
+    const benefit = await getBenefitView(db, store, context.req);
+
+    if (membersOnlyLockout(benefit)) {
+      return {
+        redirect: {
+          permanent: false,
+          destination: `/store/${store._id}`,
+        },
+      };
+    }
+
+    return { props: { store, benefit } };
   } catch (error) {
     return {
       props: { error },
@@ -61,6 +72,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
 type Props = {
   store: Store;
+  benefit?: BenefitView | null;
   error?: string;
 };
 
@@ -69,59 +81,12 @@ export default function Cart(props: Props) {
   const router = useRouter();
 
   const { store } = props;
-  const {
-    _id: storeId,
-    meta,
-    name: storeName,
-    products,
-    teacherAppreciationId,
-    sheboyganLutheranStaffId,
-  } = store;
+  const { _id: storeId, name: storeName, products } = store;
 
-  const {
-    isEligible: isEligibleForSwitchFitnessDiscount,
-    alreadyUsed: alreadyUsedForSwitchFitnessDiscount,
-  } = useSwitchFitnessDiscount();
-
-  const isSwitchFitnessStore =
-    !!meta?.isSwitchFitness && !!meta?.switchFitnessDiscountId;
-  const applySwitchFitnessDiscount =
-    isSwitchFitnessStore &&
-    isEligibleForSwitchFitnessDiscount &&
-    !alreadyUsedForSwitchFitnessDiscount;
-
-  const {
-    alreadyUsed: alreadyUsedForSheboyganLutheranStaff,
-    isEligible: isEligibleForSheboyganLutheranStaff,
-  } = useSheboyganLutheranStaff();
-
-  const isSheboyganLutheranStaffStore = !!store.sheboyganLutheranStaffId;
-  const applySheboyganLutheranStaffDiscount =
-    isSheboyganLutheranStaffStore &&
-    isEligibleForSheboyganLutheranStaff &&
-    !alreadyUsedForSheboyganLutheranStaff;
-
-  const cart = useCart({
-    sheboyganLutheranStaffEligible:
-      !!sheboyganLutheranStaffId &&
-      isEligibleForSheboyganLutheranStaff &&
-      !alreadyUsedForSheboyganLutheranStaff,
-  });
-
-  const {
-    email: teacherAppreciationEmail,
-    isEligible: isEligibleForTeacherAppreciation,
-    alreadyUsed: alreadyUsedForTeacherAppreciation,
-  } = useTeacherAppreciation();
-
-  const isTeacherAppreciationStore = !!teacherAppreciationId;
-  const cartHasFreeItem = cart.items.some(
-    item => item.itemTotal === 0 && item.quantity === 1
-  );
-  const eligibleForTeacherAppreciation =
-    isTeacherAppreciationStore &&
-    isEligibleForTeacherAppreciation &&
-    !alreadyUsedForTeacherAppreciation;
+  const cart = useCart();
+  // No shipping data on this page: shipping shows as "calculated next" and
+  // the total here is the total before it.
+  const priced = usePricedCart(props.benefit ?? null, null);
 
   // if (props.error) {
   // TODO: add error component
@@ -156,7 +121,7 @@ export default function Cart(props: Props) {
                       .
                     </div>
                   ) : (
-                    cart.items.map((item: CartItemInterface) => {
+                    priced.items.map(item => {
                       const product = products.find(
                         p => p.id === item.sku.storeProductId
                       );
@@ -174,10 +139,6 @@ export default function Cart(props: Props) {
                             item,
                             skus: product.productSkus,
                             sizes: product.sizes,
-                            cartHasFreeItem,
-                            isTeacherAppreciationStore,
-                            teacherAppreciationEmail,
-                            eligibleForTeacherAppreciation,
                             isDemo: false,
                           }}
                         />
@@ -191,27 +152,21 @@ export default function Cart(props: Props) {
                     <div className="item">
                       <div className="key">Subtotal</div>
                       <div className="value">
-                        {formatToMoney(cart.cartSubtotal, true)}
+                        {formatToMoney(priced.subtotal, true)}
                       </div>
                     </div>
-                    {applySwitchFitnessDiscount && cart.cartSubtotal > 0 ? (
-                      <div className="item">
-                        <div className="key">Switch Fitness Promo</div>
-                        <div className="value">-$25.00</div>
+                    {priced.adjustments.map((adjustment, index) => (
+                      <div className="item" key={index}>
+                        <div className="key">{adjustment.label}</div>
+                        <div className="value">
+                          -{formatToMoney(-adjustment.amount, true)}
+                        </div>
                       </div>
-                    ) : null}
-                    {applySheboyganLutheranStaffDiscount &&
-                    cart.cartSubtotal > 0 ? (
-                      <div className="item">
-                        <div className="key">Sheboygan Lutheran Staff</div>
-                        {/* TODO: add dyanmic value from database */}
-                        <div className="value">-$75.00</div>
-                      </div>
-                    ) : null}
+                    ))}
                     <div className="item">
                       <div className="key">Sales Tax</div>
                       <div className="value">
-                        {formatToMoney(cart.salesTax, true)}
+                        {formatToMoney(priced.salesTax, true)}
                       </div>
                     </div>
                     <div className="item">
@@ -221,7 +176,7 @@ export default function Cart(props: Props) {
                     <div className="item total">
                       <div className="key">Order Total</div>
                       <div className="value">
-                        {formatToMoney(cart.cartTotalWithoutShipping, true)}
+                        {formatToMoney(priced.total, true)}
                       </div>
                     </div>
                     <LinkButton

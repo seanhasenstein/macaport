@@ -12,6 +12,8 @@ import {
   getUrlParameter,
 } from '../../../utils';
 import { useCart } from '../../../hooks/useCart';
+import { orderAdjustments } from '../../../utils/benefitDisplay';
+import { describeDelivery } from '../../../utils/mailgun';
 import NoNavLayout from '../../../components/store/layouts/NoNavLayout';
 import OrderConfirmationPageError from 'components/store/errors/OrderConfirmationPageError';
 
@@ -48,11 +50,20 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
+    // Outside production the receipt may have been redirected to a test
+    // inbox by the guard in utils/mailgun. Tell the tester, so a missing
+    // receipt is never a mystery. Null in production.
+    const delivery = describeDelivery(result.order.customer.email);
+    const receiptRedirect = delivery.redirected
+      ? delivery.deliveredTo ?? 'nowhere (EMAIL_REDIRECT_TO is not set)'
+      : null;
+
     return {
       props: {
         order: result.order,
         groupRequired: result.groupRequired,
         groupTerm: result.groupTerm,
+        receiptRedirect,
       },
     };
   } catch (error) {
@@ -69,6 +80,8 @@ type Props = {
   order: Order;
   groupRequired: boolean;
   groupTerm: string;
+  // Where the receipt actually went when the email guard redirected it.
+  receiptRedirect?: string | null;
   error?: string;
 };
 
@@ -86,29 +99,30 @@ export default function OrderConfirmation(props: Props) {
     return <OrderConfirmationPageError />;
   }
 
-  const headerCopy =
-    props.order.teacherAppreciation && props.order.summary.total === 0
-      ? 'Order'
-      : 'Payment';
-
-  const isSheboyganLutheranStaffStore =
-    !!props.order.sheboyganLutheranStaffDiscount?.id;
-  const sheboyganLutheranStaffEmail =
-    props.order.sheboyganLutheranStaffDiscount?.email;
-  const sheboyganLutheranStaffDiscount =
-    props.order.sheboyganLutheranStaffDiscount?.discount;
-  const hasSheboyganLutheranStaffDiscount =
-    !!isSheboyganLutheranStaffStore &&
-    !!sheboyganLutheranStaffEmail &&
-    !!sheboyganLutheranStaffDiscount;
-
-  const isTeacherAppreciationStore = !!props.order.teacherAppreciation?.id;
-  const teacherAppreciationEmail = props.order.teacherAppreciation?.email;
-  const orderHasFreeItem = props.order.items.some(
-    item => item.itemTotal === 0 && item.quantity === 1
-  );
-  const eligibleForTeacherAppreciation =
-    isTeacherAppreciationStore && teacherAppreciationEmail;
+  const headerCopy = props.order.summary.total === 0 ? 'Order' : 'Payment';
+  const adjustments = orderAdjustments(props.order);
+  // What is left after this order, from the order's own record rather than
+  // the live balance, so the page reads the same a week later.
+  const benefitUse = props.order.benefit;
+  const benefitLabel =
+    adjustments.find(a => a.kind === 'credit' || a.kind === 'freeItem')
+      ?.label ?? 'Your benefit';
+  const remainingLine =
+    benefitUse && benefitUse.type === 'credit'
+      ? `${benefitLabel}: ${formatToMoney(
+          benefitUse.used,
+          true
+        )} used on this order, ${formatToMoney(
+          benefitUse.remainingAfter,
+          true
+        )} left to spend.`
+      : benefitUse && benefitUse.type === 'freeItem'
+      ? `${benefitLabel}: ${benefitUse.remainingAfter} free item${
+          benefitUse.remainingAfter === 1 ? '' : 's'
+        } left.`
+      : null;
+  const lineAdjustments = adjustments.filter(a => a.lineId);
+  const orderLevelAdjustments = adjustments.filter(a => !a.lineId);
 
   return (
     <NoNavLayout
@@ -148,6 +162,13 @@ export default function OrderConfirmation(props: Props) {
                       </a>
                       .
                     </p>
+                    {props.receiptRedirect ? (
+                      <p className="test-environment-note">
+                        Test environment: your receipt was sent to{' '}
+                        {props.receiptRedirect} instead of{' '}
+                        {props.order.customer.email}.
+                      </p>
+                    ) : null}
                   </div>
                   <div className="section order-details">
                     <div className="detail-item">
@@ -241,10 +262,9 @@ export default function OrderConfirmation(props: Props) {
                   <h3>Order Items</h3>
                   <div>
                     {props.order.items.map(item => {
-                      const renderTeacherAppreciation =
-                        eligibleForTeacherAppreciation &&
-                        orderHasFreeItem &&
-                        item.itemTotal === 0;
+                      const itemAdjustments = lineAdjustments.filter(
+                        a => a.lineId === item.id
+                      );
 
                       return (
                         <div key={item.id} className="order-item">
@@ -261,14 +281,11 @@ export default function OrderConfirmation(props: Props) {
                                 {formatToMoney(item.itemTotal!)}
                               </div>
                             </div>
-                            {renderTeacherAppreciation && (
-                              <div className="teacher-appreciation">
-                                <div>Free Staff Appreciation Item</div>
-                                <div className="email">
-                                  {teacherAppreciationEmail}
-                                </div>
+                            {itemAdjustments.map((adjustment, index) => (
+                              <div className="adjustment" key={index}>
+                                <div>{adjustment.label}</div>
                               </div>
-                            )}
+                            ))}
                             <div className="order-item-details">
                               <div className="order-item-detail item-quantity">
                                 Qty:{' '}
@@ -327,24 +344,16 @@ export default function OrderConfirmation(props: Props) {
                         {formatToMoney(props.order.summary.subtotal, true)}
                       </div>
                     </div>
-                    {/* SHEBOYGAN LUTHERAN STAFF DISCOUNT */}
-                    {hasSheboyganLutheranStaffDiscount ? (
-                      <div className="order-summary-item">
-                        <div className="label">Sheboygan Lutheran Staff</div>
-                        <div className="value">
-                          -{formatToMoney(sheboyganLutheranStaffDiscount, true)}
+                    {[...lineAdjustments, ...orderLevelAdjustments].map(
+                      (adjustment, index) => (
+                        <div className="order-summary-item" key={index}>
+                          <div className="label">{adjustment.label}</div>
+                          <div className="value">
+                            -{formatToMoney(-adjustment.amount, true)}
+                          </div>
                         </div>
-                      </div>
-                    ) : null}
-                    {props.order.switchFitnessDiscount &&
-                    props.order.summary.discount ? (
-                      <div className="order-summary-item">
-                        <div className="label">Switch Fitness Discount</div>
-                        <div className="value">
-                          -{formatToMoney(props.order.summary.discount, true)}
-                        </div>
-                      </div>
-                    ) : null}
+                      )
+                    )}
                     <div className="order-summary-item">
                       <div className="label">Sales Tax</div>
                       <div className="value">
@@ -363,6 +372,9 @@ export default function OrderConfirmation(props: Props) {
                         {formatToMoney(props.order.summary.total, true)}
                       </div>
                     </div>
+                    {remainingLine ? (
+                      <p className="benefit-remaining">{remainingLine}</p>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -509,7 +521,7 @@ const OrderConfirmationStyles = styled.div`
       border-top: 1px solid #e5e7eb;
     }
 
-    .teacher-appreciation {
+    .adjustment {
       margin: 0.25rem 0 0;
       font-size: 0.875rem;
       color: #1f2937;
@@ -596,6 +608,23 @@ const OrderConfirmationStyles = styled.div`
 
   .addon-item {
     color: #111827;
+  }
+
+  .benefit-remaining {
+    margin: 1rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: #4b5563;
+  }
+
+  .test-environment-note {
+    margin: 1rem 0 0;
+    padding: 0.75rem 1rem;
+    font-size: 0.8125rem;
+    color: #92400e;
+    background-color: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 0.375rem;
   }
 
   .order-summary {

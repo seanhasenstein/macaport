@@ -2,6 +2,14 @@ import React from 'react';
 import { NextApiRequest } from 'next';
 import { Db, MongoClient } from 'mongodb';
 import { Stripe, StripeCardElementChangeEvent } from '@stripe/stripe-js';
+import { Adjustment, BenefitForPricing } from '../core/pricing/priceOrder';
+import {
+  BenefitAccess,
+  BenefitType,
+  MemberBenefitCopy,
+  OrderBenefitUse,
+} from '../core/memberBenefits/types';
+import { EligibilityReason } from '../core/memberBenefits/eligibility';
 
 export interface InventoryColor {
   id: string;
@@ -175,18 +183,45 @@ export interface Order {
     zipcode: string;
   };
   summary: {
+    // Everything at its listed price, before any adjustment.
     subtotal: number;
-    discount?: number;
+    // Everything that changed the price, in the order it was applied: a free
+    // item, a discount, a credit, a waived small balance. See
+    // core/pricing/priceOrder.ts. Optional only because orders placed before
+    // this existed carry the legacy fields below instead, until
+    // scripts/migrate-member-benefits.js has rewritten them; read it through
+    // orderAdjustments() in utils/memberBenefit.ts rather than directly.
+    adjustments?: Adjustment[];
     shipping: number;
     salesTax: number;
+    // A total under Stripe's minimum that was forgiven. Absent on old orders.
+    waived?: number;
     total: number;
     stripeFee: number;
+    // Legacy: the single discount figure the three old programs wrote.
+    discount?: number;
   };
+  // Written by the dashboard; the storefront only ever creates the initial
+  // "None" record and never updates it. `card` is what was refunded to the
+  // card in Stripe, `creditRestored` what went back onto the member's
+  // benefit, `returnedItems` which lines came back.
   refund: {
     status: 'None' | 'Partial' | 'Full';
     amount: number;
+    card?: number;
+    creditRestored?: number;
+    returnedItems?: { id: string; quantity: number }[];
+    updatedAt?: string;
   };
+  // Written by the dashboard when the order is included on a client invoice.
+  clientInvoiceId?: string | null;
   note?: string;
+  // Who used what, when a member benefit was applied. The money is in
+  // summary.adjustments; this is the link back to the member.
+  benefit?: OrderBenefitUse;
+  // Legacy: written by the three hand-built programs this replaced. Kept so
+  // old orders still render until the migration script rewrites them into
+  // `benefit` and `summary.adjustments`.
   sheboyganLutheranStaffDiscount?: {
     id: string;
     email: string;
@@ -241,12 +276,10 @@ export interface Store {
   announcement?: string | null;
   createdAt: string;
   updatedAt: string;
-  teacherAppreciationId: string;
-  sheboyganLutheranStaffId?: string;
-  meta: {
-    isSwitchFitness?: boolean;
-    switchFitnessDiscountId?: string;
-  };
+  // The member benefit this store offers, if any. One per store. Set by the
+  // dashboard (or scripts/create-member-benefit.js); see
+  // core/memberBenefits/types.ts for what it points at.
+  benefitId?: string | null;
 }
 
 export interface StoreForStoresPage {
@@ -437,7 +470,6 @@ export interface VerifyCartItemsAccumulator {
   lowerInventoryItems: CartItem[];
   itemsOutOfStock: CartItem[];
   subtotal: number;
-  alreadyIncludedFreeItem: boolean;
 }
 
 export interface UseCheckoutSubmit {
@@ -470,33 +502,36 @@ export interface Request extends NextApiRequest {
   query: { id: string };
 }
 
-// Teacher Appreciation ********************************
-export interface TeacherAppreciation {
-  _id: string;
-  active: boolean;
-  year: number;
-  storeId: string;
-  eligibleEmails: string[];
-  usedEmails: string[];
+// Member benefits ***************************************
+
+// What a store page knows about its member benefit and about the person
+// looking at it. Built on the server from the benefit document and the
+// signed session cookie (utils/memberBenefit.ts), passed down as a prop, and
+// never trusted from the browser. Nulls rather than undefineds throughout,
+// because Next cannot serialize undefined into page props.
+export interface BenefitMemberView {
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  reason: EligibilityReason;
+  // Same unit as the benefit's amount: cents, or garments for freeItem.
+  allowance: number;
+  used: number;
+  remaining: number;
+  // What the cart hands the pricing pipeline. null when nothing applies.
+  forPricing: BenefitForPricing | null;
 }
 
-// Sheboygan Lutheran Staff **************************
-export interface SheboyganLutheranStaff {
-  _id: string;
+export interface BenefitView {
+  id: string;
+  type: BenefitType;
+  access: BenefitAccess;
   active: boolean;
-  year: number;
-  storeId: string;
-  eligibleAccounts: { firstName: string; lastName: string; email: string }[];
-  usedEmails: string[];
-  discount: number;
-}
-
-// Switch Fitness Discount ********************************
-export interface SwitchFitnessDiscount {
-  _id: string;
-  active: boolean;
-  storeId: string;
-  discount: number;
-  eligibleEmails: string[];
-  usedEmails: string[];
+  copy: MemberBenefitCopy;
+  // Cents, or garments for freeItem: what a member starts with. Shown on the
+  // card before sign-in, so people know what is on offer before they act.
+  amount: number;
+  productIds: string[] | null;
+  // The verified member, when this browser holds a valid session for one.
+  member: BenefitMemberView | null;
 }

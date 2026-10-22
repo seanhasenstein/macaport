@@ -24,7 +24,6 @@ interface GetInitialValues {
   hasPrimaryShipping: boolean;
   allowDirectShipping: boolean;
   allowStorePickup: boolean;
-  cartTotal: number;
   firstName?: string;
   lastName?: string;
   email?: string;
@@ -35,7 +34,6 @@ export function getInitialValues({
   hasPrimaryShipping,
   allowDirectShipping,
   allowStorePickup,
-  cartTotal,
   firstName,
   lastName,
   email,
@@ -65,11 +63,12 @@ export function getInitialValues({
       : ('Primary' as const), // todo: come back to this when adding in-store and custom shipping
     cardholderName: '',
     note: '',
-    cartTotal,
   };
 }
 
-export function getCheckoutSchema(groupTerm: string) {
+// requireCard is whether anything is owed once the member benefit has been
+// applied. A cart the credit covers entirely has no card fields to fill in.
+export function getCheckoutSchema(groupTerm: string, requireCard: boolean) {
   return Yup.object().shape({
     customer: Yup.object().shape({
       firstName: Yup.string().required('First name is required'),
@@ -100,9 +99,8 @@ export function getCheckoutSchema(groupTerm: string) {
         zipcode: Yup.string().required('Zipcode is required'),
       }),
     }),
-    cardholderName: Yup.string().when('cartTotal', {
-      is: (cartTotal: number) => cartTotal > 0,
-      then: Yup.string().required("Cardholder's name is required"),
-    }),
+    cardholderName: requireCard
+      ? Yup.string().required("Cardholder's name is required")
+      : Yup.string(),
   });
 }

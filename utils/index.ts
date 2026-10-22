@@ -1,83 +1,10 @@
 import * as crypto from 'crypto';
 import { FormikErrors, FormikTouched } from 'formik';
-import {
-  CartItem,
-  ProductSku,
-  ShippingMethod,
-  SwitchFitnessDiscount,
-} from '../interfaces';
+import { CartItem, ProductSku } from '../interfaces';
 
-type CalculateCartSubtotal = {
-  cartItems: CartItem[];
-  applySwitchFitnessDiscount?: boolean;
-};
-
-export function calculateCartSubtotal({
-  cartItems,
-  applySwitchFitnessDiscount = false,
-}: CalculateCartSubtotal) {
-  const rawCartSubtotal = cartItems.reduce((total, item) => {
-    return total + item.quantity * item.price;
-  }, 0);
-
-  let cartSubtotal = rawCartSubtotal;
-  if (applySwitchFitnessDiscount) {
-    const cartSubtotalCheckingDiscount =
-      rawCartSubtotal - 2500 > 0 ? rawCartSubtotal - 2500 : 0;
-    cartSubtotal = cartSubtotalCheckingDiscount;
-  }
-
-  return {
-    cartSubtotal,
-    rawCartSubtotal,
-  };
-}
-
-export function calculateSubtotalWithSwitchDiscount({
-  switchFitnessDiscount,
-  isEligibleForSwitchFitnessDiscount,
-  initialSubtotal,
-}: {
-  switchFitnessDiscount: SwitchFitnessDiscount | null;
-  isEligibleForSwitchFitnessDiscount: boolean;
-  initialSubtotal: number;
-}) {
-  if (switchFitnessDiscount && isEligibleForSwitchFitnessDiscount) {
-    return initialSubtotal - switchFitnessDiscount.discount > 0
-      ? initialSubtotal - switchFitnessDiscount.discount
-      : 0;
-  }
-  return initialSubtotal;
-}
-
-export function calculateSalesTax(subtotal: number) {
-  return Math.round(subtotal * 0.055);
-}
-
-export function calculateShipping(
-  price: number,
-  freeMinimum: number,
-  cartSubtotal: number,
-  shippingMethod: ShippingMethod
-) {
-  if (
-    shippingMethod === 'Primary' ||
-    shippingMethod === 'Store Pickup' ||
-    cartSubtotal >= freeMinimum
-  ) {
-    return 0;
-  }
-
-  return price;
-}
-
-export function calculateCartTotal(
-  subtotal: number,
-  salesTax = 0,
-  shipping = 0
-) {
-  return subtotal + salesTax + shipping;
-}
+// Wisconsin state plus county. The pricing pipeline takes it as an input so
+// a tax-exempt store later is this set to 0 for that store, not a rewrite.
+export const SALES_TAX_RATE = 0.055;
 
 export function isOutOfStock(sku: ProductSku, cartItems: CartItem[]) {
   if (!sku.active || sku.inventory === 0) {
