@@ -101,6 +101,26 @@ export default function OrderConfirmation(props: Props) {
 
   const headerCopy = props.order.summary.total === 0 ? 'Order' : 'Payment';
   const adjustments = orderAdjustments(props.order);
+  // What is left after this order, from the order's own record rather than
+  // the live balance, so the page reads the same a week later.
+  const benefitUse = props.order.benefit;
+  const benefitLabel =
+    adjustments.find(a => a.kind === 'credit' || a.kind === 'freeItem')
+      ?.label ?? 'Your benefit';
+  const remainingLine =
+    benefitUse && benefitUse.type === 'credit'
+      ? `${benefitLabel}: ${formatToMoney(
+          benefitUse.used,
+          true
+        )} used on this order, ${formatToMoney(
+          benefitUse.remainingAfter,
+          true
+        )} left to spend.`
+      : benefitUse && benefitUse.type === 'freeItem'
+      ? `${benefitLabel}: ${benefitUse.remainingAfter} free item${
+          benefitUse.remainingAfter === 1 ? '' : 's'
+        } left.`
+      : null;
   const lineAdjustments = adjustments.filter(a => a.lineId);
   const orderLevelAdjustments = adjustments.filter(a => !a.lineId);
 
@@ -352,6 +372,9 @@ export default function OrderConfirmation(props: Props) {
                         {formatToMoney(props.order.summary.total, true)}
                       </div>
                     </div>
+                    {remainingLine ? (
+                      <p className="benefit-remaining">{remainingLine}</p>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -585,6 +608,13 @@ const OrderConfirmationStyles = styled.div`
 
   .addon-item {
     color: #111827;
+  }
+
+  .benefit-remaining {
+    margin: 1rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: #4b5563;
   }
 
   .test-environment-note {

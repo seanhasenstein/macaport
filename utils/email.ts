@@ -1419,31 +1419,60 @@ export function generateReceiptEmail(order: Order, baseUrl = siteBaseUrl()) {
   return { text, html };
 }
 
-// The one-time code email, in the same shell as every other Macaport email
-// so it is recognisably from the same sender. The body is kept plain: a code
-// email is read for six digits and nothing else.
-export function wrapCodeEmail({
-  subject,
+// The one-time code email, in the same shell and voice as the contact
+// confirmation. Everything the reader needs is above the fold: what it is,
+// where to type it, the code itself, and when it dies. The security lines
+// are the two every sign-in code email carries: never share it, and if you
+// did not ask for it, do nothing. Nothing else is a disclaimer worth having
+// in an email someone opens for six digits.
+export function generateCodeEmailHtml({
   code,
-  body,
   storeName,
+  benefitName,
+  expiresAt,
+  resent,
 }: {
-  subject: string;
   code: string;
-  body: string;
   storeName: string;
+  benefitName: string;
+  expiresAt: number;
+  resent: boolean;
 }) {
+  const minutes = Math.max(1, Math.round((expiresAt - Date.now()) / 60000));
+  const expiry = `${minutes} minute${minutes === 1 ? '' : 's'}`;
+
+  const resentHtml = resent
+    ? `<p style="margin:20px 0 0;padding:14px 16px;color:#171717;background-color:#f1f7f3;border:1px solid ${BORDER_BRAND};border-radius:10px;font-family:${FONT};font-size:14px;line-height:1.55;">You asked for this more than once. Every copy carries the same code, so any of them will work.</p>`
+    : '';
+
+  const body = `<h1 style="margin:0;color:#171717;font-family:${FONT};font-size:22px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;">Your sign-in code</h1><p style="margin:10px 0 0;color:#737373;font-family:${FONT};font-size:15px;line-height:1.6;">Enter it on the ${escapeHtml(
+    storeName
+  )} store to activate your ${escapeHtml(
+    benefitName
+  )}. It expires in ${expiry}.</p><div style="margin:24px 0 0;padding:22px 16px;text-align:center;background-color:#fafafa;border:1px solid ${BORDER};border-radius:10px;"><span style="display:inline-block;color:#171717;font-family:${FONT};font-size:34px;line-height:1;font-weight:700;letter-spacing:0.28em;">${escapeHtml(
+    code
+  )}</span></div>${resentHtml}<p style="margin:22px 0 0;padding:14px 16px;color:#737373;background-color:#fafafa;border:1px solid ${BORDER};border-radius:10px;font-family:${FONT};font-size:13px;line-height:1.55;">Never share this code. Macaport will never ask you for it. If you did not request it, you can ignore this email: nothing happens without the code.</p>`;
+
+  const footer = [
+    footerLine(
+      `You are receiving this because this address was entered on the ${escapeHtml(
+        storeName
+      )} store at <a href="https://www.macaport.com" style="color:#737373;text-decoration:underline;">macaport.com</a>. It is not a marketing email, so there is nothing to unsubscribe from.`
+    ),
+    footerLine(
+      `<a href="https://www.macaport.com" style="color:#737373;text-decoration:underline;">macaport.com</a> &nbsp;&middot;&nbsp; <a href="https://www.macaport.com/privacy-policy" style="color:#737373;text-decoration:underline;">Privacy policy</a> &nbsp;&middot;&nbsp; <a href="mailto:support@macaport.com" style="color:#737373;text-decoration:underline;">support@macaport.com</a>`
+    ),
+    footerLine(MACAPORT_ADDRESS),
+    footerLine(
+      `&copy; ${new Date().getFullYear()} Macaport LLC. All rights reserved.`,
+      true
+    ),
+  ].join('');
+
   return shellHtml({
-    title: subject,
-    preheader: `Your code is ${code}`,
-    body: `<div style="font-family:${FONT};font-size:15px;line-height:1.6;color:#262626;">${body}</div>`,
-    footer: [
-      footerLine(
-        `You're receiving this because this address was entered on the ${escapeHtml(
-          storeName
-        )} store at macaport.com. If that wasn't you, there is nothing to do.`
-      ),
-      footerLine(MACAPORT_ADDRESS, true),
-    ].join(''),
+    title: 'Your sign-in code',
+    preheader: `${code} is your code for the ${storeName} store. It expires in ${expiry}.`,
+    body,
+    footer,
   });
 }

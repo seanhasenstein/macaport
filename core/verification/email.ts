@@ -33,6 +33,7 @@ export function codeEmail(input: CodeEmailInput) {
       input.benefitName
     }. It expires in ${minutes} minute${minutes === 1 ? '' : 's'}.`,
     '',
+    'Never share this code. Macaport will never ask you for it.',
     input.resent
       ? 'You asked for this more than once. Every copy carries the same code, so any of them will work.'
       : 'If you did not ask for this, you can ignore it. Nothing happens without the code.',

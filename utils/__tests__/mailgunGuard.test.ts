@@ -53,6 +53,16 @@ describe('the outbound email guard', () => {
     });
   });
 
+  it('does not call mail for the test inbox itself a redirect', () => {
+    process.env.EMAIL_ALLOWLIST = '@macaport.com';
+    process.env.EMAIL_REDIRECT_TO = 'Tester@Example.com';
+
+    expect(resolveRecipient('tester@example.com')).toEqual({
+      to: 'tester@example.com',
+      redirected: false,
+    });
+  });
+
   it('refuses rather than guesses when there is nowhere to redirect', () => {
     process.env.EMAIL_ALLOWLIST = '@macaport.com';
 

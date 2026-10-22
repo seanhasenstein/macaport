@@ -90,7 +90,16 @@ function restore(saved: string): CartState {
     const items: CartItem[] = Array.isArray(parsed?.items) ? parsed.items : [];
     const method = parsed?.shippingMethod;
     return {
-      items: items.filter(item => item && item.id && item.quantity > 0),
+      items: items.filter(
+        item =>
+          item &&
+          item.id &&
+          item.quantity > 0 &&
+          // The old free-shirt program stored a zero-priced line under a
+          // magic id. Priced here it would show $0 and on the server full
+          // price. Nothing legitimately costs nothing, so it is dropped.
+          item.price > 0
+      ),
       shippingMethod:
         method === 'Direct' || method === 'Store Pickup' || method === 'Primary'
           ? method

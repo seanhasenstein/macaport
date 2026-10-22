@@ -42,6 +42,11 @@ export function resolveRecipient(to: string) {
   if (isProduction()) return { to, redirected: false };
   if (isAllowlisted(to)) return { to, redirected: false };
   const redirect = process.env.EMAIL_REDIRECT_TO;
+  // Mail for the test inbox itself is not a redirect, or the subject would
+  // say "[TEST → x] " and the page "sent to x instead of x".
+  if (redirect && redirect.trim().toLowerCase() === to.trim().toLowerCase()) {
+    return { to, redirected: false };
+  }
   if (!redirect) {
     throw new Error(
       'Refusing to send email outside production: set EMAIL_REDIRECT_TO to a test inbox, or add the recipient to EMAIL_ALLOWLIST.'

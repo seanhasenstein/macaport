@@ -13,7 +13,7 @@ import {
 import { requestCode } from '../../../core/verification/code';
 import { codeEmail } from '../../../core/verification/email';
 import { sendEmail } from '../../../utils/mailgun';
-import { wrapCodeEmail } from '../../../utils/email';
+import { generateCodeEmailHtml } from '../../../utils/email';
 import { clientIp, rateLimit } from '../../../utils/rateLimit';
 import { memberBenefitSecret } from '../../../utils/memberBenefit';
 import { Request } from '../../../interfaces';
@@ -125,11 +125,12 @@ const handler = nc<ExtendedRequest, NextApiResponse>()
       from: 'Macaport <support@macaport.com>',
       subject: message.subject,
       text: message.text,
-      html: wrapCodeEmail({
-        subject: message.subject,
+      html: generateCodeEmailHtml({
         code: request.code,
-        body: message.html,
         storeName: store.name,
+        benefitName: benefit.copy.benefitName,
+        expiresAt: request.record.expiresAt,
+        resent: request.resent,
       }),
     });
 

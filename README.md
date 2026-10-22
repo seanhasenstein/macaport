@@ -11,6 +11,8 @@ The site is an e-commerce platform that gives Macaport's clients their own onlin
 
 A store can offer its members a benefit: a store credit, a fixed discount, or a free item. The benefit document lives in the `memberBenefits` collection (shape in `core/memberBenefits/types.ts`) and the store points at it with `benefitId`. Members prove they own a listed email with a six-digit code sent to it, after which a signed, httpOnly cookie identifies them for thirty days.
 
+Outside production (`VERCEL_ENV` not `production`) outbound email is redirected: only `EMAIL_ALLOWLIST` recipients are delivered to, everyone else goes to `EMAIL_REDIRECT_TO`, and with neither set sending refuses. On a host that does not set `VERCEL_ENV`, set it to `production` yourself or every customer email will be redirected.
+
 Requires `MEMBER_BENEFIT_SECRET` in the environment (any long random string; rotating it signs every member out). Until the dashboard can create benefits, use the scripts:
 
 ```

@@ -308,7 +308,13 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
     const timestamp = new Date().toISOString();
     const items = verified.items.map(item => {
       const line = priced.lines.find(l => l.id === item.id);
-      return { ...item, itemTotal: line ? line.lineTotal : item.itemTotal };
+      // `adjustments` on a cart item is browser display state from
+      // usePricedCart, not order data; the order's own list is on summary.
+      const { adjustments, ...rest } = item as typeof item & {
+        adjustments?: unknown;
+      };
+      void adjustments;
+      return { ...rest, itemTotal: line ? line.lineTotal : item.itemTotal };
     });
 
     const order: Order = {
