@@ -6,6 +6,14 @@
 // there is no wrong one to open. The body says so, so a duplicate does not
 // look like a fault.
 
+// "Acme store", but "Acme Employee Store" rather than "Acme Employee Store
+// store". Client store names often already end in the word, and the doubled
+// version is the thing that makes an email look generated.
+export function storePhrase(storeName: string) {
+  const name = storeName.trim();
+  return /\b(store|shop)$/i.test(name) ? name : `${name} store`;
+}
+
 export interface CodeEmailInput {
   code: string;
   storeName: string;
@@ -25,7 +33,7 @@ export function codeEmail(input: CodeEmailInput) {
   const subject = `${input.code} is your ${input.sender} code`;
 
   const lines = [
-    `Your code for the ${input.storeName} store is:`,
+    `Your code for the ${storePhrase(input.storeName)} is:`,
     '',
     input.code,
     '',
@@ -41,7 +49,9 @@ export function codeEmail(input: CodeEmailInput) {
 
   const text = lines.join('\n');
 
-  const html = `<p>Your code for the ${escape(input.storeName)} store is:</p>
+  const html = `<p>Your code for the ${escape(
+    storePhrase(input.storeName)
+  )} is:</p>
 <p style="font-size:28px;font-weight:700;letter-spacing:0.2em;margin:16px 0">${escape(
     input.code
   )}</p>

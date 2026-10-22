@@ -10,6 +10,7 @@ import { formatToMoney, getUrlParameter } from '../../../../utils';
 import useHasMounted from '../../../../hooks/useHasMounted';
 import { useCart } from '../../../../hooks/useCart';
 import { usePricedCart } from 'hooks/usePricedCart';
+import { splitAdjustments } from 'utils/benefitDisplay';
 import { getBenefitView } from 'utils/memberBenefit';
 import { membersOnlyLockout } from 'utils/benefitDisplay';
 
@@ -74,6 +75,7 @@ export default function DemoCart(props: Props) {
 
   const cart = useCart();
   const priced = usePricedCart(props.benefit ?? null, null);
+  const { beforeTax, afterShipping } = splitAdjustments(priced.adjustments);
 
   // if (props.error) {
   // TODO: add error component
@@ -156,7 +158,7 @@ export default function DemoCart(props: Props) {
                           {formatToMoney(priced.subtotal, true)}
                         </div>
                       </div>
-                      {priced.adjustments.map((adjustment, index) => (
+                      {beforeTax.map((adjustment, index) => (
                         <div className="item" key={index}>
                           <div className="key">{adjustment.label}</div>
                           <div className="value">
@@ -174,6 +176,14 @@ export default function DemoCart(props: Props) {
                         <div className="key">Shipping</div>
                         <div className="value">Calculated next</div>
                       </div>
+                      {afterShipping.map((adjustment, index) => (
+                        <div className="item" key={index}>
+                          <div className="key">{adjustment.label}</div>
+                          <div className="value">
+                            -{formatToMoney(-adjustment.amount, true)}
+                          </div>
+                        </div>
+                      ))}
                       <div className="item total">
                         <div className="key">Order Total</div>
                         <div className="value">

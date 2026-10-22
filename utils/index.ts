@@ -148,14 +148,19 @@ export function formatPhoneNumber(input: string) {
     .join('');
 }
 
+// includeDecimal asks for cents on a whole-dollar amount: $20 becomes
+// $20.00, which is what a total or a tax line wants. It never meant "drop
+// the cents", and it used to: `$${price}` turned 330 into "$3.3" for every
+// caller that left the flag off, which is most of them. An amount with
+// cents now always shows both of them.
 export function formatToMoney(input: number, includeDecimal = false) {
   const price = input / 100;
 
-  if (includeDecimal) {
+  if (includeDecimal || !Number.isInteger(price)) {
     return `$${price.toFixed(2)}`;
-  } else {
-    return `$${price}`;
   }
+
+  return `$${price}`;
 }
 
 export function getTouchedErrors(

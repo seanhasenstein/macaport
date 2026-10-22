@@ -1,4 +1,4 @@
-import { codeEmail } from '../email';
+import { codeEmail, storePhrase } from '../email';
 
 const base = {
   code: '482913',
@@ -33,5 +33,27 @@ describe('the code email', () => {
     const { html } = codeEmail({ ...base, storeName: 'A <b>&</b> Store' });
 
     expect(html).toContain('A &lt;b&gt;&amp;&lt;/b&gt; Store');
+  });
+});
+
+describe('naming the store', () => {
+  it('does not double the word when the name already ends in it', () => {
+    expect(storePhrase('Lincoln Elementary Employee Store')).toBe(
+      'Lincoln Elementary Employee Store'
+    );
+    expect(storePhrase('Parker Excavating Shop ')).toBe(
+      'Parker Excavating Shop'
+    );
+    expect(
+      codeEmail({ ...base, storeName: 'Acme Employee Store' }).text
+    ).toContain('the Acme Employee Store is');
+  });
+
+  it('adds it when the name does not', () => {
+    expect(storePhrase('New London Boys Basketball')).toBe(
+      'New London Boys Basketball store'
+    );
+    // Not a suffix match on any word ending in "store".
+    expect(storePhrase('Restore Hardware')).toBe('Restore Hardware store');
   });
 });

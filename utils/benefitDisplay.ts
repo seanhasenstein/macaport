@@ -1,5 +1,6 @@
 import { Adjustment } from '../core/pricing/priceOrder';
 import { BenefitView, Order } from '../interfaces';
+import { formatToMoney } from './index';
 
 // Pure helpers shared by the browser and the receipt. Nothing in here may
 // import the database: utils/memberBenefit.ts does, and anything that
@@ -44,6 +45,53 @@ export function orderAdjustments(order: Order): Adjustment[] {
   }
 
   return adjustments;
+}
+
+// Totals read in the order the pipeline applied them (see
+// core/pricing/priceOrder.ts): a free item and a discount change the price,
+// so they sit above the tax they changed; a credit is a payment against the
+// whole bill, so it sits below the tax and shipping it paid for. Reading
+// top to bottom then gives $60, $3.30 tax, -$63.30 credit, $0 due.
+export function splitAdjustments(adjustments: Adjustment[]) {
+  return {
+    beforeTax: adjustments.filter(
+      a => a.kind === 'freeItem' || a.kind === 'discount'
+    ),
+    afterShipping: adjustments.filter(
+      a => a.kind === 'credit' || a.kind === 'waived'
+    ),
+  };
+}
+
+// What this order drew on and what the member has left, for the
+// confirmation page and the receipt. Read from the order's own record
+// rather than the live balance, so it still reads true a week later.
+export function describeBenefitUse(order: Order) {
+  const use = order.benefit;
+  if (!use) return null;
+
+  const label =
+    orderAdjustments(order).find(
+      a => a.kind === 'credit' || a.kind === 'freeItem'
+    )?.label ?? 'Your benefit';
+
+  if (use.type === 'credit') {
+    return `${label}: ${formatToMoney(
+      use.used,
+      true
+    )} used on this order, ${formatToMoney(
+      use.remainingAfter,
+      true
+    )} left to spend.`;
+  }
+
+  if (use.type === 'freeItem') {
+    return `${label}: ${use.remainingAfter} free item${
+      use.remainingAfter === 1 ? '' : 's'
+    } left.`;
+  }
+
+  return null;
 }
 
 // A members-only store shows nothing but the sign-in card to anyone who has

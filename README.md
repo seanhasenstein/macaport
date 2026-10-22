@@ -21,4 +21,8 @@ node scripts/create-member-benefit.js --store <storeId> --type credit --amount 7
 node scripts/migrate-member-benefits.js --apply   # one-off: moves the three old programs over
 ```
 
-Both are dry runs without `--apply`.
+```
+node scripts/check-member-benefit-indexes.js   # the memberBenefitCodes indexes
+```
+
+All three are dry runs without `--apply`, and all three take a `DATABASE_URL` in front to point at another environment.

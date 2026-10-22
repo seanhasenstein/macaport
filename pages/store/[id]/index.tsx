@@ -169,11 +169,7 @@ export default function StoreHomepage(props: Props) {
         ) : (
           <div className="items">
             {benefit ? (
-              <MemberBenefitCard
-                storeId={props.store._id}
-                storeName={props.store.name}
-                benefit={benefit}
-              />
+              <MemberBenefitCard storeId={props.store._id} benefit={benefit} />
             ) : null}
             {locked
               ? null

@@ -12,7 +12,11 @@ import {
   getUrlParameter,
 } from '../../../utils';
 import { useCart } from '../../../hooks/useCart';
-import { orderAdjustments } from '../../../utils/benefitDisplay';
+import {
+  describeBenefitUse,
+  orderAdjustments,
+  splitAdjustments,
+} from '../../../utils/benefitDisplay';
 import { describeDelivery } from '../../../utils/mailgun';
 import NoNavLayout from '../../../components/store/layouts/NoNavLayout';
 import OrderConfirmationPageError from 'components/store/errors/OrderConfirmationPageError';
@@ -101,28 +105,10 @@ export default function OrderConfirmation(props: Props) {
 
   const headerCopy = props.order.summary.total === 0 ? 'Order' : 'Payment';
   const adjustments = orderAdjustments(props.order);
-  // What is left after this order, from the order's own record rather than
-  // the live balance, so the page reads the same a week later.
-  const benefitUse = props.order.benefit;
-  const benefitLabel =
-    adjustments.find(a => a.kind === 'credit' || a.kind === 'freeItem')
-      ?.label ?? 'Your benefit';
-  const remainingLine =
-    benefitUse && benefitUse.type === 'credit'
-      ? `${benefitLabel}: ${formatToMoney(
-          benefitUse.used,
-          true
-        )} used on this order, ${formatToMoney(
-          benefitUse.remainingAfter,
-          true
-        )} left to spend.`
-      : benefitUse && benefitUse.type === 'freeItem'
-      ? `${benefitLabel}: ${benefitUse.remainingAfter} free item${
-          benefitUse.remainingAfter === 1 ? '' : 's'
-        } left.`
-      : null;
+  const { beforeTax, afterShipping } = splitAdjustments(adjustments);
+  const remainingLine = describeBenefitUse(props.order);
+  // Per-item labels, e.g. the free shirt's own line.
   const lineAdjustments = adjustments.filter(a => a.lineId);
-  const orderLevelAdjustments = adjustments.filter(a => !a.lineId);
 
   return (
     <NoNavLayout
@@ -344,16 +330,14 @@ export default function OrderConfirmation(props: Props) {
                         {formatToMoney(props.order.summary.subtotal, true)}
                       </div>
                     </div>
-                    {[...lineAdjustments, ...orderLevelAdjustments].map(
-                      (adjustment, index) => (
-                        <div className="order-summary-item" key={index}>
-                          <div className="label">{adjustment.label}</div>
-                          <div className="value">
-                            -{formatToMoney(-adjustment.amount, true)}
-                          </div>
+                    {beforeTax.map((adjustment, index) => (
+                      <div className="order-summary-item" key={index}>
+                        <div className="label">{adjustment.label}</div>
+                        <div className="value">
+                          -{formatToMoney(-adjustment.amount, true)}
                         </div>
-                      )
-                    )}
+                      </div>
+                    ))}
                     <div className="order-summary-item">
                       <div className="label">Sales Tax</div>
                       <div className="value">
@@ -366,6 +350,14 @@ export default function OrderConfirmation(props: Props) {
                         {formatToMoney(props.order.summary.shipping, true)}
                       </div>
                     </div>
+                    {afterShipping.map((adjustment, index) => (
+                      <div className="order-summary-item" key={index}>
+                        <div className="label">{adjustment.label}</div>
+                        <div className="value">
+                          -{formatToMoney(-adjustment.amount, true)}
+                        </div>
+                      </div>
+                    ))}
                     <div className="order-summary-item total">
                       <div>Order Total</div>
                       <div className="value">

@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { formatToMoney } from 'utils';
 import useHasMounted from 'hooks/useHasMounted';
 import { PricedCart } from 'hooks/usePricedCart';
+import { splitAdjustments } from 'utils/benefitDisplay';
 import CheckoutItem from './CheckoutItem';
 
 type Props = {
@@ -16,6 +17,7 @@ type Props = {
 export default function CheckoutSidebar({ priced }: Props) {
   const router = useRouter();
   const hasMounted = useHasMounted();
+  const { beforeTax, afterShipping } = splitAdjustments(priced.adjustments);
 
   return (
     <CheckoutSidebarStyles>
@@ -51,7 +53,7 @@ export default function CheckoutSidebar({ priced }: Props) {
                   {formatToMoney(priced.subtotal, true)}
                 </div>
               </div>
-              {priced.adjustments.map((adjustment, index) => (
+              {beforeTax.map((adjustment, index) => (
                 <div className="item" key={`${adjustment.kind}-${index}`}>
                   <div className="key">{adjustment.label}</div>
                   <div className="value">
@@ -71,6 +73,14 @@ export default function CheckoutSidebar({ priced }: Props) {
                   {formatToMoney(priced.shipping, true)}
                 </div>
               </div>
+              {afterShipping.map((adjustment, index) => (
+                <div className="item" key={`${adjustment.kind}-${index}`}>
+                  <div className="key">{adjustment.label}</div>
+                  <div className="value">
+                    -{formatToMoney(-adjustment.amount, true)}
+                  </div>
+                </div>
+              ))}
               <div className="item total">
                 <div className="key">Order Total</div>
                 <div className="value">{formatToMoney(priced.total, true)}</div>

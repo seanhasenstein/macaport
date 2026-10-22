@@ -13,6 +13,7 @@ import { membersOnlyLockout } from 'utils/benefitDisplay';
 import useHasMounted from '../../../hooks/useHasMounted';
 import { useCart } from '../../../hooks/useCart';
 import { usePricedCart } from 'hooks/usePricedCart';
+import { splitAdjustments } from 'utils/benefitDisplay';
 
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
 import CartItem from '../../../components/store/cart/CartItem';
@@ -87,6 +88,7 @@ export default function Cart(props: Props) {
   // No shipping data on this page: shipping shows as "calculated next" and
   // the total here is the total before it.
   const priced = usePricedCart(props.benefit ?? null, null);
+  const { beforeTax, afterShipping } = splitAdjustments(priced.adjustments);
 
   // if (props.error) {
   // TODO: add error component
@@ -155,7 +157,7 @@ export default function Cart(props: Props) {
                         {formatToMoney(priced.subtotal, true)}
                       </div>
                     </div>
-                    {priced.adjustments.map((adjustment, index) => (
+                    {beforeTax.map((adjustment, index) => (
                       <div className="item" key={index}>
                         <div className="key">{adjustment.label}</div>
                         <div className="value">
@@ -173,6 +175,14 @@ export default function Cart(props: Props) {
                       <div className="key">Shipping</div>
                       <div className="value">Calculated next</div>
                     </div>
+                    {afterShipping.map((adjustment, index) => (
+                      <div className="item" key={index}>
+                        <div className="key">{adjustment.label}</div>
+                        <div className="value">
+                          -{formatToMoney(-adjustment.amount, true)}
+                        </div>
+                      </div>
+                    ))}
                     <div className="item total">
                       <div className="key">Order Total</div>
                       <div className="value">

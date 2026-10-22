@@ -13,7 +13,12 @@ import {
   OTHER_PRODUCT_ID,
   SHIPPED_TO_ME,
 } from './contact';
-import { orderAdjustments } from './benefitDisplay';
+import {
+  describeBenefitUse,
+  orderAdjustments,
+  splitAdjustments,
+} from './benefitDisplay';
+import { storePhrase } from '../core/verification/email';
 import { siteBaseUrl } from './internalRequest';
 import { Order } from '../interfaces';
 
@@ -728,6 +733,19 @@ export function generateContactFormEmail(
   return { text, html };
 }
 
+// The adjustment rows of a receipt, as plain text, split either side of the
+// tax and shipping lines.
+function receiptAdjustmentLines(order: Order) {
+  const line = (a: { label: string; amount: number }) =>
+    ` \n${a.label}: -${formatToMoney(-a.amount, true)}`;
+  const split = splitAdjustments(orderAdjustments(order));
+
+  return {
+    beforeTax: split.beforeTax.map(line).join(''),
+    afterShipping: split.afterShipping.map(line).join(''),
+  };
+}
+
 function generateReceiptText(order: Order, baseUrl: string) {
   return `Hi ${order.customer.firstName},\n\nThis is confirmation for your ${
     order.store.name
@@ -737,18 +755,16 @@ function generateReceiptText(order: Order, baseUrl: string) {
     order.customer.email
   } \nPhone: ${formatPhoneNumber(order.customer.phone)} \n\nOrder Summary Link:
   ${`${baseUrl}/store/${order.store.id}/order-confirmation?orderId=${order.orderId}`}
-    \n\nSubtotal: ${formatToMoney(
-      order.summary.subtotal,
-      true
-    )}${orderAdjustments(order)
-    .map(a => ` \n${a.label}: -${formatToMoney(-a.amount, true)}`)
-    .join('')} \nShipping: ${formatToMoney(
-    order.summary.shipping,
-    true
-  )} \nSales Tax: ${formatToMoney(
+    \n\nSubtotal: ${formatToMoney(order.summary.subtotal, true)}${
+    receiptAdjustmentLines(order).beforeTax
+  } \nSales Tax: ${formatToMoney(
     order.summary.salesTax,
     true
-  )} \nTotal: ${formatToMoney(order.summary.total, true)}
+  )} \nShipping: ${formatToMoney(order.summary.shipping, true)}${
+    receiptAdjustmentLines(order).afterShipping
+  } \nTotal: ${formatToMoney(order.summary.total, true)}${
+    describeBenefitUse(order) ? `\n\n${describeBenefitUse(order)}` : ''
+  }
   `;
 }
 
@@ -1291,8 +1307,8 @@ function generateReceiptHtml(order: Order, baseUrl: string) {
                               ${formatToMoney(order.summary.subtotal, true)}
                             </td>
                           </tr>
-                          ${orderAdjustments(order)
-                            .map(
+                          ${splitAdjustments(orderAdjustments(order))
+                            .beforeTax.map(
                               adjustment => `<tr>
                             <td style="padding: 0 0 2px">${escapeHtml(
                               adjustment.label
@@ -1315,6 +1331,18 @@ function generateReceiptHtml(order: Order, baseUrl: string) {
                               ${formatToMoney(order.summary.shipping, true)}
                             </td>
                           </tr>
+                          ${splitAdjustments(orderAdjustments(order))
+                            .afterShipping.map(
+                              adjustment => `<tr>
+                            <td style="padding: 0 0 2px">${escapeHtml(
+                              adjustment.label
+                            )}:</td>
+                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
+                              -${formatToMoney(-adjustment.amount, true)}
+                            </td>
+                          </tr>`
+                            )
+                            .join('')}
                           <tr>
                             <td style="font-weight: 600; color: #1F2937">
                               Total:
@@ -1330,6 +1358,13 @@ function generateReceiptHtml(order: Order, baseUrl: string) {
                             </td>
                           </tr>
                         </table>
+                        ${
+                          describeBenefitUse(order)
+                            ? `<div style="clear: both; padding: 14px 0 0; font-size: 13px; color: #6B7280; line-height: 1.5">${escapeHtml(
+                                describeBenefitUse(order) as string
+                              )}</div>`
+                            : ''
+                        }
                       </td>
                     </tr>
   
@@ -1384,8 +1419,8 @@ function generateReceiptHtml(order: Order, baseUrl: string) {
                         <p style="margin: 0 0 20px 0">
                           You're receiving this email because you made a purchase
                         from the ${escapeHtml(
-                          order.store.name
-                        )} store by <a href="${baseUrl}" style="color: #4338CA; text-decoration: none">Macaport LLC</a>.
+                          storePhrase(order.store.name)
+                        )} by <a href="${baseUrl}" style="color: #4338CA; text-decoration: none">Macaport LLC</a>.
                         </p>
                         <p style="margin: 0 0 20px 0">
                           <a href="${baseUrl}/store/${encodeURIComponent(
@@ -1446,8 +1481,8 @@ export function generateCodeEmailHtml({
     : '';
 
   const body = `<h1 style="margin:0;color:#171717;font-family:${FONT};font-size:22px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;">Your sign-in code</h1><p style="margin:10px 0 0;color:#737373;font-family:${FONT};font-size:15px;line-height:1.6;">Enter it on the ${escapeHtml(
-    storeName
-  )} store to activate your ${escapeHtml(
+    storePhrase(storeName)
+  )} to activate your ${escapeHtml(
     benefitName
   )}. It expires in ${expiry}.</p><div style="margin:24px 0 0;padding:22px 16px;text-align:center;background-color:#fafafa;border:1px solid ${BORDER};border-radius:10px;"><span style="display:inline-block;color:#171717;font-family:${FONT};font-size:34px;line-height:1;font-weight:700;letter-spacing:0.28em;">${escapeHtml(
     code
@@ -1456,8 +1491,8 @@ export function generateCodeEmailHtml({
   const footer = [
     footerLine(
       `You are receiving this because this address was entered on the ${escapeHtml(
-        storeName
-      )} store at <a href="https://www.macaport.com" style="color:#737373;text-decoration:underline;">macaport.com</a>. It is not a marketing email, so there is nothing to unsubscribe from.`
+        storePhrase(storeName)
+      )} at <a href="https://www.macaport.com" style="color:#737373;text-decoration:underline;">macaport.com</a>. It is not a marketing email, so there is nothing to unsubscribe from.`
     ),
     footerLine(
       `<a href="https://www.macaport.com" style="color:#737373;text-decoration:underline;">macaport.com</a> &nbsp;&middot;&nbsp; <a href="https://www.macaport.com/privacy-policy" style="color:#737373;text-decoration:underline;">Privacy policy</a> &nbsp;&middot;&nbsp; <a href="mailto:support@macaport.com" style="color:#737373;text-decoration:underline;">support@macaport.com</a>`
@@ -1471,7 +1506,9 @@ export function generateCodeEmailHtml({
 
   return shellHtml({
     title: 'Your sign-in code',
-    preheader: `${code} is your code for the ${storeName} store. It expires in ${expiry}.`,
+    preheader: `${code} is your code for the ${storePhrase(
+      storeName
+    )}. It expires in ${expiry}.`,
     body,
     footer,
   });

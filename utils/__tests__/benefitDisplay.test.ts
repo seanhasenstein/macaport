@@ -1,7 +1,9 @@
 import {
+  describeBenefitUse,
   describeRemaining,
   membersOnlyLockout,
   orderAdjustments,
+  splitAdjustments,
 } from '../benefitDisplay';
 import { BenefitView, Order } from '../../interfaces';
 
@@ -146,5 +148,108 @@ describe('adjustments on an order not yet migrated', () => {
         units: 1,
       },
     ]);
+  });
+});
+
+describe('the order totals read in the order they were applied', () => {
+  const split = splitAdjustments([
+    {
+      kind: 'freeItem',
+      label: 'Free shirt',
+      amount: -2000,
+      lineId: 'l1',
+      units: 1,
+    },
+    { kind: 'discount', label: 'Promo', amount: -500 },
+    { kind: 'credit', label: 'Credit', amount: -6330 },
+    { kind: 'waived', label: 'Small balance waived', amount: -12 },
+  ]);
+
+  it('puts price changes above the tax and payments below it', () => {
+    expect(split.beforeTax.map(a => a.kind)).toEqual(['freeItem', 'discount']);
+    expect(split.afterShipping.map(a => a.kind)).toEqual(['credit', 'waived']);
+  });
+
+  it('keeps every adjustment, in order', () => {
+    expect(split.beforeTax).toHaveLength(2);
+    expect(split.afterShipping).toHaveLength(2);
+  });
+});
+
+describe('what an order drew on', () => {
+  const order = (benefit: unknown, adjustments: unknown[]) =>
+    ({
+      items: [],
+      summary: {
+        subtotal: 6000,
+        shipping: 0,
+        salesTax: 330,
+        total: 0,
+        stripeFee: 0,
+        adjustments,
+      },
+      benefit,
+    } as unknown as Order);
+
+  it('states a credit as used and left', () => {
+    expect(
+      describeBenefitUse(
+        order(
+          {
+            benefitId: 'b',
+            type: 'credit',
+            email: 'a@b.com',
+            used: 6330,
+            remainingAfter: 8670,
+          },
+          [{ kind: 'credit', label: 'Employee Store Credit', amount: -6330 }]
+        )
+      )
+    ).toBe(
+      'Employee Store Credit: $63.30 used on this order, $86.70 left to spend.'
+    );
+  });
+
+  it('states free items as a count, singular when there is one', () => {
+    expect(
+      describeBenefitUse(
+        order(
+          {
+            benefitId: 'b',
+            type: 'freeItem',
+            email: 'a@b.com',
+            used: 1,
+            remainingAfter: 1,
+          },
+          [
+            {
+              kind: 'freeItem',
+              label: 'Free shirt',
+              amount: -2000,
+              lineId: 'l1',
+              units: 1,
+            },
+          ]
+        )
+      )
+    ).toBe('Free shirt: 1 free item left.');
+  });
+
+  it('says nothing for an order with no benefit, or for a discount', () => {
+    expect(describeBenefitUse(order(undefined, []))).toBeNull();
+    expect(
+      describeBenefitUse(
+        order(
+          {
+            benefitId: 'b',
+            type: 'discount',
+            email: 'a@b.com',
+            used: 2500,
+            remainingAfter: 0,
+          },
+          []
+        )
+      )
+    ).toBeNull();
   });
 });

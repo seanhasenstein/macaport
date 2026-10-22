@@ -9,7 +9,6 @@ import { describeRemaining } from 'utils/benefitDisplay';
 
 type Props = {
   storeId: string;
-  storeName: string;
   benefit: BenefitView;
 };
 
@@ -20,8 +19,13 @@ const money = (cents: number) =>
 // what they get, and what happens when they press the button. A client can
 // replace it with their own instructions from the dashboard; most will not
 // need to.
-function defaultInstructions(storeName: string, benefit: BenefitView) {
-  const who = `${storeName} ${benefit.copy.memberLabel.toLowerCase()}`;
+//
+// The member label carries who it is for on its own. Pasting the store name
+// in front of it read badly, because a store is usually named after the
+// client already: "Lincoln Elementary Staff Appreciation staff get...".
+function defaultInstructions(benefit: BenefitView) {
+  const label = benefit.copy.memberLabel.trim();
+  const who = label.charAt(0).toUpperCase() + label.slice(1);
   const what =
     benefit.type === 'credit'
       ? `get ${money(benefit.amount)} to spend in this store`
@@ -32,7 +36,7 @@ function defaultInstructions(storeName: string, benefit: BenefitView) {
             ? 'one free item'
             : `${benefit.amount} free items`
         } from this store`;
-  return `${who} ${what}. Enter your work email and we'll send you a code to activate it.`;
+  return `${who} ${what}. Enter your email and we'll send you a code to activate it.`;
 }
 
 // Not terms, just how it works, in the two facts people ask about. Generated
@@ -57,11 +61,7 @@ type Step = 'email' | 'code';
 // It holds no eligibility state of its own. Verifying sets a cookie on the
 // server, and the page's props are re-fetched, so what the card shows is
 // always what the server just said.
-export default function MemberBenefitCard({
-  storeId,
-  storeName,
-  benefit,
-}: Props) {
+export default function MemberBenefitCard({ storeId, benefit }: Props) {
   const router = useRouter();
   const { copy, member } = benefit;
 
@@ -337,7 +337,7 @@ export default function MemberBenefitCard({
       {logo}
       <h3 className="title">{copy.benefitName}</h3>
       <p className="paragraph">
-        {copy.instructions || defaultInstructions(storeName, benefit)}
+        {copy.instructions || defaultInstructions(benefit)}
       </p>
       <form onSubmit={requestCode}>
         <div className="field-item">
