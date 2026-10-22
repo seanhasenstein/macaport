@@ -416,17 +416,20 @@ const CardStyles = styled.div`
     font-size: 1.125rem;
     line-height: 1.35;
 
+    /* The check flows with the text rather than sitting beside it. As a
+       flex row it was centred against the whole heading, so the moment the
+       heading wrapped — which it does for any benefit with a name of more
+       than a couple of words — the icon floated out to the left on its own,
+       off the card's centre line and away from the words it belongs to. */
     &.verified-title {
-      display: flex;
-      align-items: center;
-      justify-content: center;
       font-size: 1rem;
 
       .check-circle-icon {
-        margin-right: 0.25rem;
-        flex-shrink: 0;
-        height: 1.3125rem;
-        width: 1.3125rem;
+        margin: 0 0.3125rem 0 0;
+        height: 1.125rem;
+        width: 1.125rem;
+        /* Optically on the cap height of the text it precedes. */
+        vertical-align: -0.1875em;
         color: #047857;
       }
     }
