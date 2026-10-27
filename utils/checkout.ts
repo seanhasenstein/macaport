@@ -73,7 +73,11 @@ export function getCheckoutSchema(groupTerm: string, requireCard: boolean) {
     customer: Yup.object().shape({
       firstName: Yup.string().required('First name is required'),
       lastName: Yup.string().required('Last name is required'),
+      // A phone's suggested address arrives with a space after it, invisible
+      // to the customer. submit-order trims before storing, so judge the
+      // address the same way here rather than refusing a correct one.
       email: Yup.string()
+        .trim()
         .email('A valid email is required')
         .required('An email address is required'),
       phone: Yup.string()
