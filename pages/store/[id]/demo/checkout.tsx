@@ -101,6 +101,7 @@ export default function Checkout(props: Props) {
               checkout={checkout}
               priced={priced}
               member={props.benefit?.member ?? null}
+            benefitName={props.benefit?.copy.benefitName ?? null}
             />
             <CheckoutSidebar priced={priced} />
           </div>

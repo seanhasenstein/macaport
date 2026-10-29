@@ -130,3 +130,10 @@ describe('checking a code', () => {
     expect(checkCode(record, code, 'rotated', 1)).toBe('wrong');
   });
 });
+
+it('is ten minutes, which the sign-in card states in words', () => {
+  // The card hardcodes "10 minutes" because importing this module into the
+  // browser would pull node's crypto into the bundle. If this changes, the
+  // sentence in MemberBenefitCard has to change with it.
+  expect(CODE_TTL_MS / 60000).toBe(10);
+});

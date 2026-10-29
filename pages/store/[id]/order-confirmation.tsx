@@ -13,13 +13,16 @@ import {
 } from '../../../utils';
 import { useCart } from '../../../hooks/useCart';
 import {
-  describeBenefitUse,
+  FREE_ITEM_NOTE,
+  needsFreeItemNote,
   orderAdjustments,
   splitAdjustments,
+  summarizeBenefitUse,
 } from '../../../utils/benefitDisplay';
 import { describeDelivery } from '../../../utils/mailgun';
 import NoNavLayout from '../../../components/store/layouts/NoNavLayout';
 import OrderConfirmationPageError from 'components/store/errors/OrderConfirmationPageError';
+import ProductPrice from 'components/store/product/ProductPrice';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -106,7 +109,7 @@ export default function OrderConfirmation(props: Props) {
   const headerCopy = props.order.summary.total === 0 ? 'Order' : 'Payment';
   const adjustments = orderAdjustments(props.order);
   const { beforeTax, afterShipping } = splitAdjustments(adjustments);
-  const remainingLine = describeBenefitUse(props.order);
+  const benefitUse = summarizeBenefitUse(props.order);
   // Per-item labels, e.g. the free shirt's own line.
   const lineAdjustments = adjustments.filter(a => a.lineId);
 
@@ -264,7 +267,10 @@ export default function OrderConfirmation(props: Props) {
                             <div className="order-item-header">
                               <div className="order-item-name">{item.name}</div>
                               <div className="order-item-total">
-                                {formatToMoney(item.itemTotal!)}
+                                <ProductPrice
+                                  full={item.price * item.quantity}
+                                  payable={item.itemTotal ?? 0}
+                                />
                               </div>
                             </div>
                             {itemAdjustments.map((adjustment, index) => (
@@ -272,6 +278,13 @@ export default function OrderConfirmation(props: Props) {
                                 <div>{adjustment.label}</div>
                               </div>
                             ))}
+                            {needsFreeItemNote(
+                              item.itemTotal ?? 0,
+                              itemAdjustments,
+                              item.quantity
+                            ) ? (
+                              <p className="free-item-note">{FREE_ITEM_NOTE}</p>
+                            ) : null}
                             <div className="order-item-details">
                               <div className="order-item-detail item-quantity">
                                 Qty:{' '}
@@ -364,8 +377,20 @@ export default function OrderConfirmation(props: Props) {
                         {formatToMoney(props.order.summary.total, true)}
                       </div>
                     </div>
-                    {remainingLine ? (
-                      <p className="benefit-remaining">{remainingLine}</p>
+                    {benefitUse ? (
+                      <div className="benefit-use">
+                        <div className="benefit-use-label">
+                          {benefitUse.label}
+                        </div>
+                        <div className="order-summary-item">
+                          <div className="label">Used on this order</div>
+                          <div className="value">{benefitUse.used}</div>
+                        </div>
+                        <div className="order-summary-item">
+                          <div className="label">Remaining</div>
+                          <div className="value">{benefitUse.remaining}</div>
+                        </div>
+                      </div>
                     ) : null}
                   </div>
                 </div>
@@ -602,11 +627,48 @@ const OrderConfirmationStyles = styled.div`
     color: #111827;
   }
 
-  .benefit-remaining {
-    margin: 1rem 0 0;
-    font-size: 0.8125rem;
-    line-height: 1.5;
-    color: #4b5563;
+  /* The receipt shows a free line the way the cart and checkout just did.
+     It used to print "$0" here, the one place left in the flow that
+     disagreed with the page before it. */
+  .order-item-total .was {
+    margin-right: 0.375rem;
+    color: #9ca3af;
+    text-decoration: line-through;
+    font-weight: 400;
+  }
+
+  .order-item-total .free {
+    color: #047857;
+    font-weight: 600;
+  }
+
+  /* Says in words why a line marked free still has a price: the benefit
+     covers the garment, and the printing on it is charged. Numbers alone
+     read as a mistake. */
+  .free-item-note {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: #6b7280;
+  }
+
+  /* Sits under the order total, in the same label-and-value shape as the
+     summary above it, so the two numbers can be found without reading a
+     sentence. Its own rule because it describes the member's benefit
+     rather than this order's money. */
+  .benefit-use {
+    margin: 1.25rem 0 0;
+    padding: 1rem 0 0;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .benefit-use-label {
+    margin: 0 0 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7280;
   }
 
   .test-environment-note {

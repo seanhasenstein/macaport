@@ -11,6 +11,7 @@ import { PricedCart } from 'hooks/usePricedCart';
 
 import { formatToMoney, unitedStates } from '../../../utils';
 import { cardStyle, getCheckoutSchema, getInitialValues } from 'utils/checkout';
+import { benefitEmailNote } from 'utils/benefitDisplay';
 
 import FieldItem, { FieldItemStyles } from './form/FieldItem';
 import ErrorMessage from './form/ErrorMessage';
@@ -46,6 +47,9 @@ type Props = {
   priced: PricedCart;
   // The verified member, if any, whose name and email prefill the form.
   member: BenefitMemberView | null;
+  // What the benefit is called, for the note shown when someone sends the
+  // receipt to a different address than the one they verified.
+  benefitName?: string | null;
 };
 
 export default function CheckoutForm(props: Props) {
@@ -107,6 +111,15 @@ export default function CheckoutForm(props: Props) {
                 <FieldItem name="customer.lastName" label="Last Name" />
               </div>
               <FieldItem name="customer.email" label="Email Address" />
+              {(() => {
+                const note = benefitEmailNote(
+                  props.member?.email,
+                  values.customer.email,
+                  props.benefitName,
+                  props.member?.reason === 'eligible'
+                );
+                return note ? <p className="field-note">{note}</p> : null;
+              })()}
               <FieldItem name="customer.phone" label="Phone Number" />
               {props.requireGroupSelection && (
                 <div className="field-row">
@@ -361,6 +374,15 @@ export default function CheckoutForm(props: Props) {
 const CheckoutFormStyles = styled.div`
   .section {
     margin: 4rem 0;
+  }
+
+  /* Sits under the email field, quiet enough not to read as an error: the
+     shopper has done nothing wrong by sending the receipt elsewhere. */
+  .field-note {
+    margin: -0.5rem 0 1rem;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: #6b7280;
   }
 
   .field-row {

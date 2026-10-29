@@ -33,6 +33,7 @@ import {
 import { MemberBenefit } from '../../core/memberBenefits/types';
 import { release, reserve } from '../../core/memberBenefits/reservation';
 import { PriceLine, priceOrder } from '../../core/pricing/priceOrder';
+import { expectedTotalFrom } from '../../utils/checkout';
 
 interface ExtendedRequest extends NextApiRequest {
   body: {
@@ -50,6 +51,9 @@ interface ExtendedRequest extends NextApiRequest {
     shippingMethod: ShippingMethod;
     shippingAddress: Address | PrimaryShippingAddress;
     note?: string;
+    // The total the browser last showed as owed. Typed unknown because it
+    // arrives over the wire and is validated before it is trusted.
+    expectedTotal?: unknown;
   };
 }
 
@@ -113,12 +117,26 @@ function toPriceLine(item: OrderItem): PriceLine {
   };
 }
 
-// Told to the customer when the reservation fails or the card is missing for
-// a total the browser thought was zero. Either way their standing changed
-// between the page loading and the order landing, and the client re-fetches
-// the page's props on seeing benefitChanged.
+// Told to the customer when their benefit no longer covers what the page
+// said it would: the reservation failed, the card is missing for a total the
+// browser thought was zero, or the total came out above what was displayed.
+// In every case something moved between the page loading and the order
+// landing, and the client re-fetches the page's props, and re-syncs the cart
+// when this response carries verifiedItems, on seeing benefitChanged.
 const BENEFIT_CHANGED =
   'has changed since this page loaded, so the totals have been refreshed. Please review your order and submit it again.';
+
+// Said whenever the order came out above the total on screen. It does not
+// name a benefit, because at this point the cause is genuinely unknown: a
+// benefit may have been spent or paused, or an item may simply cost more
+// than it did when it went into the cart. Naming the member's benefit here
+// was wrong in both directions — it accused a benefit that was fine when a
+// price had risen, and a member whose free item does not cover what they are
+// buying was told that free item had changed. The refreshed page below the
+// message shows what actually moved.
+const TOTAL_CHANGED =
+  'This order costs more than the total shown when the page loaded, so the totals have been refreshed. Please review your order and submit it again.';
+
 
 export default async (req: ExtendedRequest, res: NextApiResponse) => {
   // Set once a member's allowance has been drawn down, so that any exit
@@ -223,6 +241,27 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
         freeMinimum: shipping.freeMinimum,
       },
     });
+
+    // 5a. never charge more than the shopper was looking at. The server is
+    // the authority on price, and between this page loading and this request
+    // landing a benefit can shrink: spent in another tab, paused from the
+    // dashboard, or its amount edited. Charging the true higher total would
+    // take money nobody agreed to, so stop and let them see the new number
+    // first. A lower total needs no permission and goes through.
+    const expectedTotal = expectedTotalFrom(req.body);
+
+    if (expectedTotal !== null && priced.total > expectedTotal) {
+      return res.json({
+        error: TOTAL_CHANGED,
+        benefitChanged: true,
+        // The cart can be the stale half: it keeps the price each item had
+        // when it was added, so a price rise since then lands here too.
+        // Re-fetching the page's props would not touch it, and every retry
+        // would be refused the same way. Hand back the prices the server
+        // just used so the cart can catch up and the message is true.
+        verifiedItems: verified.items,
+      });
+    }
 
     // 6. create orderId
     const orderId = createReceiptNumber();

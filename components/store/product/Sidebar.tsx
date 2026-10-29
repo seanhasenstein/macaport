@@ -11,6 +11,8 @@ import {
 } from '../../../interfaces';
 import LinkButton from '../common/LinkButton';
 import useProductSidebar from 'hooks/useProductSidebar';
+import { PricedCartItem } from 'hooks/usePricedCart';
+import { FREE_ITEM_NOTE, needsFreeItemNote } from 'utils/benefitDisplay';
 
 type Props = {
   storeId: string;
@@ -24,6 +26,10 @@ type Props = {
   };
   resetProduct: () => void;
   isOpen: boolean;
+  // The cart line this sidebar is confirming, once it exists. The sku's own
+  // price is what it costs on its own; this is what the cart will charge
+  // for it, which is not the same thing when a benefit covers it.
+  addedLine?: PricedCartItem;
 };
 
 export default function Sidebar(props: Props) {
@@ -96,6 +102,11 @@ export default function Sidebar(props: Props) {
                     <span>Size:</span>{' '}
                     {props.size.label !== 'DEFAULT' ? props.size.label : ''}
                   </div>
+                  {props.addedLine && props.addedLine.quantity > 1 ? (
+                    <div className="quantity">
+                      <span>Qty:</span> {props.addedLine.quantity}
+                    </div>
+                  ) : null}
                   {props.personalization.addonItems.length > 0 ? (
                     <div className="personalization">
                       {props.personalization.addonItems.map((item, index) => (
@@ -117,7 +128,37 @@ export default function Sidebar(props: Props) {
                     </div>
                   ) : null}
                 </div>
-                <p className="item-price">{formatToMoney(itemPrice, true)}</p>
+                {/* The price below is the whole cart line, and adding the
+                    same size twice merges into one line of quantity 2. The
+                    quantity above is what keeps that total from reading as
+                    one very expensive shirt. */}
+                {props.addedLine ? (
+                  <p className="item-price">
+                    {props.addedLine.adjustments.length > 0 ? (
+                      <span className="was">
+                        {formatToMoney(
+                          props.addedLine.price * props.addedLine.quantity,
+                          true
+                        )}
+                      </span>
+                    ) : null}
+                    {props.addedLine.itemTotal === 0 ? (
+                      <span className="free">Free</span>
+                    ) : (
+                      formatToMoney(props.addedLine.itemTotal, true)
+                    )}
+                  </p>
+                ) : (
+                  <p className="item-price">{formatToMoney(itemPrice, true)}</p>
+                )}
+                {props.addedLine &&
+                needsFreeItemNote(
+                  props.addedLine.itemTotal,
+                  props.addedLine.adjustments,
+                  props.addedLine.quantity
+                ) ? (
+                  <p className="free-item-note">{FREE_ITEM_NOTE}</p>
+                ) : null}
               </div>
             </div>
             <div className="actions">
@@ -290,6 +331,24 @@ const SidebarStyles = styled.div<{ hasAddons: boolean }>`
     margin: 0.375rem 0 0;
     font-size: 0.875rem;
     font-weight: 500;
+  }
+
+  .free-item-note {
+    margin: 0.375rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: #6b7280;
+  }
+
+  .item-price .was {
+    margin-right: 0.375rem;
+    font-weight: 400;
+    color: #9ca3af;
+    text-decoration: line-through;
+  }
+
+  .item-price .free {
+    color: #047857;
   }
 
   .item-specs {

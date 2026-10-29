@@ -133,3 +133,93 @@ describe('the sign-in code email', () => {
     expect(again).toContain('same code');
   });
 });
+
+describe('the benefit block on a receipt', () => {
+  const withBenefit = (
+    benefit: Order['benefit'],
+    adjustments: NonNullable<Order['summary']['adjustments']>
+  ) =>
+    order({
+      benefit,
+      summary: {
+        ...order().summary,
+        adjustments,
+      },
+    });
+
+  it('tells a credit member what they spent and what is left', () => {
+    const { text, html } = generateReceiptEmail(
+      withBenefit(
+        {
+          benefitId: 'b1',
+          type: 'credit',
+          email: 'sam@example.com',
+          used: 2400,
+          remainingAfter: 5100,
+        },
+        [{ kind: 'credit', label: 'Employee Store Credit', amount: -2400 }]
+      ),
+      'https://macaport.com'
+    );
+
+    for (const body of [text, html]) {
+      expect(body).toContain('Employee Store Credit');
+      expect(body).toContain('$24.00');
+      expect(body).toContain('$51.00');
+    }
+  });
+
+  it('counts free items rather than money, and says None when spent', () => {
+    const { text, html } = generateReceiptEmail(
+      withBenefit(
+        {
+          benefitId: 'b1',
+          type: 'freeItem',
+          email: 'sam@example.com',
+          used: 1,
+          remainingAfter: 0,
+        },
+        [
+          {
+            kind: 'freeItem',
+            label: 'Employee Free Item',
+            amount: -2000,
+            lineId: 'l1',
+            units: 1,
+          },
+        ]
+      ),
+      'https://macaport.com'
+    );
+
+    for (const body of [text, html]) {
+      expect(body).toContain('Employee Free Item');
+      expect(body).toContain('1 item');
+      expect(body).toContain('None');
+    }
+  });
+
+  it('says nothing at all when the order carried no benefit', () => {
+    const { text, html } = generateReceiptEmail(order(), 'https://macaport.com');
+    expect(text).not.toContain('Used on this order');
+    expect(html).not.toContain('Used on this order');
+  });
+
+  it('escapes a benefit label rather than letting it into the markup', () => {
+    const { html } = generateReceiptEmail(
+      withBenefit(
+        {
+          benefitId: 'b1',
+          type: 'credit',
+          email: 'sam@example.com',
+          used: 500,
+          remainingAfter: 0,
+        },
+        [{ kind: 'credit', label: '<script>x</script>', amount: -500 }]
+      ),
+      'https://macaport.com'
+    );
+    expect(html).not.toContain('<script>x</script>');
+    expect(html).toContain('&lt;script&gt;');
+  });
+});

@@ -3,12 +3,27 @@ import styled from 'styled-components';
 import { formatToMoney } from '../../../utils';
 
 import { PricedCartItem } from 'hooks/usePricedCart';
+import { FREE_ITEM_NOTE, needsFreeItemNote } from 'utils/benefitDisplay';
 
 type Props = {
   item: PricedCartItem;
 };
 
+// What the line would have cost, shown struck through when a benefit has
+// brought it down. A line can carry a benefit and still have a price on it
+// — a free garment with a printed name is the ordinary case — and the badge
+// next to a bare "$5.00" read like a mistake without it. The amount taken
+// off is not repeated here: it is already in the order summary, and a third
+// number on the row only asks the reader to check the arithmetic.
+function lineAmounts(item: PricedCartItem) {
+  return {
+    full: item.price * item.quantity,
+    reduced: item.adjustments.length > 0,
+  };
+}
+
 export default function CheckoutItem(props: Props) {
+  const amounts = lineAmounts(props.item);
   return (
     <CheckoutItemStyles>
       <div className="image">
@@ -18,12 +33,32 @@ export default function CheckoutItem(props: Props) {
         />
       </div>
       <div className="name">{props.item.name}</div>
-      <div className="total">{formatToMoney(props.item.itemTotal!)}</div>
-      {props.item.adjustments.map((adjustment, index) => (
-        <div className="adjustment" key={index}>
-          <div>{adjustment.label}</div>
+      <div className="total">
+        {amounts.reduced ? (
+          <span className="was">{formatToMoney(amounts.full)}</span>
+        ) : null}
+        {props.item.itemTotal === 0 ? (
+          <span className="free">Free</span>
+        ) : (
+          formatToMoney(props.item.itemTotal)
+        )}
+      </div>
+      {props.item.adjustments.length > 0 ? (
+        <div className="adjustment-area">
+          {props.item.adjustments.map((adjustment, index) => (
+            <div className="adjustment" key={index}>
+              <div>{adjustment.label}</div>
+            </div>
+          ))}
+          {needsFreeItemNote(
+            props.item.itemTotal,
+            props.item.adjustments,
+            props.item.quantity
+          ) ? (
+            <p className="free-item-note">{FREE_ITEM_NOTE}</p>
+          ) : null}
         </div>
-      ))}
+      ) : null}
       <div className="details">
         <div className="detail">
           <span className="label">Color:</span>
@@ -76,9 +111,30 @@ const CheckoutItemStyles = styled.div`
     border-top: 1px solid #e5e7eb;
   }
 
+  .adjustment-area {
+    grid-area: adjustment;
+  }
+
+  .free-item-note {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: #6b7280;
+  }
+
+  .total .was {
+    margin-right: 0.375rem;
+    font-weight: 400;
+    color: #9ca3af;
+    text-decoration: line-through;
+  }
+
+  .total .free {
+    color: #047857;
+  }
+
   .adjustment {
     margin: 0.25rem 0 0;
-    grid-area: adjustment;
     font-size: 0.875rem;
     color: #1f2937;
     font-weight: 500;

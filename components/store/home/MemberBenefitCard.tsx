@@ -1,15 +1,18 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
-import { CheckCircleIcon } from '@heroicons/react/20/solid';
 import { BanknotesIcon, GiftIcon, TagIcon } from '@heroicons/react/24/outline';
 
 import { BenefitView } from 'interfaces';
-import { benefitStatus } from 'utils/benefitDisplay';
+import { benefitStatus, benefitTerms } from 'utils/benefitDisplay';
 
 type Props = {
   storeId: string;
   benefit: BenefitView;
+  // Whether any product this benefit covers sells a priced add-on. Decides
+  // whether the terms mention that add-ons are charged. The page works it
+  // out, because only the page has the product list.
+  paidAddons?: boolean;
 };
 
 const money = (cents: number) =>
@@ -39,20 +42,12 @@ function defaultInstructions(benefit: BenefitView) {
   return `${who} ${what}. Enter your email and we'll send you a code to activate it.`;
 }
 
-// Not terms, just how it works, in the two facts people ask about. Generated
-// from the type so it is always true of the code that enforces it.
-function finePrint(benefit: BenefitView) {
-  switch (benefit.type) {
-    case 'credit':
-      return 'Use it across orders while the store is open. Anything over your credit is paid by card at checkout.';
-    case 'discount':
-      return 'One use per email. It does not cover tax or shipping.';
-    case 'freeItem':
-      return 'One per person. Add-ons like a printed name are still charged.';
-  }
-}
-
 type Step = 'email' | 'code';
+
+// Kept in step with CODE_TTL_MS in core/verification/code.ts by hand: that
+// module imports node's crypto, so pulling the constant from it would drag
+// crypto into the browser bundle for the sake of one number.
+const CODE_MINUTES = 10;
 
 // The one card for every member benefit. Everything a client can change
 // about it (its name, what the people are called, the instructions, a logo)
@@ -61,7 +56,11 @@ type Step = 'email' | 'code';
 // It holds no eligibility state of its own. Verifying sets a cookie on the
 // server, and the page's props are re-fetched, so what the card shows is
 // always what the server just said.
-export default function MemberBenefitCard({ storeId, benefit }: Props) {
+export default function MemberBenefitCard({
+  storeId,
+  benefit,
+  paidAddons = true,
+}: Props) {
   const router = useRouter();
   const { copy, member } = benefit;
 
@@ -231,7 +230,7 @@ export default function MemberBenefitCard({ storeId, benefit }: Props) {
   // same string the signed-out card shows, so verifying does not rename
   // the thing in front of them.
   if (member) {
-    const status = benefitStatus(benefit);
+    const status = benefitStatus(benefit, paidAddons);
 
     return (
       <CardStyles>
@@ -239,30 +238,31 @@ export default function MemberBenefitCard({ storeId, benefit }: Props) {
         <h3 className="title">{copy.benefitName}</h3>
         {status ? (
           <>
-            <span className={`status-pill ${status.tone}`}>
-              {status.tone === 'active' ? (
-                <CheckCircleIcon className="status-icon" />
+            <div className="balance">
+              <p className={`status-label ${status.tone}`}>{status.label}</p>
+              {status.headline ? (
+                <p className="headline">
+                  {status.headline}
+                  {status.note ? (
+                    <span className="headline-note">{status.note}</span>
+                  ) : null}
+                </p>
               ) : null}
-              {status.label}
-            </span>
-            {status.headline ? (
-              <p className="headline">{status.headline}</p>
-            ) : null}
-            <p className="paragraph">{status.detail}</p>
+              <p className="paragraph">{status.detail}</p>
+            </div>
           </>
         ) : null}
-        <div className="current-email">
-          <p className="email-label">Your email</p>
-          <p className="email">{member.email}</p>
+        <div className="account">
+          <p className="signed-in-as">{member.email}</p>
+          <button
+            type="button"
+            className="text-button"
+            onClick={signOut}
+            disabled={busy}
+          >
+            Use a different email
+          </button>
         </div>
-        <button
-          type="button"
-          className="text-button"
-          onClick={signOut}
-          disabled={busy}
-        >
-          Use a different email
-        </button>
       </CardStyles>
     );
   }
@@ -285,7 +285,11 @@ export default function MemberBenefitCard({ storeId, benefit }: Props) {
         {logo}
         <h3 className="title">Check your email</h3>
         <p className="paragraph">
-          We sent a 6-digit code to <strong>{email}</strong>. Enter it below.
+          {/* "Enter it below" said nothing the labelled field underneath
+              does not. How long they have is the thing someone who comes
+              back to this screen actually wants to know. */}
+          We sent a 6-digit code to <strong>{email}</strong>. It expires in{' '}
+          {CODE_MINUTES} minutes.
         </p>
         <form onSubmit={verifyCode}>
           <div className="field-item">
@@ -356,7 +360,7 @@ export default function MemberBenefitCard({ storeId, benefit }: Props) {
           {busy ? <LoadingSpinner /> : 'Email me a code'}
         </button>
         {error ? <div className="validation-error">{error}</div> : null}
-        <p className="fine-print">{finePrint(benefit)}</p>
+        <p className="fine-print">{benefitTerms(benefit, paidAddons)}</p>
       </form>
     </CardStyles>
   );
@@ -370,6 +374,10 @@ const CardStyles = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* The grid stretches this to the height of the product tiles beside it,
+     which left the content hanging from the top with dead space under it.
+     Centred, the card reads as composed at whatever height it is given. */
+  justify-content: center;
   background-color: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 0.375rem;
@@ -398,7 +406,7 @@ const CardStyles = styled.div`
 
   .logo {
     width: 2.75rem;
-    margin: 0 auto 0.75rem;
+    margin: 0 auto 0.625rem;
 
     img {
       width: 100%;
@@ -407,62 +415,77 @@ const CardStyles = styled.div`
   }
 
   .title {
-    margin: 0.5rem 0 0;
+    margin: 0;
     color: #000;
     font-size: 1.125rem;
     line-height: 1.35;
   }
 
-  /* The state, in a word. Carries its own background, so it reads as a
-     label rather than as another sentence, and it is the one element whose
-     colour changes with the state. */
-  .status-pill {
-    margin: 0.625rem 0 0;
-    padding: 0.25rem 0.625rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    border-radius: 9999px;
-    border: 1px solid;
-
-    .status-icon {
-      height: 0.875rem;
-      width: 0.875rem;
-    }
+  /* The state, in a word. A label rather than a pill: inside the panel a
+     pill was a box within a box, and outside it, it was a second object
+     competing with the frame. As type it sits in the panel's own rhythm
+     and is still the one element whose colour carries meaning. */
+  .status-label {
+    margin: 0 0 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
 
     &.active {
       color: #047857;
-      background-color: #ecfdf5;
-      border-color: #a7f3d0;
     }
 
     &.spent {
-      color: #4b5563;
-      background-color: #f3f4f6;
-      border-color: #e5e7eb;
+      color: #6b7280;
     }
 
     &.paused {
       color: #92400e;
-      background-color: #fffbeb;
-      border-color: #fde68a;
     }
   }
 
-  /* What they came back to find. */
+  /* What they came back to find, given a frame of its own. Spacing alone
+     left it as one more line of centred text among several; the panel is
+     what makes the card read as zones rather than as a stack. Neutral
+     rather than green, because the same panel carries the paused and
+     used-up messages, where green would be a lie. */
+  .balance {
+    margin: 1.125rem 0 0;
+    padding: 1rem;
+    width: 100%;
+    background-color: #f8f9fa;
+    /* The card's own border colour. Lighter than this and the panel read
+       as a fill with no edge, which is most of why it still looked like
+       loose text rather than a frame. */
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+  }
+
   .headline {
-    margin: 0.875rem 0 0;
-    font-size: 1.375rem;
+    margin: 0;
+    font-size: 1.5rem;
     font-weight: 700;
     line-height: 1.2;
     color: #111827;
   }
 
-  .headline + .paragraph {
-    margin-top: 0.25rem;
+  .balance .headline {
+    margin: 0;
+  }
+
+  .headline-note {
+    margin-left: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+  }
+
+  .balance .paragraph {
+    margin: 0.5rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: #6b7280;
   }
 
   .paragraph {
@@ -526,31 +549,29 @@ const CardStyles = styled.div`
     }
   }
 
-  .current-email {
+  /* Three groups, read in order: whose benefit it is, what it is worth,
+     and who is signed in. The spacing inside each is tighter than the
+     spacing between them, which is what makes them read as groups at all;
+     the rule is there because the last one is a different kind of thing
+     from the two above it, not decoration. */
+  .account {
     margin: 1.25rem 0 0;
-    padding: 1.25rem 0.5rem;
-    background-color: rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 0.1875rem;
     width: 100%;
   }
 
-  .email-label {
+  /* Who they are signed in as answers a question nobody asks twice. As a
+     bordered box with a heading it was the largest element on the card,
+     above the balance it exists to support. */
+  .signed-in-as {
     margin: 0;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.075em;
-    color: #000;
-    line-height: 120%;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: #6b7280;
+    word-wrap: break-word;
   }
 
-  .email {
-    margin: 0.75rem 0 0;
-    word-wrap: break-word;
-    line-height: 120%;
-    font-size: 0.8125rem;
-    color: #1f2937;
+  .signed-in-as + .text-button {
+    margin-top: 0.5rem;
   }
 
   .text-button {

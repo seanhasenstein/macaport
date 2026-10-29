@@ -30,6 +30,9 @@ interface UseStoreProductAddToOrder {
   setSizeValidationError: React.Dispatch<
     React.SetStateAction<string | undefined>
   >;
+  // Which cart line the add created, so the confirmation sidebar can show
+  // what that line actually costs rather than guessing from the sku.
+  onAdded?: (cartItemId: string) => void;
 }
 
 export default function useStoreProductAddToOrder(
@@ -94,6 +97,7 @@ export default function useStoreProductAddToOrder(
     if (sku) {
       const id = `${sku.id}${getPersonalizationAddonsId(formattedAddonItems)}`;
 
+      params.onAdded?.(id);
       params.addItem({
         id,
         sku: sku,
@@ -104,9 +108,12 @@ export default function useStoreProductAddToOrder(
         personalizationAddons: formattedAddonItems,
         personalizationTotal: params.personalization.total,
       });
-    }
 
-    params.setShowSidebar(true);
+      // Only announce an add that happened. With no matching sku nothing
+      // reaches the cart, and opening the panel there used to confirm an
+      // add with whatever line was added last still priced in it.
+      params.setShowSidebar(true);
+    }
   };
 
   return handleAddToOrder;

@@ -16,8 +16,9 @@ type Props = {
     state: string;
     zipcode: string;
   };
-  // What the priced cart says is owed. Decides whether a card is collected;
-  // the server decides what is charged.
+  // What the priced cart says is owed. Decides whether a card is collected,
+  // and is sent as a ceiling on what the server may charge. The server
+  // still decides the price; this only stops a silent increase.
   total: number;
 };
 
@@ -93,6 +94,11 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
         storeId: props.storeId,
         storeName: props.storeName,
         payment_method_id: paymentMethodId,
+        // The total on screen when this was submitted. The server still
+        // prices the order itself; this only stops it charging more than
+        // was displayed, which can happen if the benefit shrank while this
+        // page was open.
+        expectedTotal: props.total,
         items,
         customer: data.customer,
         group: data.group,
@@ -132,10 +138,14 @@ export default function useCheckoutSubmit(props: Props): UseCheckoutSubmit {
       console.error(res.error);
       setIsSubmitting(false);
 
-      // The member's standing changed under them (another order used the
-      // credit, or the benefit was paused). Re-run the page's server props
-      // so the totals they are looking at are true again.
+      // What the page was showing is no longer true: another order used the
+      // credit, the benefit was paused, or an item costs more than it did
+      // when it went into the cart. Re-run the page's server props for the
+      // benefit and shipping, and take the server's prices for the cart
+      // itself, which server props do not cover. Without the second half a
+      // price rise would be refused on every retry.
       if (res.benefitChanged) {
+        if (res.verifiedItems) setItems(res.verifiedItems);
         router.replace(router.asPath);
       }
       return;

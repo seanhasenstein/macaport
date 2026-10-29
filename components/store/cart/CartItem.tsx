@@ -6,6 +6,7 @@ import { ProductSku, ProductSize } from '../../../interfaces';
 import { useCart } from '../../../hooks/useCart';
 import useCartItem from 'hooks/useCartItem';
 import { PricedCartItem } from 'hooks/usePricedCart';
+import { FREE_ITEM_NOTE, needsFreeItemNote } from 'utils/benefitDisplay';
 import { formatToMoney } from '../../../utils';
 
 type Props = {
@@ -16,7 +17,21 @@ type Props = {
   isDemo: boolean;
 };
 
+// What the line would have cost, shown struck through when a benefit has
+// brought it down. A line can carry a benefit and still have a price on it
+// — a free garment with a printed name is the ordinary case — and the badge
+// next to a bare "$5.00" read like a mistake without it. The amount taken
+// off is not repeated here: it is already in the order summary, and a third
+// number on the row only asks the reader to check the arithmetic.
+function lineAmounts(item: PricedCartItem) {
+  return {
+    full: item.price * item.quantity,
+    reduced: item.adjustments.length > 0,
+  };
+}
+
 export default function CartItem(props: Props) {
+  const amounts = lineAmounts(props.item);
   const { items, removeItem, updateItemSize, updateItemQuantity } = useCart();
 
   const cartItem = useCartItem({
@@ -88,7 +103,16 @@ export default function CartItem(props: Props) {
             ) : null}
           </div>
         </div>
-        <div className="total">{formatToMoney(props.item.itemTotal!)}</div>
+        <div className="total">
+          {amounts.reduced ? (
+            <span className="was">{formatToMoney(amounts.full)}</span>
+          ) : null}
+          {props.item.itemTotal === 0 ? (
+            <span className="free">Free</span>
+          ) : (
+            formatToMoney(props.item.itemTotal)
+          )}
+        </div>
         <div className="inputs">
           <div className="size">
             <label htmlFor="size">Size</label>
@@ -154,12 +178,23 @@ export default function CartItem(props: Props) {
             <span className="sr-only">Remove from cart</span>
           </button>
         </div>
-        {props.item.adjustments.map((adjustment, index) => (
-          <div className="adjustment" key={index}>
-            <CheckCircleIcon className="check-circle-icon" />
-            {adjustment.label}
+        {props.item.adjustments.length > 0 ? (
+          <div className="adjustment-area">
+            {props.item.adjustments.map((adjustment, index) => (
+              <div className="adjustment" key={index}>
+                <CheckCircleIcon className="check-circle-icon" />
+                {adjustment.label}
+              </div>
+            ))}
+            {needsFreeItemNote(
+              props.item.itemTotal,
+              props.item.adjustments,
+              props.item.quantity
+            ) ? (
+              <p className="free-item-note">{FREE_ITEM_NOTE}</p>
+            ) : null}
           </div>
-        ))}
+        ) : null}
       </div>
     </CartItemStyles>
   );
@@ -183,9 +218,15 @@ const CartItemStyles = styled.div<{ personalized: boolean }>`
     gap: 0 1.5rem;
   }
 
-  .adjustment {
+  /* The badge and the line explaining it share one cell, so the note
+     cannot land on top of the badge. */
+  .adjustment-area {
     margin: 1.25rem 0 0;
     grid-area: adjustment;
+  }
+
+  .adjustment {
+    margin: 0;
     font-size: 0.875rem;
     display: flex;
     align-items: center;
@@ -320,6 +361,24 @@ const CartItemStyles = styled.div<{ personalized: boolean }>`
     }
   }
 
+  .free-item-note {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: #6b7280;
+  }
+
+  .total .was {
+    margin-right: 0.375rem;
+    font-weight: 400;
+    color: #9ca3af;
+    text-decoration: line-through;
+  }
+
+  .total .free {
+    color: #047857;
+  }
+
   .total {
     grid-area: total;
     display: flex;
@@ -382,6 +441,12 @@ const CartItemStyles = styled.div<{ personalized: boolean }>`
 
     .adjustment {
       justify-content: center;
+    }
+
+    /* The badge centres at this width, so the line explaining it has to
+       centre with it or the pair reads as two unrelated things. */
+    .free-item-note {
+      text-align: center;
     }
 
     .item-image {

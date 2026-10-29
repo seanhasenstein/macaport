@@ -8,7 +8,10 @@ import { connectToDb, store as storeModel } from 'db';
 import { getUrlParameter } from 'utils';
 import { getStoreStatus } from 'utils/store';
 import { getBenefitView } from 'utils/memberBenefit';
-import { membersOnlyLockout } from 'utils/benefitDisplay';
+import {
+  benefitCoversPaidAddons,
+  membersOnlyLockout,
+} from 'utils/benefitDisplay';
 import { usePricedCart } from 'hooks/usePricedCart';
 
 import StoreLayout from '../../../components/store/layouts/StoreLayout';
@@ -108,6 +111,12 @@ export default function StoreHomepage(props: Props) {
   // browser holds a verified session.
   const locked = membersOnlyLockout(benefit);
 
+  // Only the page holds the product list, so the card is told whether any
+  // product the benefit covers can be personalized for a price.
+  const paidAddons =
+    !!benefit &&
+    benefitCoversPaidAddons(benefit, props.store.products ?? []);
+
   // "Free" on a product tile when adding it would cost nothing: a free-item
   // benefit with room left, for a product it covers.
   const member = benefit?.member ?? null;
@@ -169,7 +178,11 @@ export default function StoreHomepage(props: Props) {
         ) : (
           <div className="items">
             {benefit ? (
-              <MemberBenefitCard storeId={props.store._id} benefit={benefit} />
+              <MemberBenefitCard
+                storeId={props.store._id}
+                benefit={benefit}
+                paidAddons={paidAddons}
+              />
             ) : null}
             {locked
               ? null

@@ -14,9 +14,9 @@ import {
   SHIPPED_TO_ME,
 } from './contact';
 import {
-  describeBenefitUse,
   orderAdjustments,
   splitAdjustments,
+  summarizeBenefitUse,
 } from './benefitDisplay';
 import { storePhrase } from '../core/verification/email';
 import { siteBaseUrl } from './internalRequest';
@@ -746,6 +746,13 @@ function receiptAdjustmentLines(order: Order) {
   };
 }
 
+// The member's benefit, as its own small block rather than a sentence.
+function benefitUseText(order: Order) {
+  const use = summarizeBenefitUse(order);
+  if (!use) return '';
+  return `\n\n${use.label} \nUsed on this order: ${use.used} \nRemaining: ${use.remaining}`;
+}
+
 function generateReceiptText(order: Order, baseUrl: string) {
   return `Hi ${order.customer.firstName},\n\nThis is confirmation for your ${
     order.store.name
@@ -762,10 +769,30 @@ function generateReceiptText(order: Order, baseUrl: string) {
     true
   )} \nShipping: ${formatToMoney(order.summary.shipping, true)}${
     receiptAdjustmentLines(order).afterShipping
-  } \nTotal: ${formatToMoney(order.summary.total, true)}${
-    describeBenefitUse(order) ? `\n\n${describeBenefitUse(order)}` : ''
-  }
+  } \nTotal: ${formatToMoney(order.summary.total, true)}${benefitUseText(order)}
   `;
+}
+
+function benefitUseHtml(order: Order) {
+  const use = summarizeBenefitUse(order);
+  if (!use) return '';
+
+  const row = (label: string, value: string) =>
+    `<tr><td style="padding: 0 0 2px">${escapeHtml(
+      label
+    )}:</td><td style="padding: 0 0 2px; text-align: right; color: #1F2937">${escapeHtml(
+      value
+    )}</td></tr>`;
+
+  return `<div style="clear: both; padding: 16px 0 0">
+    <div style="padding: 14px 0 0; border-top: 1px solid #E5E7EB; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6B7280">${escapeHtml(
+      use.label
+    )}</div>
+    <table align="left" border="0" cellpadding="0" cellspacing="0" role="presentation" width="240" style="margin: 6px 0 0; font-size: 15px; color: #6B7280; line-height: 1.5">
+      ${row('Used on this order', use.used)}
+      ${row('Remaining', use.remaining)}
+    </table>
+  </div>`;
 }
 
 function generateReceiptHtml(order: Order, baseUrl: string) {
@@ -1358,13 +1385,7 @@ function generateReceiptHtml(order: Order, baseUrl: string) {
                             </td>
                           </tr>
                         </table>
-                        ${
-                          describeBenefitUse(order)
-                            ? `<div style="clear: both; padding: 14px 0 0; font-size: 13px; color: #6B7280; line-height: 1.5">${escapeHtml(
-                                describeBenefitUse(order) as string
-                              )}</div>`
-                            : ''
-                        }
+                        ${benefitUseHtml(order)}
                       </td>
                     </tr>
   

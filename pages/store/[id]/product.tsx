@@ -142,8 +142,13 @@ export default function Product(props: Props) {
     setShowLightbox,
   });
 
+  // The line the last "add to order" created, so the sidebar confirming
+  // it can show its real price.
+  const [addedLineId, setAddedLineId] = React.useState<string>();
+
   const handleAddToOrder = useAddProductToOrder({
     addItem,
+    onAdded: setAddedLineId,
     productName: props.product.name,
     primaryImage: productImages.primaryImage,
     size: productSize.size,
@@ -157,6 +162,9 @@ export default function Product(props: Props) {
   const handleProductReset = () => {
     productPersonalization.reset();
     setShowSidebar(false);
+    // Forget which line the panel was confirming, so a later add can never
+    // be priced from a stale one.
+    setAddedLineId(undefined);
     productSize.setSize(defaultSize);
     productSize.setLowInventory(false);
   };
@@ -254,6 +262,7 @@ export default function Product(props: Props) {
             total: productPersonalization.total,
           }}
           isOpen={showSidebar}
+          addedLine={priced.items.find(i => i.id === addedLineId)}
         />
       </StoreLayout>
       {showLightbox && productImages.primaryImage ? (

@@ -108,3 +108,17 @@ export function getCheckoutSchema(groupTerm: string, requireCard: boolean) {
       : Yup.string(),
   });
 }
+
+// What the browser last displayed as owed, in cents, as it arrives over the
+// wire. Advisory and one-directional: the server uses it as a ceiling on
+// what it may charge without asking again, never as a floor, so a browser
+// cannot send a small number and pay less — it can only cause its own order
+// to stop. Anything malformed, fractional or negative is treated as absent,
+// which leaves the server free to charge its own figure as it did before.
+export function expectedTotalFrom(body: { expectedTotal?: unknown }) {
+  const value = body.expectedTotal;
+  if (typeof value !== 'number') return null;
+  if (!Number.isFinite(value) || !Number.isInteger(value)) return null;
+  if (value < 0) return null;
+  return value;
+}
