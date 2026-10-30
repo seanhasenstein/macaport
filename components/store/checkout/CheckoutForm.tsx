@@ -9,7 +9,11 @@ import useHasMounted from '../../../hooks/useHasMounted';
 import { useCart } from 'hooks/useCart';
 import { PricedCart } from 'hooks/usePricedCart';
 
-import { formatToMoney, unitedStates } from '../../../utils';
+import {
+  formatPhoneInput,
+  formatToMoney,
+  unitedStates,
+} from '../../../utils';
 import { cardStyle, getCheckoutSchema, getInitialValues } from 'utils/checkout';
 import { benefitEmailNote } from 'utils/benefitDisplay';
 
@@ -120,7 +124,15 @@ export default function CheckoutForm(props: Props) {
                 );
                 return note ? <p className="field-note">{note}</p> : null;
               })()}
-              <FieldItem name="customer.phone" label="Phone Number" />
+              <FieldItem
+                name="customer.phone"
+                label="Phone Number"
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                placeholder="(920) 555-0134"
+                format={formatPhoneInput}
+              />
               {props.requireGroupSelection && (
                 <div className="field-row">
                   <FieldItemStyles>

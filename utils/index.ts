@@ -135,6 +135,31 @@ export function removeNonDigits(input: string) {
   return input.replace(/\D/g, '');
 }
 
+// Formats a phone field as you type, capped at ten digits. Reuses
+// formatPhoneNumber so the shape shown in the field and the shape in an email
+// or on a receipt can't drift. Shared by the contact form and checkout.
+//
+// `previous` is what makes deleting work. Backspacing over one of the
+// inserted characters — the bracket, space, or dash — removes no digit, so
+// reformatting would put it straight back and the field would look frozen.
+// When the digits haven't changed but the text got shorter, drop a digit.
+//
+// A pasted number often arrives with the country code, as +1 920 555 0134.
+// Taking the first ten digits of that would keep the 1 and drop the last
+// digit, giving a wrong number that still passes a ten digit check, so an
+// eleven digit number beginning with 1 loses the 1 instead.
+export function formatPhoneInput(next: string, previous: string) {
+  let digits = removeNonDigits(next);
+  if (digits.length === 11 && digits.startsWith('1')) digits = digits.slice(1);
+  digits = digits.slice(0, 10);
+
+  if (next.length < previous.length && digits === removeNonDigits(previous)) {
+    digits = digits.slice(0, -1);
+  }
+
+  return formatPhoneNumber(digits);
+}
+
 export function formatPhoneNumber(input: string) {
   const digits = removeNonDigits(input);
   const digitsArray = digits.split('');

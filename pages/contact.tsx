@@ -11,6 +11,7 @@ import {
   GRID_FADE_SIDES,
   reducedMotion,
 } from '../styles/theme';
+import { formatPhoneInput } from 'utils';
 import Layout from '../components/Layout';
 import { Success } from 'components/contact/Success';
 import ServerError from 'components/contact/ServerError';
@@ -38,7 +39,6 @@ import {
   OTHER_PRODUCT_ID,
   PRODUCT_OPTIONS,
   SHIPPED_TO_ME,
-  formatPhoneInput,
   initialValues,
   isInquiryType,
   validationSchema,
