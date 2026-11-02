@@ -15,6 +15,9 @@ type Props = {
   // deleting. Without it the field behaves as a plain Formik field. Same
   // shape as the contact form's field, so one formatter serves both.
   format?: (next: string, previous: string) => string;
+  // Called the first time the shopper types in this field, so a caller can
+  // tell a value they entered from one the form filled in for them.
+  onUserInput?: () => void;
 };
 
 export default function FieldItem({
@@ -25,10 +28,12 @@ export default function FieldItem({
   inputMode,
   autoComplete,
   format,
+  onUserInput,
 }: Props) {
   const [field, , helpers] = useField<string>(name);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onUserInput?.();
     if (!format) {
       field.onChange(event);
       return;

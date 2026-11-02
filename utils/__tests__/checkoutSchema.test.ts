@@ -63,3 +63,90 @@ describe('the ceiling on what may be charged', () => {
     expect(claim(999999)).toBe('charged');
   });
 });
+
+describe('the gaps a required field alone left open', () => {
+  const base = {
+    customer: {
+      firstName: 'Sean',
+      lastName: 'Hasenstein',
+      email: 'sean@example.com',
+      phone: '9205550134',
+    },
+    shippingAddress: {
+      street: '1 Main St',
+      street2: '',
+      city: 'New London',
+      state: 'Wisconsin',
+      zipcode: '54961',
+    },
+    groupRequired: false,
+    group: '',
+    shippingMethod: 'Direct',
+    cardholderName: 'Sean Hasenstein',
+    note: '',
+  };
+
+  const accepts = async (patch: Record<string, unknown>) => {
+    try {
+      await getCheckoutSchema('Group', true).validate({ ...base, ...patch });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const address = (patch: Record<string, unknown>) => ({
+    shippingAddress: { ...base.shippingAddress, ...patch },
+  });
+  const customer = (patch: Record<string, unknown>) => ({
+    customer: { ...base.customer, ...patch },
+  });
+
+  it('wants a zipcode that could actually be posted to', async () => {
+    expect(await accepts(address({ zipcode: '54961' }))).toBe(true);
+    expect(await accepts(address({ zipcode: '54961-1234' }))).toBe(true);
+    expect(await accepts(address({ zipcode: 'abc' }))).toBe(false);
+    expect(await accepts(address({ zipcode: '1' }))).toBe(false);
+    expect(await accepts(address({ zipcode: '549611' }))).toBe(false);
+  });
+
+  it('does not accept a single space as an answer', async () => {
+    // The server trims names before storing, so a space became a blank name
+    // on a real order.
+    expect(await accepts(customer({ firstName: ' ' }))).toBe(false);
+    expect(await accepts(customer({ lastName: ' ' }))).toBe(false);
+    expect(await accepts(address({ city: '  ' }))).toBe(false);
+    expect(await accepts(address({ street: ' ' }))).toBe(false);
+    expect(await accepts({ cardholderName: ' ' })).toBe(false);
+  });
+
+  it('caps free text so a pasted document cannot reach an order', async () => {
+    expect(await accepts(customer({ firstName: 'a'.repeat(101) }))).toBe(false);
+    expect(await accepts(customer({ firstName: 'a'.repeat(100) }))).toBe(true);
+    expect(await accepts(address({ city: 'a'.repeat(201) }))).toBe(false);
+    expect(await accepts({ note: 'x'.repeat(1001) })).toBe(false);
+    expect(await accepts({ note: 'x'.repeat(1000) })).toBe(true);
+  });
+
+  it('still lets a normal order through, and an optional line stay empty', async () => {
+    expect(await accepts({})).toBe(true);
+    expect(await accepts(address({ street2: '' }))).toBe(true);
+    expect(await accepts(address({ street2: 'Apt 4B' }))).toBe(true);
+  });
+
+  it('leaves the address alone when the order is not being shipped', async () => {
+    // Store pickup and primary delivery never fill these in.
+    expect(
+      await accepts({
+        shippingMethod: 'Store Pickup',
+        shippingAddress: {
+          street: '',
+          street2: '',
+          city: '',
+          state: '',
+          zipcode: '',
+        },
+      })
+    ).toBe(true);
+  });
+});

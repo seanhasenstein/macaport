@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { CardElement } from '@stripe/react-stripe-js';
-import { Formik, Form, Field } from 'formik';
+import { Formik, Form, Field, useFormikContext } from 'formik';
 
 import useHasMounted from '../../../hooks/useHasMounted';
 import { useCart } from 'hooks/useCart';
@@ -12,6 +12,7 @@ import { PricedCart } from 'hooks/usePricedCart';
 import {
   formatPhoneInput,
   formatToMoney,
+  formatZipcodeInput,
   unitedStates,
 } from '../../../utils';
 import { cardStyle, getCheckoutSchema, getInitialValues } from 'utils/checkout';
@@ -56,10 +57,48 @@ type Props = {
   benefitName?: string | null;
 };
 
+type CheckoutFormValues = ReturnType<typeof getInitialValues>;
+
+// Keeps the cardholder's name in step with the shipping name until the
+// shopper types in it themselves, after which it is theirs and nothing
+// writes to it again, including when they clear it.
+//
+// An effect rather than a handler on the name fields, because the two cases
+// that matter have no keystroke behind them. A verified member arrives with
+// their name already filled from their session and may never touch those
+// fields. And the cardholder field does not always exist: it is hidden while
+// the benefit covers the whole order, so someone can fill in their name,
+// then add an item that pushes the total above zero and have the field
+// appear. Running on mount and on every name change covers both; the value
+// is written even while the field is hidden, so it is there when it appears.
+function MirrorCardholderName({
+  edited,
+}: {
+  edited: React.MutableRefObject<boolean>;
+}) {
+  const { values, setFieldValue } = useFormikContext<CheckoutFormValues>();
+  const { firstName, lastName } = values.customer;
+  const current = values.cardholderName;
+
+  React.useEffect(() => {
+    if (edited.current) return;
+    // Collapses the gap while only one of the two names is filled in, so the
+    // field reads "Sean" rather than "Sean ".
+    const next = `${firstName} ${lastName}`.replace(/\s+/g, ' ').trim();
+    if (next !== current) setFieldValue('cardholderName', next);
+  }, [firstName, lastName, current, edited, setFieldValue]);
+
+  return null;
+}
+
 export default function CheckoutForm(props: Props) {
   const router = useRouter();
   const hasMounted = useHasMounted();
   const cart = useCart();
+  // Set the first time the shopper types in the cardholder field. A ref
+  // rather than Formik's touched, which fires on blur: tabbing through the
+  // field without typing would otherwise lock it empty.
+  const cardholderEdited = React.useRef(false);
 
   const [initialValues] = React.useState(() =>
     getInitialValues({
@@ -106,6 +145,7 @@ export default function CheckoutForm(props: Props) {
       {({ errors, setFieldValue, touched, values }) => (
         <CheckoutFormStyles>
           <Form>
+            <MirrorCardholderName edited={cardholderEdited} />
             <div className="section">
               <h3 className="section-title">
                 <span>Shipping Details</span>
@@ -279,6 +319,9 @@ export default function CheckoutForm(props: Props) {
                       <FieldItem
                         name="shippingAddress.zipcode"
                         label="Zipcode"
+                        inputMode="numeric"
+                        autoComplete="postal-code"
+                        format={formatZipcodeInput}
                       />
                     </div>
                   )}
@@ -302,7 +345,14 @@ export default function CheckoutForm(props: Props) {
               </h3>
               {!nothingOwed && (
                 <>
-                  <FieldItem name="cardholderName" label="Cardholder's Name" />
+                  <FieldItem
+                    name="cardholderName"
+                    label="Cardholder's Name"
+                    autoComplete="cc-name"
+                    onUserInput={() => {
+                      cardholderEdited.current = true;
+                    }}
+                  />
                   <label htmlFor="stripeInput">Card Information</label>
                   <CardElement
                     options={cardStyle}

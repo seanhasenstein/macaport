@@ -1,4 +1,9 @@
-import { formatPhoneInput, formatPhoneNumber, removeNonDigits } from '../index';
+import {
+  formatPhoneInput,
+  formatPhoneNumber,
+  formatZipcodeInput,
+  removeNonDigits,
+} from '../index';
 
 // The contact form and checkout both pass the field's previous value in, so
 // every case here is written the way a real keystroke arrives.
@@ -52,5 +57,32 @@ describe('the phone number a customer reads', () => {
   it('formats a stored number the same way the field does', () => {
     // The receipt and the confirmation page read from the stored digits.
     expect(formatPhoneNumber('9205550134')).toBe(typed('9205550134'));
+  });
+});
+
+describe('the zipcode a shipment can be posted to', () => {
+  it('takes digits and stops at five', () => {
+    expect(formatZipcodeInput('54961')).toBe('54961');
+    expect(formatZipcodeInput('549619999')).toBe('54961');
+    expect(formatZipcodeInput('5')).toBe('5');
+    expect(formatZipcodeInput('')).toBe('');
+  });
+
+  it('keeps anything that is not a digit out', () => {
+    expect(formatZipcodeInput('abc')).toBe('');
+    expect(formatZipcodeInput('5a4b9c6d1')).toBe('54961');
+    expect(formatZipcodeInput('  54961  ')).toBe('54961');
+  });
+
+  it('takes the five that matter from a saved address', () => {
+    // Autofill often supplies zip plus four. Dropping the extension leaves
+    // the right zipcode rather than a mangled one.
+    expect(formatZipcodeInput('54961-1234')).toBe('54961');
+  });
+
+  it('deletes without a fight', () => {
+    // No inserted characters to backspace over, so nothing to undo.
+    expect(formatZipcodeInput('5496')).toBe('5496');
+    expect(formatZipcodeInput('549')).toBe('549');
   });
 });

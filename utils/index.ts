@@ -135,6 +135,19 @@ export function removeNonDigits(input: string) {
   return input.replace(/\D/g, '');
 }
 
+// What a zipcode field should hold after a keystroke or a paste. Five
+// digits, nothing else. Restricting the input prevents the mistake rather
+// than reporting it after the fact, the way "abc" used to be caught only on
+// submit, and it handles a saved address gracefully: autofill of
+// "54961-1234" strips to the correct 54961 rather than being mangled.
+//
+// The same shape as formatPhoneInput so the two fields can share a prop,
+// though there is no formatting to undo here, so the previous value is not
+// needed and deleting behaves on its own.
+export function formatZipcodeInput(next: string) {
+  return removeNonDigits(next).slice(0, 5);
+}
+
 // Formats a phone field as you type, capped at ten digits. Reuses
 // formatPhoneNumber so the shape shown in the field and the shape in an email
 // or on a receipt can't drift. Shared by the contact form and checkout.

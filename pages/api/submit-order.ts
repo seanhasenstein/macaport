@@ -138,6 +138,17 @@ const TOTAL_CHANGED =
   'This order costs more than the total shown when the page loaded, so the totals have been refreshed. Please review your order and submit it again.';
 
 
+// Whitespace off every string on an address, whatever shape it is: a direct
+// shipping address and a store's primary location do not share a type.
+function trimAddress<T>(address: T): T {
+  if (!address || typeof address !== 'object') return address;
+  const trimmed: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(address)) {
+    trimmed[key] = typeof value === 'string' ? value.trim() : value;
+  }
+  return trimmed as T;
+}
+
 export default async (req: ExtendedRequest, res: NextApiResponse) => {
   // Set once a member's allowance has been drawn down, so that any exit
   // before the order is saved can put it back.
@@ -372,7 +383,10 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       group: req.body.group,
       orderStatus: 'Unfulfilled',
       shippingMethod,
-      shippingAddress: req.body.shippingAddress,
+      // Trimmed the way the customer fields are. The schema does this in the
+      // browser, but a request that never went through the form would
+      // otherwise store a space as the city.
+      shippingAddress: trimAddress(req.body.shippingAddress),
       summary: {
         subtotal: priced.subtotal,
         adjustments: priced.adjustments,
