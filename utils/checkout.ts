@@ -72,7 +72,11 @@ export function getInitialValues({
 const NAME_MAX = 100;
 const EMAIL_MAX = 200;
 const ADDRESS_MAX = 200;
-const NOTE_MAX = 1000;
+// Generous on purpose. A note here is often a roster: twenty players with
+// names, numbers and sizes runs past a thousand characters, and that is a
+// real order rather than an abuse of the field. The cap is only here to stop
+// a pasted document.
+const NOTE_MAX = 5000;
 
 // requireCard is whether anything is owed once the member benefit has been
 // applied. A cart the credit covers entirely has no card fields to fill in.

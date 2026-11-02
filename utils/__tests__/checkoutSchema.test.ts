@@ -124,8 +124,11 @@ describe('the gaps a required field alone left open', () => {
     expect(await accepts(customer({ firstName: 'a'.repeat(101) }))).toBe(false);
     expect(await accepts(customer({ firstName: 'a'.repeat(100) }))).toBe(true);
     expect(await accepts(address({ city: 'a'.repeat(201) }))).toBe(false);
-    expect(await accepts({ note: 'x'.repeat(1001) })).toBe(false);
-    expect(await accepts({ note: 'x'.repeat(1000) })).toBe(true);
+    expect(await accepts({ note: 'x'.repeat(5001) })).toBe(false);
+    // A roster of twenty players with names, numbers and sizes runs well
+    // past a thousand characters and is a real order, not an abuse.
+    expect(await accepts({ note: 'x'.repeat(5000) })).toBe(true);
+    expect(await accepts({ note: 'x'.repeat(1500) })).toBe(true);
   });
 
   it('still lets a normal order through, and an optional line stay empty', async () => {

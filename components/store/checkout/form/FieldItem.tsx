@@ -15,8 +15,10 @@ type Props = {
   // deleting. Without it the field behaves as a plain Formik field. Same
   // shape as the contact form's field, so one formatter serves both.
   format?: (next: string, previous: string) => string;
-  // Called the first time the shopper types in this field, so a caller can
-  // tell a value they entered from one the form filled in for them.
+  // Called on every change the shopper makes to this field, so a caller can
+  // tell a value they entered from one the form filled in for them. Callers
+  // should be idempotent: this is a signal that the field is theirs now, not
+  // a count of keystrokes.
   onUserInput?: () => void;
 };
 

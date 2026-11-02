@@ -336,6 +336,7 @@ export default function CheckoutForm(props: Props) {
               <div className="form-item">
                 <label htmlFor="notes">Include any order notes here:</label>
                 <Field as="textarea" name="note" id="note" />
+                <ErrorMessage name="note" />
               </div>
             </div>
 
