@@ -135,6 +135,15 @@ export function summarizeBenefitUse(
     };
   }
 
+  // A discount shows nothing, on purpose. It is spent in one go, so there is
+  // never a balance to report, and "Used on this order" would print a figure
+  // that contradicts the line above it: the order records the whole
+  // allowance as used, while the adjustment is only what came off the cart.
+  // A $25 promo on a $22 cart records 2500 used against an adjustment of
+  // -2200, so this block would say $25.00 directly under "Promo: -$22.00".
+  //
+  // If the rule changes so an unspent remainder is kept, a discount does
+  // gain a balance worth showing, and this is the place to add it.
   return null;
 }
 

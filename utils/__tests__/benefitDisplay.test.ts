@@ -650,6 +650,24 @@ describe('the balance shown against the allowance', () => {
     expect(second?.remaining).not.toContain('$86.70');
   });
 
+  it('shows nothing for a discount, which has no balance to report', () => {
+    // Deliberate. A discount is spent in one go, and the order records the
+    // whole allowance as used while the adjustment is only what came off
+    // the cart, so a "used" row here would contradict the summary above it.
+    const discount = order(
+      {
+        benefitId: 'b',
+        type: 'discount',
+        email: 'a@b.com',
+        used: 2500,
+        remainingAfter: 0,
+      },
+      [{ kind: 'discount', label: 'Switch Fitness Promo', amount: -2200 }]
+    );
+    expect(summarizeBenefitUse(discount)).toBeNull();
+    expect(summarizeBenefitUse(discount, 2500)).toBeNull();
+  });
+
   it('leaves the used row alone', () => {
     expect(summarizeBenefitUse(creditOrder(6330, 8670), 15000)?.used).toBe(
       '$63.30'
