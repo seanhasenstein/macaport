@@ -426,10 +426,14 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
     orderSaved = true;
 
     // 11. send email receipt
+    // The receipt shows the balance against what the member started with,
+    // and the order does not record that. Passing it here rather than
+    // looking it up again keeps a database round trip off the receipt path;
+    // this request already has the benefit in hand.
     await callInternal(
       baseUrl,
       '/api/send-email-receipt',
-      { order },
+      { order, benefitAllowance: reservation?.eligibility.allowance ?? null },
       order.orderId
     );
 

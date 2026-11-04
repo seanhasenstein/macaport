@@ -299,7 +299,7 @@ describe('what an order drew on', () => {
     });
   });
 
-  it('counts free items, and says None rather than a zero', () => {
+  it('counts free items, showing a spent balance as a number', () => {
     expect(
       summarizeBenefitUse(
         order(
@@ -321,7 +321,7 @@ describe('what an order drew on', () => {
           ]
         )
       )
-    ).toEqual({ label: 'Free shirt', used: '1 item', remaining: 'None' });
+    ).toEqual({ label: 'Free shirt', used: '1 item', remaining: '0 items' });
 
     expect(
       summarizeBenefitUse(
@@ -579,5 +579,81 @@ describe('the note when a receipt is sent somewhere else', () => {
     expect(
       benefitEmailNote(verified, 'me@home.com', 'Free Staff Shirt', true)
     ).toContain('Your Free Staff Shirt stays with');
+  });
+});
+
+describe('the balance shown against the allowance', () => {
+  const order = (benefit: unknown, adjustments: unknown[]) =>
+    ({
+      items: [],
+      summary: {
+        subtotal: 6000,
+        shipping: 0,
+        salesTax: 330,
+        total: 0,
+        stripeFee: 0,
+        adjustments,
+      },
+      benefit,
+    } as unknown as Order);
+
+  const creditOrder = (used: number, remainingAfter: number) =>
+    order(
+      { benefitId: 'b', type: 'credit', email: 'a@b.com', used, remainingAfter },
+      [{ kind: 'credit', label: 'Employee Store Credit', amount: -used }]
+    );
+
+  const freeOrder = (used: number, remainingAfter: number) =>
+    order(
+      { benefitId: 'b', type: 'freeItem', email: 'a@b.com', used, remainingAfter },
+      [
+        {
+          kind: 'freeItem',
+          label: 'Employee Free Item',
+          amount: -2000,
+          lineId: 'l1',
+          units: used,
+        },
+      ]
+    );
+
+  it('reads a credit against what the member started with', () => {
+    expect(summarizeBenefitUse(creditOrder(15000, 0), 15000)?.remaining).toBe(
+      '$0.00 of $150.00'
+    );
+    expect(summarizeBenefitUse(creditOrder(6330, 8670), 15000)?.remaining).toBe(
+      '$86.70 of $150.00'
+    );
+  });
+
+  it('reads free items the same way, with the unit on the allowance', () => {
+    expect(summarizeBenefitUse(freeOrder(1, 0), 1)?.remaining).toBe(
+      '0 of 1 item'
+    );
+    expect(summarizeBenefitUse(freeOrder(1, 1), 2)?.remaining).toBe(
+      '1 of 2 items'
+    );
+  });
+
+  it('never says None, with or without the allowance', () => {
+    expect(summarizeBenefitUse(creditOrder(15000, 0))?.remaining).toBe('$0.00');
+    expect(summarizeBenefitUse(freeOrder(1, 0))?.remaining).toBe('0 items');
+  });
+
+  it('does not take the allowance from used plus what is left', () => {
+    // A member's second order against a $150 credit: $63.30 already gone,
+    // this order spends $20, leaving $66.70. used + remainingAfter is 86.70,
+    // the balance before this order, and showing that as the allowance would
+    // tell them they started with $86.70.
+    const second = summarizeBenefitUse(creditOrder(2000, 6670), 15000);
+    expect(second?.remaining).toBe('$66.70 of $150.00');
+    expect(second?.remaining).not.toContain('$86.70');
+  });
+
+  it('leaves the used row alone', () => {
+    expect(summarizeBenefitUse(creditOrder(6330, 8670), 15000)?.used).toBe(
+      '$63.30'
+    );
+    expect(summarizeBenefitUse(freeOrder(1, 1), 2)?.used).toBe('1 item');
   });
 });

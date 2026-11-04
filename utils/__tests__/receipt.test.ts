@@ -169,7 +169,7 @@ describe('the benefit block on a receipt', () => {
     }
   });
 
-  it('counts free items rather than money, and says None when spent', () => {
+  it('counts free items rather than money, and shows a spent balance', () => {
     const { text, html } = generateReceiptEmail(
       withBenefit(
         {
@@ -195,7 +195,8 @@ describe('the benefit block on a receipt', () => {
     for (const body of [text, html]) {
       expect(body).toContain('Employee Free Item');
       expect(body).toContain('1 item');
-      expect(body).toContain('None');
+      expect(body).toContain('0 items');
+      expect(body).not.toContain('None');
     }
   });
 

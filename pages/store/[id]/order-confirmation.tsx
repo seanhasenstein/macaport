@@ -4,7 +4,11 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { format } from 'date-fns';
-import { connectToDb, order } from '../../../db';
+import { connectToDb, memberBenefit, order } from '../../../db';
+import {
+  findMember,
+  memberAllowance,
+} from '../../../core/memberBenefits/eligibility';
 import { Order } from '../../../interfaces';
 import {
   formatPhoneNumber,
@@ -65,12 +69,27 @@ export const getServerSideProps: GetServerSideProps = async context => {
       ? delivery.deliveredTo ?? 'nowhere (EMAIL_REDIRECT_TO is not set)'
       : null;
 
+    // What this member started with, so the balance can be shown against it.
+    // The order records what was used and what is left but not the
+    // allowance, and it cannot be added up from those two: on a second order
+    // they describe the balance before that order, not the allowance. Null
+    // when the benefit or the member has since been removed, in which case
+    // the balance is shown on its own.
+    const use = result.order.benefit;
+    const benefit = use
+      ? await memberBenefit.getMemberBenefitById(db, use.benefitId)
+      : null;
+    const member = benefit ? findMember(benefit, use!.email) : undefined;
+    const benefitAllowance =
+      benefit && member ? memberAllowance(benefit, member) : null;
+
     return {
       props: {
         order: result.order,
         groupRequired: result.groupRequired,
         groupTerm: result.groupTerm,
         receiptRedirect,
+        benefitAllowance,
       },
     };
   } catch (error) {
@@ -89,6 +108,8 @@ type Props = {
   groupTerm: string;
   // Where the receipt actually went when the email guard redirected it.
   receiptRedirect?: string | null;
+  // What the member started with, for showing the balance against it.
+  benefitAllowance?: number | null;
   error?: string;
 };
 
@@ -109,7 +130,10 @@ export default function OrderConfirmation(props: Props) {
   const headerCopy = props.order.summary.total === 0 ? 'Order' : 'Payment';
   const adjustments = orderAdjustments(props.order);
   const { beforeTax, afterShipping } = splitAdjustments(adjustments);
-  const benefitUse = summarizeBenefitUse(props.order);
+  const benefitUse = summarizeBenefitUse(
+    props.order,
+    props.benefitAllowance ?? undefined
+  );
   // Per-item labels, e.g. the free shirt's own line.
   const lineAdjustments = adjustments.filter(a => a.lineId);
 

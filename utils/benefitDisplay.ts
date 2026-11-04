@@ -82,7 +82,19 @@ export type BenefitUseSummary = {
   remaining: string;
 };
 
-export function summarizeBenefitUse(order: Order): BenefitUseSummary | null {
+// `allowance` is what this member started with, which the order does not
+// store: a credit's cents, or a free item's count. Pass it and the balance
+// reads against it, the way the dashboard shows it. Without it the balance
+// is shown on its own, which is what a caller that cannot reach the benefit
+// document should do.
+//
+// It has to come from the benefit rather than from used + remainingAfter.
+// Those two are the balance before this order, so on a member's second order
+// they add up to what was left at the time, not to the allowance.
+export function summarizeBenefitUse(
+  order: Order,
+  allowance?: number
+): BenefitUseSummary | null {
   const use = order.benefit;
   if (!use) return null;
 
@@ -91,23 +103,35 @@ export function summarizeBenefitUse(order: Order): BenefitUseSummary | null {
       a => a.kind === 'credit' || a.kind === 'freeItem'
     )?.label ?? 'Your benefit';
 
+  // "None" said the right thing and still read as an error, as though the
+  // benefit had gone missing rather than been spent. A balance of zero is a
+  // number like any other, and seeing it against the allowance tells a
+  // member what they had as well as what is left.
+  const of = (value: string, whole: string | null) =>
+    whole === null ? value : `${value} of ${whole}`;
+
   if (use.type === 'credit') {
     return {
       label,
       used: formatToMoney(use.used, true),
-      remaining:
-        use.remainingAfter > 0
-          ? formatToMoney(use.remainingAfter, true)
-          : 'None',
+      remaining: of(
+        formatToMoney(use.remainingAfter, true),
+        allowance === undefined ? null : formatToMoney(allowance, true)
+      ),
     };
   }
 
   if (use.type === 'freeItem') {
-    const items = (n: number) => `${n} item${n === 1 ? '' : 's'}`;
+    const plural = (n: number) => `item${n === 1 ? '' : 's'}`;
     return {
       label,
-      used: items(use.used),
-      remaining: use.remainingAfter > 0 ? items(use.remainingAfter) : 'None',
+      used: `${use.used} ${plural(use.used)}`,
+      // The unit follows the allowance, so a member with two reads "0 of 2
+      // items" rather than "0 items of 2".
+      remaining:
+        allowance === undefined
+          ? `${use.remainingAfter} ${plural(use.remainingAfter)}`
+          : `${use.remainingAfter} of ${allowance} ${plural(allowance)}`,
     };
   }
 

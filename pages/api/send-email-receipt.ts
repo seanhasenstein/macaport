@@ -9,6 +9,8 @@ import { Order } from '../../interfaces';
 interface Request extends NextApiRequest {
   body: {
     order: Order;
+    // Typed unknown because it arrives over the wire and is checked below.
+    benefitAllowance?: unknown;
   };
 }
 
@@ -71,7 +73,16 @@ const handler = nc<Request, NextApiResponse>().post(async (req, res) => {
       return res.status(429).json({ error: 'Too many requests' });
     }
   }
-  const { text, html } = generateReceiptEmail(order, siteBaseUrl(req));
+  // Sent by submit-order, which has the benefit in hand. Anything else is
+  // ignored, and the receipt then shows the balance without the allowance.
+  const allowance =
+    typeof req.body?.benefitAllowance === 'number' &&
+    Number.isInteger(req.body.benefitAllowance) &&
+    req.body.benefitAllowance >= 0
+      ? req.body.benefitAllowance
+      : undefined;
+
+  const { text, html } = generateReceiptEmail(order, siteBaseUrl(req), allowance);
 
   const result = await sendEmail({
     to: order.customer.email,

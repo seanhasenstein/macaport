@@ -735,6 +735,20 @@ export function generateContactFormEmail(
 
 // The adjustment rows of a receipt, as plain text, split either side of the
 // tax and shipping lines.
+// Both tables under the order share this. 240px was enough for "Subtotal"
+// against a short amount, but a benefit's name is the client's to choose and
+// the dashboard allows sixty characters, so a long label ran into its value
+// with nothing between them, and the balance reading "$0.00 of $150.00"
+// rather than a bare amount made the second table tighter still.
+//
+// Percentage rather than a wider fixed width, which is what I tried first:
+// the card gives about 295px on a 375px phone and about 240px on a 320px
+// one, so any fixed width that helps a desktop label overflows a phone. A
+// percentage takes what is there. The max-width stops the totals becoming
+// the widest thing on the page on desktop, and a client that drops it falls
+// back to the full width, which is wrong-looking but never clipped.
+const TOTALS_TABLE = 'width="100%" style="max-width:360px"';
+
 function receiptAdjustmentLines(order: Order) {
   const line = (a: { label: string; amount: number }) =>
     ` \n${a.label}: -${formatToMoney(-a.amount, true)}`;
@@ -747,13 +761,13 @@ function receiptAdjustmentLines(order: Order) {
 }
 
 // The member's benefit, as its own small block rather than a sentence.
-function benefitUseText(order: Order) {
-  const use = summarizeBenefitUse(order);
+function benefitUseText(order: Order, allowance?: number) {
+  const use = summarizeBenefitUse(order, allowance);
   if (!use) return '';
   return `\n\n${use.label} \nUsed on this order: ${use.used} \nRemaining: ${use.remaining}`;
 }
 
-function generateReceiptText(order: Order, baseUrl: string) {
+function generateReceiptText(order: Order, baseUrl: string, allowance?: number) {
   return `Hi ${order.customer.firstName},\n\nThis is confirmation for your ${
     order.store.name
   } order on macaport.com. \n\nOrder #: ${order.orderId} \nName: ${
@@ -769,16 +783,16 @@ function generateReceiptText(order: Order, baseUrl: string) {
     true
   )} \nShipping: ${formatToMoney(order.summary.shipping, true)}${
     receiptAdjustmentLines(order).afterShipping
-  } \nTotal: ${formatToMoney(order.summary.total, true)}${benefitUseText(order)}
+  } \nTotal: ${formatToMoney(order.summary.total, true)}${benefitUseText(order, allowance)}
   `;
 }
 
-function benefitUseHtml(order: Order) {
-  const use = summarizeBenefitUse(order);
+function benefitUseHtml(order: Order, allowance?: number) {
+  const use = summarizeBenefitUse(order, allowance);
   if (!use) return '';
 
   const row = (label: string, value: string) =>
-    `<tr><td style="padding: 0 0 2px">${escapeHtml(
+    `<tr><td style="padding: 0 16px 2px 0">${escapeHtml(
       label
     )}:</td><td style="padding: 0 0 2px; text-align: right; color: #1F2937">${escapeHtml(
       value
@@ -788,14 +802,14 @@ function benefitUseHtml(order: Order) {
     <div style="padding: 14px 0 0; border-top: 1px solid #E5E7EB; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6B7280">${escapeHtml(
       use.label
     )}</div>
-    <table align="left" border="0" cellpadding="0" cellspacing="0" role="presentation" width="240" style="margin: 6px 0 0; font-size: 15px; color: #6B7280; line-height: 1.5">
+    <table align="left" border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="max-width:360px; margin: 6px 0 0; font-size: 15px; color: #6B7280; line-height: 1.5">
       ${row('Used on this order', use.used)}
       ${row('Remaining', use.remaining)}
     </table>
   </div>`;
 }
 
-function generateReceiptHtml(order: Order, baseUrl: string) {
+function generateReceiptHtml(order: Order, baseUrl: string, allowance?: number) {
   return `<!DOCTYPE html>
   <html lang="en">
     <head>
@@ -1326,45 +1340,45 @@ function generateReceiptHtml(order: Order, baseUrl: string) {
                           cellpadding="0"
                           cellspacing="0"
                           role="presentation"
-                          width="240"
+                          ${TOTALS_TABLE}
                         >
                           <tr>
-                            <td style="padding: 0 0 2px">Subtotal:</td>
-                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
+                            <td style="padding: 0 16px 2px 0">Subtotal:</td>
+                            <td style="padding: 0 0 2px; text-align: right; white-space: nowrap; color: #1F2937">
                               ${formatToMoney(order.summary.subtotal, true)}
                             </td>
                           </tr>
                           ${splitAdjustments(orderAdjustments(order))
                             .beforeTax.map(
                               adjustment => `<tr>
-                            <td style="padding: 0 0 2px">${escapeHtml(
+                            <td style="padding: 0 16px 2px 0">${escapeHtml(
                               adjustment.label
                             )}:</td>
-                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
+                            <td style="padding: 0 0 2px; text-align: right; white-space: nowrap; color: #1F2937">
                               -${formatToMoney(-adjustment.amount, true)}
                             </td>
                           </tr>`
                             )
                             .join('')}
                           <tr>
-                            <td style="padding: 0 0 2px">Sales Tax:</td>
-                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
+                            <td style="padding: 0 16px 2px 0">Sales Tax:</td>
+                            <td style="padding: 0 0 2px; text-align: right; white-space: nowrap; color: #1F2937">
                               ${formatToMoney(order.summary.salesTax, true)}
                             </td>
                           </tr>
                           <tr>
-                            <td style="padding: 0 0 2px">Shipping:</td>
-                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
+                            <td style="padding: 0 16px 2px 0">Shipping:</td>
+                            <td style="padding: 0 0 2px; text-align: right; white-space: nowrap; color: #1F2937">
                               ${formatToMoney(order.summary.shipping, true)}
                             </td>
                           </tr>
                           ${splitAdjustments(orderAdjustments(order))
                             .afterShipping.map(
                               adjustment => `<tr>
-                            <td style="padding: 0 0 2px">${escapeHtml(
+                            <td style="padding: 0 16px 2px 0">${escapeHtml(
                               adjustment.label
                             )}:</td>
-                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
+                            <td style="padding: 0 0 2px; text-align: right; white-space: nowrap; color: #1F2937">
                               -${formatToMoney(-adjustment.amount, true)}
                             </td>
                           </tr>`
@@ -1385,7 +1399,7 @@ function generateReceiptHtml(order: Order, baseUrl: string) {
                             </td>
                           </tr>
                         </table>
-                        ${benefitUseHtml(order)}
+                        ${benefitUseHtml(order, allowance)}
                       </td>
                     </tr>
   
@@ -1469,9 +1483,16 @@ function generateReceiptHtml(order: Order, baseUrl: string) {
 
 // baseUrl is where the links in the receipt point: the public site in
 // production, the preview or the local server elsewhere.
-export function generateReceiptEmail(order: Order, baseUrl = siteBaseUrl()) {
-  const text = generateReceiptText(order, baseUrl);
-  const html = generateReceiptHtml(order, baseUrl);
+// `allowance` is what the member started with, passed in by submit-order,
+// which already holds the benefit. Omitted, the receipt shows the balance
+// on its own rather than against the allowance.
+export function generateReceiptEmail(
+  order: Order,
+  baseUrl = siteBaseUrl(),
+  allowance?: number
+) {
+  const text = generateReceiptText(order, baseUrl, allowance);
+  const html = generateReceiptHtml(order, baseUrl, allowance);
   return { text, html };
 }
 
