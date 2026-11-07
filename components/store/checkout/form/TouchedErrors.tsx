@@ -2,8 +2,18 @@ import { FormikErrors, FormikTouched } from 'formik';
 import React from 'react';
 import { getTouchedErrors } from 'utils';
 import { CheckoutForm } from '../../../../interfaces';
-import TouchedError from './TouchedError';
+import ErrorItem from './TouchedError';
 
+// Every validation message on a field the shopper has reached, gathered into
+// one list above the submit button.
+//
+// The messages come from getTouchedErrors, which walks the whole error tree.
+// This used to decide whether to show the box from that walk but then render
+// a hand-written list of ten field names, so any validated field missing from
+// that list produced an empty pink box: a submit that did nothing, with no
+// way to find out which field was at fault. Rendering what the walk found
+// means the two can never disagree, and a field added to the schema later is
+// covered without anyone remembering this file.
 export default function TouchedErrors({
   errors,
   touched,
@@ -24,22 +34,13 @@ export default function TouchedErrors({
     setTouchedErrors(testing || []);
   }, [errors, touched]);
 
-  if (touchedErrors.length > 0) {
-    return (
-      <div className="errors-list">
-        <TouchedError name="customer.firstName" />
-        <TouchedError name="customer.lastName" />
-        <TouchedError name="customer.email" />
-        <TouchedError name="customer.phone" />
-        <TouchedError name="group" />
-        <TouchedError name="shippingAddress.street" />
-        <TouchedError name="shippingAddress.city" />
-        <TouchedError name="shippingAddress.state" />
-        <TouchedError name="shippingAddress.zipcode" />
-        <TouchedError name="cardholderName" />
-      </div>
-    );
-  } else {
-    return null;
-  }
+  if (touchedErrors.length < 1) return null;
+
+  return (
+    <div className="errors-list">
+      {touchedErrors.map((message, index) => (
+        <ErrorItem key={`${message}-${index}`} message={message} />
+      ))}
+    </div>
+  );
 }

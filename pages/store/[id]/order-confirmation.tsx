@@ -4,7 +4,11 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styled from 'styled-components';
 import { format } from 'date-fns';
-import { connectToDb, order } from '../../../db';
+import { connectToDb, memberBenefit, order } from '../../../db';
+import {
+  findMember,
+  memberAllowance,
+} from '../../../core/memberBenefits/eligibility';
 import { Order } from '../../../interfaces';
 import {
   formatPhoneNumber,
@@ -12,8 +16,17 @@ import {
   getUrlParameter,
 } from '../../../utils';
 import { useCart } from '../../../hooks/useCart';
+import {
+  FREE_ITEM_NOTE,
+  needsFreeItemNote,
+  orderAdjustments,
+  splitAdjustments,
+  summarizeBenefitUse,
+} from '../../../utils/benefitDisplay';
+import { describeDelivery } from '../../../utils/mailgun';
 import NoNavLayout from '../../../components/store/layouts/NoNavLayout';
 import OrderConfirmationPageError from 'components/store/errors/OrderConfirmationPageError';
+import ProductPrice from 'components/store/product/ProductPrice';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   try {
@@ -48,11 +61,35 @@ export const getServerSideProps: GetServerSideProps = async context => {
       };
     }
 
+    // Outside production the receipt may have been redirected to a test
+    // inbox by the guard in utils/mailgun. Tell the tester, so a missing
+    // receipt is never a mystery. Null in production.
+    const delivery = describeDelivery(result.order.customer.email);
+    const receiptRedirect = delivery.redirected
+      ? delivery.deliveredTo ?? 'nowhere (EMAIL_REDIRECT_TO is not set)'
+      : null;
+
+    // What this member started with, so the balance can be shown against it.
+    // The order records what was used and what is left but not the
+    // allowance, and it cannot be added up from those two: on a second order
+    // they describe the balance before that order, not the allowance. Null
+    // when the benefit or the member has since been removed, in which case
+    // the balance is shown on its own.
+    const use = result.order.benefit;
+    const benefit = use
+      ? await memberBenefit.getMemberBenefitById(db, use.benefitId)
+      : null;
+    const member = benefit ? findMember(benefit, use!.email) : undefined;
+    const benefitAllowance =
+      benefit && member ? memberAllowance(benefit, member) : null;
+
     return {
       props: {
         order: result.order,
         groupRequired: result.groupRequired,
         groupTerm: result.groupTerm,
+        receiptRedirect,
+        benefitAllowance,
       },
     };
   } catch (error) {
@@ -69,6 +106,10 @@ type Props = {
   order: Order;
   groupRequired: boolean;
   groupTerm: string;
+  // Where the receipt actually went when the email guard redirected it.
+  receiptRedirect?: string | null;
+  // What the member started with, for showing the balance against it.
+  benefitAllowance?: number | null;
   error?: string;
 };
 
@@ -86,29 +127,15 @@ export default function OrderConfirmation(props: Props) {
     return <OrderConfirmationPageError />;
   }
 
-  const headerCopy =
-    props.order.teacherAppreciation && props.order.summary.total === 0
-      ? 'Order'
-      : 'Payment';
-
-  const isSheboyganLutheranStaffStore =
-    !!props.order.sheboyganLutheranStaffDiscount?.id;
-  const sheboyganLutheranStaffEmail =
-    props.order.sheboyganLutheranStaffDiscount?.email;
-  const sheboyganLutheranStaffDiscount =
-    props.order.sheboyganLutheranStaffDiscount?.discount;
-  const hasSheboyganLutheranStaffDiscount =
-    !!isSheboyganLutheranStaffStore &&
-    !!sheboyganLutheranStaffEmail &&
-    !!sheboyganLutheranStaffDiscount;
-
-  const isTeacherAppreciationStore = !!props.order.teacherAppreciation?.id;
-  const teacherAppreciationEmail = props.order.teacherAppreciation?.email;
-  const orderHasFreeItem = props.order.items.some(
-    item => item.itemTotal === 0 && item.quantity === 1
+  const headerCopy = props.order.summary.total === 0 ? 'Order' : 'Payment';
+  const adjustments = orderAdjustments(props.order);
+  const { beforeTax, afterShipping } = splitAdjustments(adjustments);
+  const benefitUse = summarizeBenefitUse(
+    props.order,
+    props.benefitAllowance ?? undefined
   );
-  const eligibleForTeacherAppreciation =
-    isTeacherAppreciationStore && teacherAppreciationEmail;
+  // Per-item labels, e.g. the free shirt's own line.
+  const lineAdjustments = adjustments.filter(a => a.lineId);
 
   return (
     <NoNavLayout
@@ -148,6 +175,13 @@ export default function OrderConfirmation(props: Props) {
                       </a>
                       .
                     </p>
+                    {props.receiptRedirect ? (
+                      <p className="test-environment-note">
+                        Test environment: your receipt was sent to{' '}
+                        {props.receiptRedirect} instead of{' '}
+                        {props.order.customer.email}.
+                      </p>
+                    ) : null}
                   </div>
                   <div className="section order-details">
                     <div className="detail-item">
@@ -241,10 +275,9 @@ export default function OrderConfirmation(props: Props) {
                   <h3>Order Items</h3>
                   <div>
                     {props.order.items.map(item => {
-                      const renderTeacherAppreciation =
-                        eligibleForTeacherAppreciation &&
-                        orderHasFreeItem &&
-                        item.itemTotal === 0;
+                      const itemAdjustments = lineAdjustments.filter(
+                        a => a.lineId === item.id
+                      );
 
                       return (
                         <div key={item.id} className="order-item">
@@ -258,17 +291,24 @@ export default function OrderConfirmation(props: Props) {
                             <div className="order-item-header">
                               <div className="order-item-name">{item.name}</div>
                               <div className="order-item-total">
-                                {formatToMoney(item.itemTotal!)}
+                                <ProductPrice
+                                  full={item.price * item.quantity}
+                                  payable={item.itemTotal ?? 0}
+                                />
                               </div>
                             </div>
-                            {renderTeacherAppreciation && (
-                              <div className="teacher-appreciation">
-                                <div>Free Staff Appreciation Item</div>
-                                <div className="email">
-                                  {teacherAppreciationEmail}
-                                </div>
+                            {itemAdjustments.map((adjustment, index) => (
+                              <div className="adjustment" key={index}>
+                                <div>{adjustment.label}</div>
                               </div>
-                            )}
+                            ))}
+                            {needsFreeItemNote(
+                              item.itemTotal ?? 0,
+                              itemAdjustments,
+                              item.quantity
+                            ) ? (
+                              <p className="free-item-note">{FREE_ITEM_NOTE}</p>
+                            ) : null}
                             <div className="order-item-details">
                               <div className="order-item-detail item-quantity">
                                 Qty:{' '}
@@ -327,24 +367,14 @@ export default function OrderConfirmation(props: Props) {
                         {formatToMoney(props.order.summary.subtotal, true)}
                       </div>
                     </div>
-                    {/* SHEBOYGAN LUTHERAN STAFF DISCOUNT */}
-                    {hasSheboyganLutheranStaffDiscount ? (
-                      <div className="order-summary-item">
-                        <div className="label">Sheboygan Lutheran Staff</div>
+                    {beforeTax.map((adjustment, index) => (
+                      <div className="order-summary-item" key={index}>
+                        <div className="label">{adjustment.label}</div>
                         <div className="value">
-                          -{formatToMoney(sheboyganLutheranStaffDiscount, true)}
+                          -{formatToMoney(-adjustment.amount, true)}
                         </div>
                       </div>
-                    ) : null}
-                    {props.order.switchFitnessDiscount &&
-                    props.order.summary.discount ? (
-                      <div className="order-summary-item">
-                        <div className="label">Switch Fitness Discount</div>
-                        <div className="value">
-                          -{formatToMoney(props.order.summary.discount, true)}
-                        </div>
-                      </div>
-                    ) : null}
+                    ))}
                     <div className="order-summary-item">
                       <div className="label">Sales Tax</div>
                       <div className="value">
@@ -357,12 +387,35 @@ export default function OrderConfirmation(props: Props) {
                         {formatToMoney(props.order.summary.shipping, true)}
                       </div>
                     </div>
+                    {afterShipping.map((adjustment, index) => (
+                      <div className="order-summary-item" key={index}>
+                        <div className="label">{adjustment.label}</div>
+                        <div className="value">
+                          -{formatToMoney(-adjustment.amount, true)}
+                        </div>
+                      </div>
+                    ))}
                     <div className="order-summary-item total">
                       <div>Order Total</div>
                       <div className="value">
                         {formatToMoney(props.order.summary.total, true)}
                       </div>
                     </div>
+                    {benefitUse ? (
+                      <div className="benefit-use">
+                        <div className="benefit-use-label">
+                          {benefitUse.label}
+                        </div>
+                        <div className="order-summary-item">
+                          <div className="label">Used on this order</div>
+                          <div className="value">{benefitUse.used}</div>
+                        </div>
+                        <div className="order-summary-item">
+                          <div className="label">Remaining</div>
+                          <div className="value">{benefitUse.remaining}</div>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -509,7 +562,7 @@ const OrderConfirmationStyles = styled.div`
       border-top: 1px solid #e5e7eb;
     }
 
-    .teacher-appreciation {
+    .adjustment {
       margin: 0.25rem 0 0;
       font-size: 0.875rem;
       color: #1f2937;
@@ -596,6 +649,60 @@ const OrderConfirmationStyles = styled.div`
 
   .addon-item {
     color: #111827;
+  }
+
+  /* The receipt shows a free line the way the cart and checkout just did.
+     It used to print "$0" here, the one place left in the flow that
+     disagreed with the page before it. */
+  .order-item-total .was {
+    margin-right: 0.375rem;
+    color: #9ca3af;
+    text-decoration: line-through;
+    font-weight: 400;
+  }
+
+  .order-item-total .free {
+    color: #047857;
+    font-weight: 600;
+  }
+
+  /* Says in words why a line marked free still has a price: the benefit
+     covers the garment, and the printing on it is charged. Numbers alone
+     read as a mistake. */
+  .free-item-note {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: #6b7280;
+  }
+
+  /* Sits under the order total, in the same label-and-value shape as the
+     summary above it, so the two numbers can be found without reading a
+     sentence. Its own rule because it describes the member's benefit
+     rather than this order's money. */
+  .benefit-use {
+    margin: 1.25rem 0 0;
+    padding: 1rem 0 0;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .benefit-use-label {
+    margin: 0 0 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7280;
+  }
+
+  .test-environment-note {
+    margin: 1rem 0 0;
+    padding: 0.75rem 1rem;
+    font-size: 0.8125rem;
+    color: #92400e;
+    background-color: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 0.375rem;
   }
 
   .order-summary {

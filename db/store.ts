@@ -139,3 +139,26 @@ export async function getStoresForStoresPage(db: Db) {
     .toArray();
   return await result;
 }
+
+// The little a request-a-code call needs to know about a store. getStoreById
+// expands every product and sku, which is the wrong amount of work for
+// answering "which benefit, and what is the store called".
+export async function getStoreSummary(db: Db, id: string) {
+  if (!ObjectID.isValid(id)) return null;
+
+  const store = await db
+    .collection('stores')
+    .findOne(
+      { _id: new ObjectID(id) },
+      { projection: { name: 1, benefitId: 1 } }
+    );
+
+  if (!store) return null;
+
+  const result: { _id: string; name: string; benefitId?: string | null } = {
+    _id: `${store._id}`,
+    name: store.name,
+    benefitId: store.benefitId ?? null,
+  };
+  return result;
+}

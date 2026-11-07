@@ -30,7 +30,9 @@ interface UseStoreProductAddToOrder {
   setSizeValidationError: React.Dispatch<
     React.SetStateAction<string | undefined>
   >;
-  eligibleForFreeShirt: boolean;
+  // Which cart line the add created, so the confirmation sidebar can show
+  // what that line actually costs rather than guessing from the sku.
+  onAdded?: (cartItemId: string) => void;
 }
 
 export default function useStoreProductAddToOrder(
@@ -93,26 +95,25 @@ export default function useStoreProductAddToOrder(
     );
 
     if (sku) {
-      const id = `${sku.id}${getPersonalizationAddonsId(formattedAddonItems)}${
-        params.eligibleForFreeShirt ? '-ta2024-free' : ''
-      }`;
+      const id = `${sku.id}${getPersonalizationAddonsId(formattedAddonItems)}`;
 
-      // Temp for teacher appreciation discount
-      const skuPrice = params.eligibleForFreeShirt ? 0 : sku.size.price;
-
+      params.onAdded?.(id);
       params.addItem({
         id,
         sku: sku,
         quantity: 1,
         name: params.productName,
         image: params.primaryImage,
-        price: skuPrice + params.personalization.total,
+        price: sku.size.price + params.personalization.total,
         personalizationAddons: formattedAddonItems,
         personalizationTotal: params.personalization.total,
       });
-    }
 
-    params.setShowSidebar(true);
+      // Only announce an add that happened. With no matching sku nothing
+      // reaches the cart, and opening the panel there used to confirm an
+      // add with whatever line was added last still priced in it.
+      params.setShowSidebar(true);
+    }
   };
 
   return handleAddToOrder;

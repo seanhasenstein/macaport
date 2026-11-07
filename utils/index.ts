@@ -1,83 +1,10 @@
 import * as crypto from 'crypto';
 import { FormikErrors, FormikTouched } from 'formik';
-import {
-  CartItem,
-  ProductSku,
-  ShippingMethod,
-  SwitchFitnessDiscount,
-} from '../interfaces';
+import { CartItem, ProductSku } from '../interfaces';
 
-type CalculateCartSubtotal = {
-  cartItems: CartItem[];
-  applySwitchFitnessDiscount?: boolean;
-};
-
-export function calculateCartSubtotal({
-  cartItems,
-  applySwitchFitnessDiscount = false,
-}: CalculateCartSubtotal) {
-  const rawCartSubtotal = cartItems.reduce((total, item) => {
-    return total + item.quantity * item.price;
-  }, 0);
-
-  let cartSubtotal = rawCartSubtotal;
-  if (applySwitchFitnessDiscount) {
-    const cartSubtotalCheckingDiscount =
-      rawCartSubtotal - 2500 > 0 ? rawCartSubtotal - 2500 : 0;
-    cartSubtotal = cartSubtotalCheckingDiscount;
-  }
-
-  return {
-    cartSubtotal,
-    rawCartSubtotal,
-  };
-}
-
-export function calculateSubtotalWithSwitchDiscount({
-  switchFitnessDiscount,
-  isEligibleForSwitchFitnessDiscount,
-  initialSubtotal,
-}: {
-  switchFitnessDiscount: SwitchFitnessDiscount | null;
-  isEligibleForSwitchFitnessDiscount: boolean;
-  initialSubtotal: number;
-}) {
-  if (switchFitnessDiscount && isEligibleForSwitchFitnessDiscount) {
-    return initialSubtotal - switchFitnessDiscount.discount > 0
-      ? initialSubtotal - switchFitnessDiscount.discount
-      : 0;
-  }
-  return initialSubtotal;
-}
-
-export function calculateSalesTax(subtotal: number) {
-  return Math.round(subtotal * 0.055);
-}
-
-export function calculateShipping(
-  price: number,
-  freeMinimum: number,
-  cartSubtotal: number,
-  shippingMethod: ShippingMethod
-) {
-  if (
-    shippingMethod === 'Primary' ||
-    shippingMethod === 'Store Pickup' ||
-    cartSubtotal >= freeMinimum
-  ) {
-    return 0;
-  }
-
-  return price;
-}
-
-export function calculateCartTotal(
-  subtotal: number,
-  salesTax = 0,
-  shipping = 0
-) {
-  return subtotal + salesTax + shipping;
-}
+// Wisconsin state plus county. The pricing pipeline takes it as an input so
+// a tax-exempt store later is this set to 0 for that store, not a rewrite.
+export const SALES_TAX_RATE = 0.055;
 
 export function isOutOfStock(sku: ProductSku, cartItems: CartItem[]) {
   if (!sku.active || sku.inventory === 0) {
@@ -208,6 +135,44 @@ export function removeNonDigits(input: string) {
   return input.replace(/\D/g, '');
 }
 
+// What a zipcode field should hold after a keystroke or a paste. Five
+// digits, nothing else. Restricting the input prevents the mistake rather
+// than reporting it after the fact, the way "abc" used to be caught only on
+// submit, and it handles a saved address gracefully: autofill of
+// "54961-1234" strips to the correct 54961 rather than being mangled.
+//
+// The same shape as formatPhoneInput so the two fields can share a prop,
+// though there is no formatting to undo here, so the previous value is not
+// needed and deleting behaves on its own.
+export function formatZipcodeInput(next: string) {
+  return removeNonDigits(next).slice(0, 5);
+}
+
+// Formats a phone field as you type, capped at ten digits. Reuses
+// formatPhoneNumber so the shape shown in the field and the shape in an email
+// or on a receipt can't drift. Shared by the contact form and checkout.
+//
+// `previous` is what makes deleting work. Backspacing over one of the
+// inserted characters — the bracket, space, or dash — removes no digit, so
+// reformatting would put it straight back and the field would look frozen.
+// When the digits haven't changed but the text got shorter, drop a digit.
+//
+// A pasted number often arrives with the country code, as +1 920 555 0134.
+// Taking the first ten digits of that would keep the 1 and drop the last
+// digit, giving a wrong number that still passes a ten digit check, so an
+// eleven digit number beginning with 1 loses the 1 instead.
+export function formatPhoneInput(next: string, previous: string) {
+  let digits = removeNonDigits(next);
+  if (digits.length === 11 && digits.startsWith('1')) digits = digits.slice(1);
+  digits = digits.slice(0, 10);
+
+  if (next.length < previous.length && digits === removeNonDigits(previous)) {
+    digits = digits.slice(0, -1);
+  }
+
+  return formatPhoneNumber(digits);
+}
+
 export function formatPhoneNumber(input: string) {
   const digits = removeNonDigits(input);
   const digitsArray = digits.split('');
@@ -221,14 +186,19 @@ export function formatPhoneNumber(input: string) {
     .join('');
 }
 
+// includeDecimal asks for cents on a whole-dollar amount: $20 becomes
+// $20.00, which is what a total or a tax line wants. It never meant "drop
+// the cents", and it used to: `$${price}` turned 330 into "$3.3" for every
+// caller that left the flag off, which is most of them. An amount with
+// cents now always shows both of them.
 export function formatToMoney(input: number, includeDecimal = false) {
   const price = input / 100;
 
-  if (includeDecimal) {
+  if (includeDecimal || !Number.isInteger(price)) {
     return `$${price.toFixed(2)}`;
-  } else {
-    return `$${price}`;
   }
+
+  return `$${price}`;
 }
 
 export function getTouchedErrors(

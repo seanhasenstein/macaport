@@ -1,5 +1,43 @@
 import * as crypto from 'crypto';
+import { IncomingHttpHeaders } from 'http';
 import { NextApiRequest } from 'next';
+
+/**
+ * Where this deployment can reach itself, for the server-to-server calls
+ * submit-order makes and for the links in emails.
+ *
+ * In production it is API_HOST, the public domain, so receipt links read
+ * macaport.com and not a deployment hash; on a preview deployment, where
+ * API_HOST should be left unset, it is the preview's own VERCEL_URL, so a
+ * preview calls itself rather than production. The request's Host header is
+ * only consulted outside production: it is whatever the client sent, and a
+ * call carrying INTERNAL_API_SECRET must not be pointed at an address the
+ * client chose. Locally that means the port `next dev` actually started on,
+ * whatever it is, with no env var to keep in step.
+ */
+export function siteBaseUrl(req?: { headers: IncomingHttpHeaders }) {
+  const configured = process.env.API_HOST?.replace(/\/$/, '');
+  const vercel = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : undefined;
+
+  if (process.env.NODE_ENV === 'production') {
+    const url = configured || vercel;
+    if (!url) {
+      throw new Error('API_HOST (or VERCEL_URL) is required in production');
+    }
+    return url;
+  }
+
+  const host = req?.headers.host;
+  if (host) {
+    const proto =
+      req?.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+    return `${proto}://${host}`;
+  }
+
+  return configured || vercel || 'http://localhost:3000';
+}
 
 export const INTERNAL_HEADER = 'x-macaport-internal';
 

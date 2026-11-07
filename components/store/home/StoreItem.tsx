@@ -38,9 +38,20 @@ export default function StoreItem(props: Props) {
           <h4 className="secondary">{props.item.tag}</h4>
           <div className="bottom-row">
             <h4 className="price">
-              {props.eligibleForFreeItem
-                ? formatToMoney(0)
-                : formatToMoney(props.item.sizes[0].price)}
+              {props.eligibleForFreeItem ? (
+                <>
+                  {/* "$0" on its own reads as missing data rather than as
+                      something being given away, and the product page says
+                      "Free" for the same item. The old price struck through
+                      says which it is. */}
+                  <span className="was">
+                    {formatToMoney(props.item.sizes[0].price)}
+                  </span>
+                  <span className="free">Free</span>
+                </>
+              ) : (
+                formatToMoney(props.item.sizes[0].price)
+              )}
             </h4>
             <div className="colors-row">
               <div className="colors">
@@ -141,6 +152,17 @@ const StoreItemStyles = styled.a`
     font-size: 0.875rem;
     font-weight: 600;
     color: #36383e;
+
+    .was {
+      margin-right: 0.375rem;
+      font-weight: 400;
+      color: #9ca3af;
+      text-decoration: line-through;
+    }
+
+    .free {
+      color: #047857;
+    }
   }
 
   .colors-row {

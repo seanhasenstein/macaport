@@ -1,8 +1,4 @@
-import {
-  formatDateValue,
-  formatPhoneNumber,
-  formatToMoney,
-} from './index';
+import { formatDateValue, formatPhoneNumber, formatToMoney } from './index';
 import {
   confirmationNote,
   nextStep,
@@ -17,6 +13,13 @@ import {
   OTHER_PRODUCT_ID,
   SHIPPED_TO_ME,
 } from './contact';
+import {
+  orderAdjustments,
+  splitAdjustments,
+  summarizeBenefitUse,
+} from './benefitDisplay';
+import { storePhrase } from '../core/verification/email';
+import { siteBaseUrl } from './internalRequest';
 import { Order } from '../interfaces';
 
 const FONT = `-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif`;
@@ -57,7 +60,8 @@ const LOGO_RATIO = 400 / 105;
 // where it does double duty: a real address is one of the signals that keeps
 // mail out of spam folders, and this is a place customers actually collect
 // orders from.
-export const MACAPORT_ADDRESS = 'Macaport LLC, 3080 Frederick Farm Ln. Suite 101, New London, WI 54961';
+export const MACAPORT_ADDRESS =
+  'Macaport LLC, 3080 Frederick Farm Ln. Suite 101, New London, WI 54961';
 
 // Everything interpolated below is typed by a stranger. Without this a stray
 // angle bracket in a message breaks the layout, and a deliberate one puts
@@ -199,7 +203,11 @@ const adminHeading = (inquiryType?: string) =>
 // column, which truncates around 70 characters anyway.
 export function contactSubject(message: Message, id: string) {
   const raw = `${message.firstName ?? ''} ${message.lastName ?? ''}`;
-  const name = String(raw).replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
+  const name = String(raw)
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60);
 
   // The order number is the first thing anyone looks up to answer one of these,
   // so it belongs where it can be read and searched without opening the email.
@@ -255,16 +263,14 @@ export const badgeLabel = (inquiryType?: string) =>
 // Invitational" means we would print at it, "about Waupaca Hockey" means they
 // are asking after it. Getting that backwards on missed-deadline would read as
 // though we were quoting someone a new job they never asked for.
-const HEADING_PHRASING: Record<
-  string,
-  { noun: string; preposition: string }
-> = {
-  apparel: { noun: 'quote request', preposition: 'for' },
-  'team-store': { noun: 'store request', preposition: 'for' },
-  onsite: { noun: 'request', preposition: 'for' },
-  'missed-deadline': { noun: 'request', preposition: 'about' },
-  existing: { noun: 'question', preposition: 'about' },
-};
+const HEADING_PHRASING: Record<string, { noun: string; preposition: string }> =
+  {
+    apparel: { noun: 'quote request', preposition: 'for' },
+    'team-store': { noun: 'store request', preposition: 'for' },
+    onsite: { noun: 'request', preposition: 'for' },
+    'missed-deadline': { noun: 'request', preposition: 'about' },
+    existing: { noun: 'question', preposition: 'about' },
+  };
 
 // Long enough for a real event or organization name — "New London Gridiron
 // Club" is 24 — and short enough that whatever comes back is still a heading.
@@ -382,8 +388,7 @@ function inquiryDetails(input: EmailParams) {
       value: input.inquiryType ? inquiryLabel(input.inquiryType) : '',
     },
     {
-      label:
-        ORGANIZATION_LABELS[input.inquiryType ?? ''] ?? 'Organization',
+      label: ORGANIZATION_LABELS[input.inquiryType ?? ''] ?? 'Organization',
       value: input.organization ?? '',
     },
     { label: 'Website', value: input.website ?? '' },
@@ -455,8 +460,7 @@ function inquiryDetails(input: EmailParams) {
       // without clearing what was typed into it. Ungated, an order being
       // collected in New London arrives carrying a shipping address, which is
       // the one row here capable of sending a box to the wrong place.
-      value:
-        input.delivery === SHIPPED_TO_ME ? input.shipToAddress ?? '' : '',
+      value: input.delivery === SHIPPED_TO_ME ? input.shipToAddress ?? '' : '',
     },
     {
       label: 'How people get their orders',
@@ -485,7 +489,9 @@ function generateText(input: EmailParams) {
     details ? `\n${details}\n` : ''
   }\nMessage: ${
     input.message
-  }\n\n---\nSent from the contact form at macaport.com/contact.\nReplying to this email goes straight to ${input.firstName} at ${input.email}.\n`;
+  }\n\n---\nSent from the contact form at macaport.com/contact.\nReplying to this email goes straight to ${
+    input.firstName
+  } at ${input.email}.\n`;
 }
 
 // The shell (page colour, logo, card border and radius) is deliberately the
@@ -509,7 +515,9 @@ function shellHtml({
     title
   )}</title></head><body style="margin:0;padding:0;background-color:${PAGE_BG};"><div style="display:none;font-size:1px;color:${PAGE_BG};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${escapeHtml(
     preheader
-  )}</div><div style="background-color:${PAGE_BG};margin:0;padding:24px 0;width:100%;"><table role="presentation" border="0" align="center" cellpadding="0" cellspacing="0" width="100%"><tbody><tr><td align="center"><div style="margin:0 auto;padding:8px 0 24px;"><img alt="Macaport" src="${LOGO_URL}" width="${Math.round(44 * LOGO_RATIO)}" height="44" style="display:block;border:0;outline:none;text-decoration:none;height:44px;width:auto;" /></div></td></tr></tbody></table><div style="margin:0 auto;max-width:600px;width:100%;padding:0 16px;box-sizing:border-box;"><table role="presentation" width="100%" align="center" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td width="100%" align="left" valign="top" bgcolor="#FFFFFF" style="background-color:#FFFFFF;border:1px solid ${BORDER};border-radius:12px;box-sizing:border-box;padding:28px 24px 28px;">${body}</td></tr></tbody></table><table role="presentation" width="100%" align="center" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td align="center" style="padding:24px 8px 32px;">${footer}</td></tr></tbody></table></div></div></body></html>`;
+  )}</div><div style="background-color:${PAGE_BG};margin:0;padding:24px 0;width:100%;"><table role="presentation" border="0" align="center" cellpadding="0" cellspacing="0" width="100%"><tbody><tr><td align="center"><div style="margin:0 auto;padding:8px 0 24px;"><img alt="Macaport" src="${LOGO_URL}" width="${Math.round(
+    44 * LOGO_RATIO
+  )}" height="44" style="display:block;border:0;outline:none;text-decoration:none;height:44px;width:auto;" /></div></td></tr></tbody></table><div style="margin:0 auto;max-width:600px;width:100%;padding:0 16px;box-sizing:border-box;"><table role="presentation" width="100%" align="center" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td width="100%" align="left" valign="top" bgcolor="#FFFFFF" style="background-color:#FFFFFF;border:1px solid ${BORDER};border-radius:12px;box-sizing:border-box;padding:28px 24px 28px;">${body}</td></tr></tbody></table><table role="presentation" width="100%" align="center" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td align="center" style="padding:24px 8px 32px;">${footer}</td></tr></tbody></table></div></div></body></html>`;
 }
 
 const footerLine = (content: string, last = false) =>
@@ -584,9 +592,12 @@ export function generateHtml(input: EmailParams) {
     0
   )}<h1 style="margin:6px 0 0;color:#171717;font-family:${FONT};font-size:22px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;">${escapeHtml(
     adminHeading(input.inquiryType)
-  )}</h1>${metaLine(input.id, input.date)}${deadline}${divider(24)}${sectionHeading('Who sent it', 20)}${table(contactRows)}${sectionHeading('What they asked for', 22)}${table(
-    detailRows
-  )}`;
+  )}</h1>${metaLine(input.id, input.date)}${deadline}${divider(
+    24
+  )}${sectionHeading('Who sent it', 20)}${table(contactRows)}${sectionHeading(
+    'What they asked for',
+    22
+  )}${table(detailRows)}`;
 
   // Two things an employee cannot see from the message itself: where it came
   // from, and that hitting reply answers the customer rather than the office.
@@ -638,9 +649,9 @@ export function generateCustomerConfirmationEmail(
 
   const note = confirmationNote(input.inquiryType ?? '');
 
-  const text = `Hi ${input.firstName},\n\n${customerOpening(
-    message
-  )}\n${note ? `\n${note}\n` : ''}\nHere is what you sent us on ${date} (reference #${id}):\n\n${
+  const text = `Hi ${input.firstName},\n\n${customerOpening(message)}\n${
+    note ? `\n${note}\n` : ''
+  }\nHere is what you sent us on ${date} (reference #${id}):\n\n${
     summary ? `${summary}\n\n` : ''
   }Message: ${
     input.message
@@ -650,7 +661,10 @@ export function generateCustomerConfirmationEmail(
   // validation, and this is the only place they can catch it — without these
   // rows "what you sent" is not actually what they sent.
   const rows = [
-    summaryRowHtml('Name', escapeHtml(`${input.firstName} ${input.lastName}`.trim())),
+    summaryRowHtml(
+      'Name',
+      escapeHtml(`${input.firstName} ${input.lastName}`.trim())
+    ),
     summaryRowHtml('Email', escapeHtml(input.email)),
     summaryRowHtml('Phone', escapeHtml(input.phone)),
     ...details.map(row => summaryRowHtml(row.label, escapeHtml(row.value))),
@@ -676,7 +690,12 @@ export function generateCustomerConfirmationEmail(
     customerHeading(message)
   )}</h1><p style="margin:10px 0 0;color:#737373;font-family:${FONT};font-size:15px;line-height:1.6;">${escapeHtml(
     nextStep(input.inquiryType ?? '')
-  )}</p>${metaLine(id, date)}${noteHtml}${divider(24)}${sectionHeading('What you sent', 20)}${table(rows)}<p style="margin:22px 0 0;padding:14px 16px;color:#737373;background-color:#fafafa;border:1px solid ${BORDER};border-radius:10px;font-family:${FONT};font-size:13px;line-height:1.55;">If anything above is wrong, reply to this email and it will reach us.</p>`;
+  )}</p>${metaLine(id, date)}${noteHtml}${divider(24)}${sectionHeading(
+    'What you sent',
+    20
+  )}${table(
+    rows
+  )}<p style="margin:22px 0 0;padding:14px 16px;color:#737373;background-color:#fafafa;border:1px solid ${BORDER};border-radius:10px;font-family:${FONT};font-size:13px;line-height:1.55;">If anything above is wrong, reply to this email and it will reach us.</p>`;
 
   const footer = [
     footerLine(
@@ -714,7 +733,41 @@ export function generateContactFormEmail(
   return { text, html };
 }
 
-function generateReceiptText(order: Order) {
+// The adjustment rows of a receipt, as plain text, split either side of the
+// tax and shipping lines.
+// Both tables under the order share this. 240px was enough for "Subtotal"
+// against a short amount, but a benefit's name is the client's to choose and
+// the dashboard allows sixty characters, so a long label ran into its value
+// with nothing between them, and the balance reading "$0.00 of $150.00"
+// rather than a bare amount made the second table tighter still.
+//
+// Percentage rather than a wider fixed width, which is what I tried first:
+// the card gives about 295px on a 375px phone and about 240px on a 320px
+// one, so any fixed width that helps a desktop label overflows a phone. A
+// percentage takes what is there. The max-width stops the totals becoming
+// the widest thing on the page on desktop, and a client that drops it falls
+// back to the full width, which is wrong-looking but never clipped.
+const TOTALS_TABLE = 'width="100%" style="max-width:360px"';
+
+function receiptAdjustmentLines(order: Order) {
+  const line = (a: { label: string; amount: number }) =>
+    ` \n${a.label}: -${formatToMoney(-a.amount, true)}`;
+  const split = splitAdjustments(orderAdjustments(order));
+
+  return {
+    beforeTax: split.beforeTax.map(line).join(''),
+    afterShipping: split.afterShipping.map(line).join(''),
+  };
+}
+
+// The member's benefit, as its own small block rather than a sentence.
+function benefitUseText(order: Order, allowance?: number) {
+  const use = summarizeBenefitUse(order, allowance);
+  if (!use) return '';
+  return `\n\n${use.label} \nUsed on this order: ${use.used} \nRemaining: ${use.remaining}`;
+}
+
+function generateReceiptText(order: Order, baseUrl: string, allowance?: number) {
   return `Hi ${order.customer.firstName},\n\nThis is confirmation for your ${
     order.store.name
   } order on macaport.com. \n\nOrder #: ${order.orderId} \nName: ${
@@ -722,21 +775,41 @@ function generateReceiptText(order: Order) {
   } ${order.customer.lastName} \nEmail: ${
     order.customer.email
   } \nPhone: ${formatPhoneNumber(order.customer.phone)} \n\nOrder Summary Link:
-  ${`${process.env.API_HOST}/store/${order.store.id}/order-confirmation?orderId=${order.orderId}`}
-    \n\nSubtotal: ${formatToMoney(
-      order.summary.subtotal,
-      true
-    )} \nShipping: ${formatToMoney(
-    order.summary.shipping,
-    true
-  )} \nSales Tax: ${formatToMoney(
+  ${`${baseUrl}/store/${order.store.id}/order-confirmation?orderId=${order.orderId}`}
+    \n\nSubtotal: ${formatToMoney(order.summary.subtotal, true)}${
+    receiptAdjustmentLines(order).beforeTax
+  } \nSales Tax: ${formatToMoney(
     order.summary.salesTax,
     true
-  )} \nTotal: ${formatToMoney(order.summary.total, true)}
+  )} \nShipping: ${formatToMoney(order.summary.shipping, true)}${
+    receiptAdjustmentLines(order).afterShipping
+  } \nTotal: ${formatToMoney(order.summary.total, true)}${benefitUseText(order, allowance)}
   `;
 }
 
-function generateReceiptHtml(order: Order) {
+function benefitUseHtml(order: Order, allowance?: number) {
+  const use = summarizeBenefitUse(order, allowance);
+  if (!use) return '';
+
+  const row = (label: string, value: string) =>
+    `<tr><td style="padding: 0 16px 2px 0">${escapeHtml(
+      label
+    )}:</td><td style="padding: 0 0 2px; text-align: right; color: #1F2937">${escapeHtml(
+      value
+    )}</td></tr>`;
+
+  return `<div style="clear: both; padding: 16px 0 0">
+    <div style="padding: 14px 0 0; border-top: 1px solid #E5E7EB; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6B7280">${escapeHtml(
+      use.label
+    )}</div>
+    <table align="left" border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="max-width:360px; margin: 6px 0 0; font-size: 15px; color: #6B7280; line-height: 1.5">
+      ${row('Used on this order', use.used)}
+      ${row('Remaining', use.remaining)}
+    </table>
+  </div>`;
+}
+
+function generateReceiptHtml(order: Order, baseUrl: string, allowance?: number) {
   return `<!DOCTYPE html>
   <html lang="en">
     <head>
@@ -934,7 +1007,9 @@ function generateReceiptHtml(order: Order) {
                         </h1>
                         ${
                           order.group
-                            ? `<p style="margin: 0; padding: 0; font-size: 15px; font-weight: 400; color: #868f9d; text-align: center; line-height: 1;">${escapeHtml(order.group)}</p>`
+                            ? `<p style="margin: 0; padding: 0; font-size: 15px; font-weight: 400; color: #868f9d; text-align: center; line-height: 1;">${escapeHtml(
+                                order.group
+                              )}</p>`
                             : ''
                         }
                       </td>
@@ -1050,7 +1125,9 @@ function generateReceiptHtml(order: Order) {
                         >
                           <tr>
                             <td style="color: #6B7280">
-                              ${escapeHtml(formatPhoneNumber(order.customer.phone))}
+                              ${escapeHtml(
+                                formatPhoneNumber(order.customer.phone)
+                              )}
                             </td>
                           </tr>
                         </table>
@@ -1180,17 +1257,25 @@ function generateReceiptHtml(order: Order) {
                         >
                           <tr>
                             <td style="color: #6B7280">
-                              ${escapeHtml(order.customer.firstName)} ${escapeHtml(order.customer.lastName)}
+                              ${escapeHtml(
+                                order.customer.firstName
+                              )} ${escapeHtml(order.customer.lastName)}
                             </td>
                           </tr>
                           <tr>
                             <td style="color: #6B7280">
-                              ${escapeHtml(order.shippingAddress.street)} ${escapeHtml(order.shippingAddress.street2)}
+                              ${escapeHtml(
+                                order.shippingAddress.street
+                              )} ${escapeHtml(order.shippingAddress.street2)}
                             </td>
                           </tr>
                           <tr>
                             <td style="color: #6B7280">
-                              ${escapeHtml(order.shippingAddress.city)}, ${escapeHtml(order.shippingAddress.state)} ${escapeHtml(order.shippingAddress.zipcode)}
+                              ${escapeHtml(
+                                order.shippingAddress.city
+                              )}, ${escapeHtml(
+                            order.shippingAddress.state
+                          )} ${escapeHtml(order.shippingAddress.zipcode)}
                             </td>
                           </tr>
                         </table>
@@ -1228,13 +1313,11 @@ function generateReceiptHtml(order: Order) {
                       >
                         <tr>
                           <td style="color: #6B7280">
-                          <div style="margin: 10px 0 0 0">For all order details and order items please <a href="${
-                            process.env.API_HOST
-                          }/store/${
-    encodeURIComponent(order.store.id)
-  }/order-confirmation?orderId=${
-    encodeURIComponent(order.orderId)
-  }" style="color: #4338CA; text-decoration: underline">click here</a>.</div>
+                          <div style="margin: 10px 0 0 0">For all order details and order items please <a href="${baseUrl}/store/${encodeURIComponent(
+    order.store.id
+  )}/order-confirmation?orderId=${encodeURIComponent(
+    order.orderId
+  )}" style="color: #4338CA; text-decoration: underline">click here</a>.</div>
                           </td>
                         </tr>
                       </table>
@@ -1257,52 +1340,50 @@ function generateReceiptHtml(order: Order) {
                           cellpadding="0"
                           cellspacing="0"
                           role="presentation"
-                          width="240"
+                          ${TOTALS_TABLE}
                         >
                           <tr>
-                            <td style="padding: 0 0 2px">Subtotal:</td>
-                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
+                            <td style="padding: 0 16px 2px 0">Subtotal:</td>
+                            <td style="padding: 0 0 2px; text-align: right; white-space: nowrap; color: #1F2937">
                               ${formatToMoney(order.summary.subtotal, true)}
                             </td>
                           </tr>
-                          ${
-                            order.sheboyganLutheranStaffDiscount
-                              ? `<tr>
-                            <td style="padding: 0 0 2px">Discount:</td>
-                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
-                              -${formatToMoney(
-                                order.summary.discount || 0,
-                                true
-                              )}
+                          ${splitAdjustments(orderAdjustments(order))
+                            .beforeTax.map(
+                              adjustment => `<tr>
+                            <td style="padding: 0 16px 2px 0">${escapeHtml(
+                              adjustment.label
+                            )}:</td>
+                            <td style="padding: 0 0 2px; text-align: right; white-space: nowrap; color: #1F2937">
+                              -${formatToMoney(-adjustment.amount, true)}
                             </td>
                           </tr>`
-                              : ``
-                          }
-                          ${
-                            order.switchFitnessDiscount
-                              ? `<tr>
-                            <td style="padding: 0 0 2px">Discount:</td>
-                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
-                              -${formatToMoney(
-                                order.summary.discount || 0,
-                                true
-                              )}
-                            </td>
-                          </tr>`
-                              : ``
-                          }
+                            )
+                            .join('')}
                           <tr>
-                            <td style="padding: 0 0 2px">Sales Tax:</td>
-                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
+                            <td style="padding: 0 16px 2px 0">Sales Tax:</td>
+                            <td style="padding: 0 0 2px; text-align: right; white-space: nowrap; color: #1F2937">
                               ${formatToMoney(order.summary.salesTax, true)}
                             </td>
                           </tr>
                           <tr>
-                            <td style="padding: 0 0 2px">Shipping:</td>
-                            <td style="padding: 0 0 2px; text-align: right; color: #1F2937">
+                            <td style="padding: 0 16px 2px 0">Shipping:</td>
+                            <td style="padding: 0 0 2px; text-align: right; white-space: nowrap; color: #1F2937">
                               ${formatToMoney(order.summary.shipping, true)}
                             </td>
                           </tr>
+                          ${splitAdjustments(orderAdjustments(order))
+                            .afterShipping.map(
+                              adjustment => `<tr>
+                            <td style="padding: 0 16px 2px 0">${escapeHtml(
+                              adjustment.label
+                            )}:</td>
+                            <td style="padding: 0 0 2px; text-align: right; white-space: nowrap; color: #1F2937">
+                              -${formatToMoney(-adjustment.amount, true)}
+                            </td>
+                          </tr>`
+                            )
+                            .join('')}
                           <tr>
                             <td style="font-weight: 600; color: #1F2937">
                               Total:
@@ -1318,6 +1399,7 @@ function generateReceiptHtml(order: Order) {
                             </td>
                           </tr>
                         </table>
+                        ${benefitUseHtml(order, allowance)}
                       </td>
                     </tr>
   
@@ -1346,9 +1428,9 @@ function generateReceiptHtml(order: Order) {
                                 If you have any questions about your payment or order,
                                 please contact us at
                                 <a
-                                  href="mailto:support@macaport.com?subject=Order Inquiry [Order #${
-                                    encodeURIComponent(order.orderId)
-                                  }]"
+                                  href="mailto:support@macaport.com?subject=Order Inquiry [Order #${encodeURIComponent(
+                                    order.orderId
+                                  )}]"
                                   style="color: #4338CA; text-decoration: none"
                                   >support@macaport.com</a
                                 >.
@@ -1371,16 +1453,16 @@ function generateReceiptHtml(order: Order) {
                       >
                         <p style="margin: 0 0 20px 0">
                           You're receiving this email because you made a purchase
-                        from the ${escapeHtml(order.store.name)} store by <a href="${
-    process.env.API_HOST
-  }" style="color: #4338CA; text-decoration: none">Macaport LLC</a>.
+                        from the ${escapeHtml(
+                          storePhrase(order.store.name)
+                        )} by <a href="${baseUrl}" style="color: #4338CA; text-decoration: none">Macaport LLC</a>.
                         </p>
                         <p style="margin: 0 0 20px 0">
-                          <a href="${process.env.API_HOST}/store/${
-    encodeURIComponent(order.store.id)
-  }/order-confirmation?orderId=${
-    encodeURIComponent(order.orderId)
-  }" style="color: #4338CA; text-decoration: none">Click here</a> to view your order in the web browser.
+                          <a href="${baseUrl}/store/${encodeURIComponent(
+    order.store.id
+  )}/order-confirmation?orderId=${encodeURIComponent(
+    order.orderId
+  )}" style="color: #4338CA; text-decoration: none">Click here</a> to view your order in the web browser.
                         </p>
                         <p style="margin: 0">
                           ${MACAPORT_ADDRESS}
@@ -1399,8 +1481,77 @@ function generateReceiptHtml(order: Order) {
   `;
 }
 
-export function generateReceiptEmail(order: Order) {
-  const text = generateReceiptText(order);
-  const html = generateReceiptHtml(order);
+// baseUrl is where the links in the receipt point: the public site in
+// production, the preview or the local server elsewhere.
+// `allowance` is what the member started with, passed in by submit-order,
+// which already holds the benefit. Omitted, the receipt shows the balance
+// on its own rather than against the allowance.
+export function generateReceiptEmail(
+  order: Order,
+  baseUrl = siteBaseUrl(),
+  allowance?: number
+) {
+  const text = generateReceiptText(order, baseUrl, allowance);
+  const html = generateReceiptHtml(order, baseUrl, allowance);
   return { text, html };
+}
+
+// The one-time code email, in the same shell and voice as the contact
+// confirmation. Everything the reader needs is above the fold: what it is,
+// where to type it, the code itself, and when it dies. The security lines
+// are the two every sign-in code email carries: never share it, and if you
+// did not ask for it, do nothing. Nothing else is a disclaimer worth having
+// in an email someone opens for six digits.
+export function generateCodeEmailHtml({
+  code,
+  storeName,
+  benefitName,
+  expiresAt,
+  resent,
+}: {
+  code: string;
+  storeName: string;
+  benefitName: string;
+  expiresAt: number;
+  resent: boolean;
+}) {
+  const minutes = Math.max(1, Math.round((expiresAt - Date.now()) / 60000));
+  const expiry = `${minutes} minute${minutes === 1 ? '' : 's'}`;
+
+  const resentHtml = resent
+    ? `<p style="margin:20px 0 0;padding:14px 16px;color:#171717;background-color:#f1f7f3;border:1px solid ${BORDER_BRAND};border-radius:10px;font-family:${FONT};font-size:14px;line-height:1.55;">You asked for this more than once. Every copy carries the same code, so any of them will work.</p>`
+    : '';
+
+  const body = `<h1 style="margin:0;color:#171717;font-family:${FONT};font-size:22px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;">Your sign-in code</h1><p style="margin:10px 0 0;color:#737373;font-family:${FONT};font-size:15px;line-height:1.6;">Enter it on the ${escapeHtml(
+    storePhrase(storeName)
+  )} to activate your ${escapeHtml(
+    benefitName
+  )}. It expires in ${expiry}.</p><div style="margin:24px 0 0;padding:22px 16px;text-align:center;background-color:#fafafa;border:1px solid ${BORDER};border-radius:10px;"><span style="display:inline-block;color:#171717;font-family:${FONT};font-size:34px;line-height:1;font-weight:700;letter-spacing:0.28em;">${escapeHtml(
+    code
+  )}</span></div>${resentHtml}<p style="margin:22px 0 0;padding:14px 16px;color:#737373;background-color:#fafafa;border:1px solid ${BORDER};border-radius:10px;font-family:${FONT};font-size:13px;line-height:1.55;">Never share this code. Macaport will never ask you for it. If you did not request it, you can ignore this email: nothing happens without the code.</p>`;
+
+  const footer = [
+    footerLine(
+      `You are receiving this because this address was entered on the ${escapeHtml(
+        storePhrase(storeName)
+      )} at <a href="https://www.macaport.com" style="color:#737373;text-decoration:underline;">macaport.com</a>. It is not a marketing email, so there is nothing to unsubscribe from.`
+    ),
+    footerLine(
+      `<a href="https://www.macaport.com" style="color:#737373;text-decoration:underline;">macaport.com</a> &nbsp;&middot;&nbsp; <a href="https://www.macaport.com/privacy-policy" style="color:#737373;text-decoration:underline;">Privacy policy</a> &nbsp;&middot;&nbsp; <a href="mailto:support@macaport.com" style="color:#737373;text-decoration:underline;">support@macaport.com</a>`
+    ),
+    footerLine(MACAPORT_ADDRESS),
+    footerLine(
+      `&copy; ${new Date().getFullYear()} Macaport LLC. All rights reserved.`,
+      true
+    ),
+  ].join('');
+
+  return shellHtml({
+    title: 'Your sign-in code',
+    preheader: `${code} is your code for the ${storePhrase(
+      storeName
+    )}. It expires in ${expiry}.`,
+    body,
+    footer,
+  });
 }

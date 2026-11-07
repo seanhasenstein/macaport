@@ -6,12 +6,18 @@ import {
   VerifyCartItemsAccumulator,
 } from 'interfaces';
 
+// Re-prices every cart line from the store's own products and checks stock.
+//
+// Nothing the browser sent about money survives this: the unit price comes
+// from the sku, the personalization total from the store's add-on list, and
+// the line total from those two. What it does not do is apply any benefit.
+// That happens afterwards in core/pricing/priceOrder, on the lines this
+// returns, which is why a free item no longer arrives as a zero-priced line
+// the server has to guess at.
 export function verifyCartItems(
   items: CartItem[],
-  verifiedStoreProducts: StoreProduct[],
-  eligibleForTeacherAppreciation: boolean
+  verifiedStoreProducts: StoreProduct[]
 ) {
-  const freeCartItem = items.find(item => item.itemTotal === 0);
   return items.reduce(
     (cartAccumulator: VerifyCartItemsAccumulator, currentItem: CartItem) => {
       const product = verifiedStoreProducts.find(
@@ -113,6 +119,8 @@ export function verifyCartItems(
               ...currentItem,
               quantity: inventoryAvailable,
               sku: productSku,
+              price: productSku.size.price + verifiedPersonalizationTotal,
+              personalizationTotal: verifiedPersonalizationTotal,
               itemTotal:
                 inventoryAvailable *
                 (productSku.size.price + verifiedPersonalizationTotal),
@@ -121,59 +129,17 @@ export function verifyCartItems(
         };
       }
 
-      // at this point we know that there is enough productSku.invntory for this currentItem.quantity
+      // at this point we know that there is enough productSku.inventory for this currentItem.quantity
 
-      // OLD LOW_QUANTITY/OUT_OF_STOCK CODE
-      // if (productSku.inventory < totalQuantity) {
-      //   if (productSku.inventory === 0) {
-      // return {
-      //   ...cartAccumulator,
-      //   itemsOutOfStock: [
-      //     ...cartAccumulator.itemsOutOfStock,
-      //     { ...currentItem, quantity: 0, itemTotal: 0 },
-      //   ],
-      // };
-      //   }
-
-      //   const updatedQuantity = totalQuantity - productSku.inventory;
-
-      //   return {
-      //     ...cartAccumulator,
-      //     lowerInventoryItems: [
-      //       ...cartAccumulator.lowerInventoryItems,
-      //       {
-      //         ...currentItem,
-      //         quantity: updatedQuantity,
-      //         itemTotal:
-      //           updatedQuantity *
-      //           (productSku.size.price + verifiedPersonalizationTotal),
-      //       },
-      //     ],
-      //   };
-      // }
-
-      const haventIncludedFreeItem = !cartAccumulator.alreadyIncludedFreeItem;
-      const isFreeItem =
-        eligibleForTeacherAppreciation &&
-        freeCartItem?.id === currentItem.id &&
-        haventIncludedFreeItem;
-      const conditionalItemPrice = isFreeItem
-        ? 0
-        : productSku.size.price + verifiedPersonalizationTotal;
-
-      // todo from 5/1/24: when reverting back to oringinal code use itemPrice instead of conditionalItemPrice
-      // const itemPrice = productSku.size.price + verifiedPersonalizationTotal;
-
-      // TODO
-      // const { active, inventory, ...updatedSku } = currentItem.sku;
-      // const {active, inventory, ...updatedProductSku} = productSku;
+      const itemPrice = productSku.size.price + verifiedPersonalizationTotal;
 
       const verifiedItem: OrderItem = {
         ...currentItem,
         sku: productSku,
         merchandiseCode: product.merchandiseCode,
-        price: conditionalItemPrice,
-        itemTotal: conditionalItemPrice * currentItem.quantity!,
+        price: itemPrice,
+        personalizationTotal: verifiedPersonalizationTotal,
+        itemTotal: itemPrice * currentItem.quantity,
         status: {
           current: 'Unfulfilled',
           meta: {
@@ -185,14 +151,10 @@ export function verifyCartItems(
         },
       };
 
-      const verifiedSubtotal =
-        cartAccumulator.subtotal + verifiedItem.itemTotal!;
-
       return {
         ...cartAccumulator,
         items: [...cartAccumulator.items, verifiedItem],
-        subtotal: verifiedSubtotal,
-        alreadyIncludedFreeItem: isFreeItem,
+        subtotal: cartAccumulator.subtotal + verifiedItem.itemTotal!,
       };
     },
     {
@@ -200,7 +162,6 @@ export function verifyCartItems(
       lowerInventoryItems: [],
       itemsOutOfStock: [],
       subtotal: 0,
-      alreadyIncludedFreeItem: false,
     }
   );
 }

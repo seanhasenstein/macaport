@@ -6,30 +6,34 @@ import {
   order as orderModel,
   store as storeModel,
   shipping as shippingModel,
-  sheboyganLutheranStaff as sheboyganLutheranStaffModel,
-  teacherAppreciation as teacherAppreciationModel,
-  switchFitness as switchFitnessModel,
 } from '../../db';
 import {
   Address,
   CartItem,
   Order,
+  OrderItem,
   PrimaryShippingAddress,
   ShippingMethod,
   Store,
-  SwitchFitnessDiscount,
 } from '../../interfaces';
 import {
-  calculateSalesTax,
-  calculateCartTotal,
   createReceiptNumber,
-  calculateShipping,
   removeNonDigits,
-  calculateSubtotalWithSwitchDiscount,
+  SALES_TAX_RATE,
 } from '../../utils';
 import { getStoreStatus } from '../../utils/store';
 import { verifyCartItems } from 'utils/payment';
-import { internalHeaders } from '../../utils/internalRequest';
+import { internalHeaders, siteBaseUrl } from '../../utils/internalRequest';
+import { getStoreBenefit, readMemberSession } from '../../utils/memberBenefit';
+import {
+  memberEligibility,
+  MemberEligibility,
+  usageFor,
+} from '../../core/memberBenefits/eligibility';
+import { MemberBenefit } from '../../core/memberBenefits/types';
+import { release, reserve } from '../../core/memberBenefits/reservation';
+import { PriceLine, priceOrder } from '../../core/pricing/priceOrder';
+import { expectedTotalFrom } from '../../utils/checkout';
 
 interface ExtendedRequest extends NextApiRequest {
   body: {
@@ -47,17 +51,21 @@ interface ExtendedRequest extends NextApiRequest {
     shippingMethod: ShippingMethod;
     shippingAddress: Address | PrimaryShippingAddress;
     note?: string;
-    teacherAppreciationEmail?: string;
-    sheboyganLutheranStaffEmail?: string;
-    switchFitnessDiscountEmail?: string;
-    isEligibleForSwitchDiscountFromClient?: boolean; // used to send message back to user if they request the discount but after we check here on the server they are not eligible
-    isEligibleForSheboyganLutheranStaffFromClient?: boolean; // used to send message back to user if they request the discount but after we check here on the server they are not eligible
+    // The total the browser last showed as owed. Typed unknown because it
+    // arrives over the wire and is validated before it is trusted.
+    expectedTotal?: unknown;
   };
 }
 
 const stripe = new Stripe(`${process.env.STRIPE_SECRET_KEY}`, {
   apiVersion: '2020-08-27',
 });
+
+const SHIPPING_METHODS: ShippingMethod[] = [
+  'Primary',
+  'Direct',
+  'Store Pickup',
+];
 
 /**
  * Calls one of our own routes and says so loudly when it fails.
@@ -70,9 +78,14 @@ const stripe = new Stripe(`${process.env.STRIPE_SECRET_KEY}`, {
  * never decrement stock and never send a receipt, with the customer charged
  * and nothing anywhere saying why.
  */
-async function callInternal(path: string, body: unknown, orderId: string) {
+async function callInternal(
+  baseUrl: string,
+  path: string,
+  body: unknown,
+  orderId: string
+) {
   try {
-    const response = await fetch(`${process.env.API_HOST}${path}`, {
+    const response = await fetch(`${baseUrl}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...internalHeaders() },
       body: JSON.stringify(body),
@@ -92,13 +105,83 @@ async function callInternal(path: string, body: unknown, orderId: string) {
   }
 }
 
-export default async (req: ExtendedRequest, res: NextApiResponse) => {
-  try {
-    if (!process.env.API_HOST) {
-      throw new Error('Environment variable API_HOST is required');
-    }
+// The garment and its add-ons apart, the way the pricing pipeline wants
+// them. Both come from verifyCartItems, so both are the store's numbers.
+function toPriceLine(item: OrderItem): PriceLine {
+  return {
+    id: item.id,
+    unitPrice: item.price - item.personalizationTotal,
+    addOnUnitPrice: item.personalizationTotal,
+    quantity: item.quantity,
+    productId: item.sku.storeProductId,
+  };
+}
 
-    const db = await connectToDb();
+// Told to the customer when their benefit no longer covers what the page
+// said it would: the reservation failed, the card is missing for a total the
+// browser thought was zero, or the total came out above what was displayed.
+// In every case something moved between the page loading and the order
+// landing, and the client re-fetches the page's props, and re-syncs the cart
+// when this response carries verifiedItems, on seeing benefitChanged.
+const BENEFIT_CHANGED =
+  'has changed since this page loaded, so the totals have been refreshed. Please review your order and submit it again.';
+
+// Said whenever the order came out above the total on screen. It does not
+// name a benefit, because at this point the cause is genuinely unknown: a
+// benefit may have been spent or paused, or an item may simply cost more
+// than it did when it went into the cart. Naming the member's benefit here
+// was wrong in both directions — it accused a benefit that was fine when a
+// price had risen, and a member whose free item does not cover what they are
+// buying was told that free item had changed. The refreshed page below the
+// message shows what actually moved.
+const TOTAL_CHANGED =
+  'This order costs more than the total shown when the page loaded, so the totals have been refreshed. Please review your order and submit it again.';
+
+
+// Whitespace off every string on an address, whatever shape it is: a direct
+// shipping address and a store's primary location do not share a type.
+function trimAddress<T>(address: T): T {
+  if (!address || typeof address !== 'object') return address;
+  const trimmed: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(address)) {
+    trimmed[key] = typeof value === 'string' ? value.trim() : value;
+  }
+  return trimmed as T;
+}
+
+export default async (req: ExtendedRequest, res: NextApiResponse) => {
+  // Set once a member's allowance has been drawn down, so that any exit
+  // before the order is saved can put it back.
+  let reservation: {
+    benefit: MemberBenefit;
+    eligibility: MemberEligibility;
+    amount: number;
+    orderId: string;
+  } | null = null;
+  let orderSaved = false;
+
+  const undoReservation = async (db: Parameters<typeof release>[0]) => {
+    if (!reservation || orderSaved) return;
+    const { benefit, eligibility, amount, orderId } = reservation;
+    await release(
+      db,
+      benefit,
+      { email: eligibility.member?.email ?? '' },
+      amount,
+      orderId
+    );
+    reservation = null;
+  };
+
+  let db: Awaited<ReturnType<typeof connectToDb>> | undefined;
+
+  try {
+    // Throws in production if neither API_HOST nor VERCEL_URL is set, which
+    // is the same failure the old fixed API_HOST check caught.
+    const baseUrl = siteBaseUrl(req);
+
+    db = await connectToDb();
+
     // 1. get store from db to verify items
     const store: Store | undefined = await storeModel.getStoreById(
       db,
@@ -119,129 +202,21 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       return res.json({ storeClosed: true });
     }
 
-    // sheboygan Lutheran staff verification
-    const sheboyganLutheranStaffEmail =
-      req.body.sheboyganLutheranStaffEmail?.toLowerCase() ?? '';
-    const sheboyganLutheranStaffId = store.sheboyganLutheranStaffId;
-
-    let sheboyganLutheranStaff;
-    let sheboyganLutheranStaffDiscountTotal: number | undefined;
-
-    if (sheboyganLutheranStaffId) {
-      sheboyganLutheranStaff =
-        await sheboyganLutheranStaffModel.getSheboyganLutheranStaffById(
-          db,
-          sheboyganLutheranStaffId
-        );
-      sheboyganLutheranStaffDiscountTotal = sheboyganLutheranStaff?.discount;
+    if (!Array.isArray(req.body.items) || req.body.items.length === 0) {
+      return res
+        .status(400)
+        .json({ error: 'An order needs at least one item' });
     }
 
-    const isEligibleForSheboyganLutheranStaffDiscount =
-      !!sheboyganLutheranStaff &&
-      sheboyganLutheranStaff.active &&
-      sheboyganLutheranStaff.eligibleAccounts.some(
-        account => account.email.toLowerCase() === sheboyganLutheranStaffEmail
-      ) &&
-      !sheboyganLutheranStaff.usedEmails.includes(sheboyganLutheranStaffEmail);
-
-    if (
-      !!sheboyganLutheranStaffId &&
-      req.body.isEligibleForSheboyganLutheranStaffFromClient &&
-      !isEligibleForSheboyganLutheranStaffDiscount
-    ) {
-      return res.json({
-        error:
-          'Your email is either ineligible or has already been used for the Sheboygan Lutheran Staff discount.',
-      });
+    const shippingMethod = req.body.shippingMethod;
+    if (!SHIPPING_METHODS.includes(shippingMethod)) {
+      return res
+        .status(400)
+        .json({ error: 'A valid shipping method is required' });
     }
 
-    // teacher appreciation verification
-    const teacherAppreciationEmail =
-      req.body.teacherAppreciationEmail?.trim().toLowerCase() ?? '';
-    const teacherAppreciationId = store.teacherAppreciationId;
-
-    let teacherAppreciation;
-
-    if (teacherAppreciationId) {
-      teacherAppreciation =
-        await teacherAppreciationModel.getTeacherAppreciationById(
-          db,
-          teacherAppreciationId
-        );
-    }
-
-    const teacherAppreciationProgramPaused =
-      !!teacherAppreciation && !teacherAppreciation.active;
-
-    const teacherAppreciationEligibleEmails =
-      teacherAppreciation?.eligibleEmails.map(e => e.trim().toLowerCase()) ??
-      [];
-    const teacherAppreciationUsedEmails =
-      teacherAppreciation?.usedEmails.map(e => e.trim().toLowerCase()) ?? [];
-
-    const isEligibleForTeacherAppreciation =
-      !!teacherAppreciation &&
-      teacherAppreciation.active &&
-      teacherAppreciationEligibleEmails.includes(teacherAppreciationEmail) &&
-      !teacherAppreciationUsedEmails.includes(teacherAppreciationEmail);
-
-    // check if the cart has a teacher appreciation item
-    const cartHasTeacherAppreciationItem = req.body.items.some(item => {
-      return item.itemTotal === 0 && item.quantity === 1;
-    });
-
-    const orderIncludesTeacherAppreciation =
-      isEligibleForTeacherAppreciation && cartHasTeacherAppreciationItem;
-
-    if (
-      !!teacherAppreciationId &&
-      cartHasTeacherAppreciationItem &&
-      !isEligibleForTeacherAppreciation
-    ) {
-      return res.json({
-        error: teacherAppreciationProgramPaused
-          ? 'The teacher appreciation discount is currently paused. Please try again later.'
-          : 'Your email is either ineligible or has already been used for the teacher appreciation discount.',
-      });
-    }
-
-    // Switch Fitness Discount
-    const switchFitnessDiscountEmail =
-      req.body.switchFitnessDiscountEmail?.toLowerCase() ?? '';
-
-    let switchFitnessDiscount: SwitchFitnessDiscount | null = null;
-    if (store.meta?.switchFitnessDiscountId) {
-      switchFitnessDiscount =
-        await switchFitnessModel.getSwitchFitnessDiscountById(
-          db,
-          store.meta.switchFitnessDiscountId
-        );
-    }
-
-    const isEligibleForSwitchFitnessDiscount =
-      !!switchFitnessDiscount &&
-      switchFitnessDiscount.active &&
-      switchFitnessDiscount.eligibleEmails.includes(
-        switchFitnessDiscountEmail
-      ) &&
-      !switchFitnessDiscount.usedEmails.includes(switchFitnessDiscountEmail);
-
-    if (
-      req.body.isEligibleForSwitchDiscountFromClient &&
-      !isEligibleForSwitchFitnessDiscount
-    ) {
-      return res.json({
-        error:
-          'Your email is either ineligible or has already been used for the Switch Fitness discount.',
-      });
-    }
-
-    // 3. verify order items and order subtotal
-    const verified = verifyCartItems(
-      req.body.items,
-      store.products,
-      isEligibleForTeacherAppreciation
-    );
+    // 3. verify order items against the store's own products and stock
+    const verified = verifyCartItems(req.body.items, store.products);
 
     // send response back if theres not enough inventory for all cartItems with this sku.id
     if (
@@ -257,61 +232,105 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       });
     }
 
-    // calculate subtotal with switch fitness discount check
-    const verifiedSubtotal = calculateSubtotalWithSwitchDiscount({
-      initialSubtotal: verified.subtotal,
-      switchFitnessDiscount,
-      isEligibleForSwitchFitnessDiscount,
+    // 4. the member benefit, from the session cookie and the database only.
+    // Nothing in the request body can claim one.
+    const benefit = await getStoreBenefit(db, store);
+    const session = benefit ? readMemberSession(req, store._id) : null;
+    const eligibility =
+      benefit && session && session.benefitId === benefit._id
+        ? memberEligibility(benefit, session.email)
+        : null;
+
+    // 5. price it, the same way the browser just did
+    const priced = priceOrder({
+      lines: verified.items.map(toPriceLine),
+      benefit: eligibility?.eligible ? eligibility.forPricing : null,
+      taxRate: SALES_TAX_RATE,
+      shipping: {
+        method: shippingMethod,
+        price: shipping.price,
+        freeMinimum: shipping.freeMinimum,
+      },
     });
 
-    // 4. calculate order salesTax and total from verified items and subtotal
-    // TODO: 11/10/25 clean this up to work with any combination of discounts, sales tax, and shipping scenarios
-    const skipSalesTax =
-      isEligibleForSheboyganLutheranStaffDiscount &&
-      sheboyganLutheranStaffDiscountTotal &&
-      verifiedSubtotal <= sheboyganLutheranStaffDiscountTotal;
-    const verifiedSalesTax =
-      verifiedSubtotal -
-        (isEligibleForSheboyganLutheranStaffDiscount
-          ? sheboyganLutheranStaffDiscountTotal ?? 0
-          : 0) >
-      0
-        ? calculateSalesTax(
-            verifiedSubtotal -
-              (isEligibleForSheboyganLutheranStaffDiscount
-                ? sheboyganLutheranStaffDiscountTotal ?? 0
-                : 0)
-          )
-        : 0;
+    // 5a. never charge more than the shopper was looking at. The server is
+    // the authority on price, and between this page loading and this request
+    // landing a benefit can shrink: spent in another tab, paused from the
+    // dashboard, or its amount edited. Charging the true higher total would
+    // take money nobody agreed to, so stop and let them see the new number
+    // first. A lower total needs no permission and goes through.
+    const expectedTotal = expectedTotalFrom(req.body);
 
-    const verifiedShipping = calculateShipping(
-      shipping.price,
-      shipping.freeMinimum,
-      verifiedSubtotal, // todo: ask Nick about this (should it be the original subtotal or the subtotal with the discount applied?)
-      req.body.shippingMethod
-    );
+    if (expectedTotal !== null && priced.total > expectedTotal) {
+      return res.json({
+        error: TOTAL_CHANGED,
+        benefitChanged: true,
+        // The cart can be the stale half: it keeps the price each item had
+        // when it was added, so a price rise since then lands here too.
+        // Re-fetching the page's props would not touch it, and every retry
+        // would be refused the same way. Hand back the prices the server
+        // just used so the cart can catch up and the message is true.
+        verifiedItems: verified.items,
+      });
+    }
 
-    const verifiedTotal = calculateCartTotal(
-      Math.max(
-        0,
-        verifiedSubtotal -
-          (isEligibleForSheboyganLutheranStaffDiscount
-            ? sheboyganLutheranStaffDiscountTotal ?? 0
-            : 0)
-      ),
-      skipSalesTax ? 0 : verifiedSalesTax,
-      isEligibleForSheboyganLutheranStaffDiscount ? 0 : verifiedShipping
-    );
-
-    // 5. create orderId
+    // 6. create orderId
     const orderId = createReceiptNumber();
+
+    // 7. draw down the member's allowance before anything is charged. The
+    // conditional update only succeeds while they still have enough, so two
+    // orders racing for the same balance cannot both win.
+    if (benefit && eligibility && eligibility.eligible && eligibility.member) {
+      const amount = usageFor(benefit, eligibility, {
+        creditApplied: priced.creditApplied,
+        freeUnits: priced.adjustments.reduce(
+          (sum, a) => sum + (a.kind === 'freeItem' ? a.units ?? 0 : 0),
+          0
+        ),
+        discountApplied: priced.adjustments.reduce(
+          (sum, a) => sum + (a.kind === 'discount' ? -a.amount : 0),
+          0
+        ),
+      });
+
+      if (amount > 0) {
+        const result = await reserve(
+          db,
+          benefit,
+          { email: eligibility.member.email, allowance: eligibility.allowance },
+          amount,
+          orderId
+        );
+
+        if (result !== 'reserved') {
+          return res.json({
+            error: `Your ${benefit.copy.benefitName} ${BENEFIT_CHANGED}`,
+            benefitChanged: true,
+          });
+        }
+
+        reservation = { benefit, eligibility, amount, orderId };
+      }
+    }
 
     let stripeIntentId: string | undefined;
 
-    if (verifiedTotal > 0) {
-      // 6. send request to Stripe to handle payment
+    if (priced.total > 0) {
+      // The browser only collects a card when it believes something is owed.
+      // If it believed wrong, the benefit changed under it.
+      if (!req.body.payment_method_id) {
+        await undoReservation(db);
+        return res.json({
+          error: `Your ${
+            benefit?.copy.benefitName ?? 'benefit'
+          } ${BENEFIT_CHANGED}`,
+          benefitChanged: true,
+        });
+      }
+
+      // 8. send request to Stripe to handle payment
       const intent = await stripe.paymentIntents.create({
-        amount: verifiedTotal,
+        amount: priced.total,
         currency: 'usd',
         payment_method: req.body.payment_method_id,
         confirm: true,
@@ -324,6 +343,7 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       });
 
       if (intent.status !== 'succeeded') {
+        await undoReservation(db);
         return res
           .status(500)
           .json({ error: `Unexpected status ${intent.status}` });
@@ -332,18 +352,28 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       stripeIntentId = intent.id;
     }
 
-    // 7. format the order for the db
+    // 9. format the order for the db. Each line keeps its real unit price;
+    // what a free item took off is in summary.adjustments, and the line's
+    // total reflects it.
     const timestamp = new Date().toISOString();
-    const switchFitnessDiscountValue = isEligibleForSwitchFitnessDiscount
-      ? switchFitnessDiscount?.discount
-      : 0;
+    const items = verified.items.map(item => {
+      const line = priced.lines.find(l => l.id === item.id);
+      // `adjustments` on a cart item is browser display state from
+      // usePricedCart, not order data; the order's own list is on summary.
+      const { adjustments, ...rest } = item as typeof item & {
+        adjustments?: unknown;
+      };
+      void adjustments;
+      return { ...rest, itemTotal: line ? line.lineTotal : item.itemTotal };
+    });
+
     const order: Order = {
       orderId,
       store: {
         id: req.body.storeId,
         name: req.body.storeName,
       },
-      items: verified.items,
+      items,
       customer: {
         firstName: req.body.customer.firstName.trim(),
         lastName: req.body.customer.lastName.trim(),
@@ -352,24 +382,19 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       },
       group: req.body.group,
       orderStatus: 'Unfulfilled',
-      shippingMethod: req.body.shippingMethod,
-      shippingAddress: req.body.shippingAddress,
+      shippingMethod,
+      // Trimmed the way the customer fields are. The schema does this in the
+      // browser, but a request that never went through the form would
+      // otherwise store a space as the city.
+      shippingAddress: trimAddress(req.body.shippingAddress),
       summary: {
-        subtotal: verified.subtotal, // this should be the subtotal before any discounts
-        // TODO: 11/10/25 clean this up to work with any combination of discounts
-        discount: isEligibleForSheboyganLutheranStaffDiscount
-          ? sheboyganLutheranStaffDiscountTotal
-          : switchFitnessDiscountValue
-          ? switchFitnessDiscountValue
-          : 0,
-        // TODO: 11/10/25 clean this up
-        shipping: isEligibleForSheboyganLutheranStaffDiscount
-          ? 0
-          : verifiedShipping,
-        salesTax: skipSalesTax ? 0 : verifiedSalesTax,
-        total: verifiedTotal,
-        stripeFee:
-          verifiedTotal > 0 ? Math.round(verifiedTotal * 0.029 + 30) : 0,
+        subtotal: priced.subtotal,
+        adjustments: priced.adjustments,
+        shipping: priced.shipping,
+        salesTax: priced.salesTax,
+        waived: priced.waived,
+        total: priced.total,
+        stripeFee: priced.total > 0 ? Math.round(priced.total * 0.029 + 30) : 0,
       },
       refund: {
         status: 'None',
@@ -380,73 +405,56 @@ export default async (req: ExtendedRequest, res: NextApiResponse) => {
       meta: {
         receiptPrinted: false,
       },
-      ...(orderIncludesTeacherAppreciation && {
-        teacherAppreciation: {
-          id: teacherAppreciationId,
-          email: teacherAppreciationEmail,
-        },
-      }),
-      ...(isEligibleForSwitchFitnessDiscount && {
-        switchFitnessDiscount: {
-          id: switchFitnessDiscount?._id.toString() as string,
-          email: switchFitnessDiscountEmail,
-        },
-      }),
-      ...(isEligibleForSheboyganLutheranStaffDiscount && {
-        sheboyganLutheranStaffDiscount: {
-          id: sheboyganLutheranStaffId as string,
-          email: sheboyganLutheranStaffEmail,
-          discount: sheboyganLutheranStaff?.discount as number,
+      ...(reservation && {
+        benefit: {
+          benefitId: reservation.benefit._id,
+          type: reservation.benefit.type,
+          email: reservation.eligibility.member?.email ?? '',
+          used: reservation.amount,
+          remainingAfter: Math.max(
+            0,
+            reservation.eligibility.remaining - reservation.amount
+          ),
         },
       }),
       createdAt: timestamp,
       updatedAt: timestamp,
     };
 
-    // 8. add order to the database
+    // 10. add order to the database
     await orderModel.addOrderToStore(db, store._id, order);
+    orderSaved = true;
 
-    // 9. send email receipt
-    await callInternal('/api/send-email-receipt', { order }, order.orderId);
+    // 11. send email receipt
+    // The receipt shows the balance against what the member started with,
+    // and the order does not record that. Passing it here rather than
+    // looking it up again keeps a database round trip off the receipt path;
+    // this request already has the benefit in hand.
+    await callInternal(
+      baseUrl,
+      '/api/send-email-receipt',
+      { order, benefitAllowance: reservation?.eligibility.allowance ?? null },
+      order.orderId
+    );
 
-    // 10. send request to subtract inventory
-    await callInternal('/api/subtract-inventory', order.items, order.orderId);
+    // 12. send request to subtract inventory
+    await callInternal(
+      baseUrl,
+      '/api/subtract-inventory',
+      order.items,
+      order.orderId
+    );
 
-    // 11. if teacher appreciation was used, add email to teacher appreciation usedEmails
-    if (orderIncludesTeacherAppreciation) {
-      await teacherAppreciationModel.addUsedEmailToTeacherAppreciation(
-        db,
-        teacherAppreciationId,
-        teacherAppreciationEmail
-      );
-    }
-
-    // if sheboyganLutheranStaff discount was used, add email to sheboyganLutheranStaff usedEmails
-    if (isEligibleForSheboyganLutheranStaffDiscount) {
-      await sheboyganLutheranStaffModel.addUsedEmailToSheboyganLutheranStaff(
-        db,
-        sheboyganLutheranStaffId as string,
-        sheboyganLutheranStaffEmail
-      );
-    }
-
-    // 12. if switch fitness discount was used, add email to switch fitness discount usedEmails
-    if (isEligibleForSwitchFitnessDiscount) {
-      await switchFitnessModel.addUsedEmailToSwitchFitness(
-        db,
-        switchFitnessDiscount?._id as string,
-        switchFitnessDiscountEmail
-      );
-    }
-
-    res.json({
-      success: true,
-      orderId: order.orderId,
-      resetTeacherAppreciation: !!teacherAppreciation,
-      resetSwitchFitnessDiscount: !!switchFitnessDiscount,
-      resetSheboyganLutheranStaffDiscount: !!sheboyganLutheranStaff,
-    });
+    res.json({ success: true, orderId: order.orderId });
   } catch (error: any) {
+    if (db) {
+      try {
+        await undoReservation(db);
+      } catch (releaseError) {
+        console.error('Could not release a benefit reservation', releaseError);
+      }
+    }
+
     if (error.type === 'StripeCardError') {
       return res.json({ error: error.message });
     } else {

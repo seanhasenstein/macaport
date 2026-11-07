@@ -1,6 +1,6 @@
 import * as Yup from 'yup';
 import { ContactFormValues, InquiryType } from 'interfaces';
-import { formatPhoneNumber, removeNonDigits } from 'utils';
+import { removeNonDigits } from 'utils';
 
 // The hero links here with ?about=<value>, so these values are part of the
 // URL contract. Changing one breaks the links in components/home/Hero.tsx.
@@ -224,23 +224,6 @@ export const STORE_DURATION_OPTIONS = [
   'Open permanently',
   'Not sure yet',
 ];
-
-// Formats as you type, capped at 10 digits. Reuses formatPhoneNumber so the
-// shape shown in the field and the shape in the notification email can't drift.
-//
-// The `previous` value is what makes deleting work. Backspacing over one of the
-// inserted characters — the bracket, space, or dash — removes no digit, so
-// reformatting would put it straight back and the field would look frozen.
-// When the digits haven't changed but the text got shorter, drop a digit instead.
-export const formatPhoneInput = (next: string, previous: string) => {
-  let digits = removeNonDigits(next).slice(0, 10);
-
-  if (next.length < previous.length && digits === removeNonDigits(previous)) {
-    digits = digits.slice(0, -1);
-  }
-
-  return formatPhoneNumber(digits);
-};
 
 // What happens next, per path. Shared because it appears both on the success
 // screen and in the customer's confirmation email; two copies would drift.

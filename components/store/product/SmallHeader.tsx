@@ -1,6 +1,6 @@
 import { ProductSize } from 'interfaces';
 import styled from 'styled-components';
-import { formatToMoney } from 'utils';
+import ProductPrice from './ProductPrice';
 
 type Props = {
   productName: string;
@@ -11,21 +11,21 @@ type Props = {
 };
 
 export default function SmallHeader(props: Props) {
+  const base =
+    props.size.label === 'DEFAULT'
+      ? props.productSizes[0].price
+      : props.size.price;
+  const full = base + props.personalizationTotal;
+  // A free item covers the garment only, so add-ons are still payable.
+  const payable = props.eligibleForFreeShirt
+    ? props.personalizationTotal
+    : full;
+
   return (
     <SmallHeaderStyles>
       <h2 className="name">{props.productName}</h2>
       <h3 className="price">
-        {props.eligibleForFreeShirt ? (
-          'Free'
-        ) : (
-          <>
-            {formatToMoney(
-              (props.size.label === 'DEFAULT'
-                ? props.productSizes[0].price
-                : props.size.price) + props.personalizationTotal
-            )}
-          </>
-        )}
+        <ProductPrice full={full} payable={payable} />
       </h3>
     </SmallHeaderStyles>
   );
@@ -51,6 +51,17 @@ const SmallHeaderStyles = styled.div`
       font-size: 1.125rem;
       font-weight: 600;
       color: #111827;
+
+      .was {
+        margin-right: 0.375rem;
+        font-weight: 400;
+        color: #9ca3af;
+        text-decoration: line-through;
+      }
+
+      .free {
+        color: #047857;
+      }
     }
   }
 `;
